@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "TeamLink",
+    "slug": "teamlink",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#007AFF"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.teamlink.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#007AFF"
+      },
+      "package": "com.teamlink.app"
+    },
+    "web": {},
+    "sdkVersion": "54.0.0",
+    "jsEngine": "hermes",
+    "plugins": [
+      "expo-dev-client"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c73c9aaa-30c3-4740-bb30-54de7bd1a6cf"
+      }
+    }
+  }
+}
