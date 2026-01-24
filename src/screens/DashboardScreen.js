@@ -151,7 +151,7 @@ export default function DashboardScreen() {
         contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.content, isWeb && styles.contentWeb]}>
+        <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
           {/* Header */}
           <View style={styles.header}>
             <View>
