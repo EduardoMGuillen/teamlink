@@ -75,6 +75,19 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Tabla de invitaciones por email
+CREATE TABLE IF NOT EXISTS team_invites (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+  inviter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  invitee_email TEXT NOT NULL,
+  invitee_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  role TEXT DEFAULT 'member' CHECK (role IN ('member', 'lead', 'manager')),
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(team_id, invitee_email)
+);
+
 -- Índices para mejorar el rendimiento
 CREATE INDEX IF NOT EXISTS idx_team_members_team_id ON team_members(team_id);
 CREATE INDEX IF NOT EXISTS idx_team_members_user_id ON team_members(user_id);
@@ -88,11 +101,14 @@ CREATE INDEX IF NOT EXISTS idx_messages_recipient_id ON messages(recipient_id);
 CREATE INDEX IF NOT EXISTS idx_updates_team_id ON updates(team_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
+CREATE INDEX IF NOT EXISTS idx_team_invites_team_id ON team_invites(team_id);
+CREATE INDEX IF NOT EXISTS idx_team_invites_email ON team_invites(invitee_email);
 
 -- Row Level Security (RLS) Policies
 ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_join_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_invites ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE updates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
@@ -163,6 +179,27 @@ CREATE POLICY "Managers can update join requests" ON team_join_requests
       SELECT team_id FROM team_members
       WHERE user_id = auth.uid() AND role IN ('manager', 'lead')
     )
+  );
+
+-- Políticas para team_invites
+DROP POLICY IF EXISTS "Managers can invite by email" ON team_invites;
+CREATE POLICY "Managers can invite by email" ON team_invites
+  FOR INSERT WITH CHECK (
+    inviter_id = auth.uid()
+  );
+
+DROP POLICY IF EXISTS "Users can view invites" ON team_invites;
+CREATE POLICY "Users can view invites" ON team_invites
+  FOR SELECT USING (
+    invitee_email = (SELECT email FROM users WHERE id = auth.uid())
+    OR inviter_id = auth.uid()
+  );
+
+DROP POLICY IF EXISTS "Invitees can update invites" ON team_invites;
+CREATE POLICY "Invitees can update invites" ON team_invites
+  FOR UPDATE USING (
+    invitee_email = (SELECT email FROM users WHERE id = auth.uid())
+    OR inviter_id = auth.uid()
   );
 
 -- Políticas para messages: los usuarios pueden ver mensajes de sus equipos o mensajes directos

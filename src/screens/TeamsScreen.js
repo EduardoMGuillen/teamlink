@@ -29,6 +29,7 @@ export default function TeamsScreen() {
   const [teamMembers, setTeamMembers] = useState([]);
   const [teamUpdates, setTeamUpdates] = useState([]);
   const [joinRequests, setJoinRequests] = useState([]);
+  const [pendingInvites, setPendingInvites] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -38,8 +39,8 @@ export default function TeamsScreen() {
   const [teamDepartment, setTeamDepartment] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [joinStatus, setJoinStatus] = useState('');
-  const [inviteQuery, setInviteQuery] = useState('');
-  const [inviteResults, setInviteResults] = useState([]);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteStatus, setInviteStatus] = useState('');
   const [memberRole, setMemberRole] = useState('member');
   const [isWorking, setIsWorking] = useState(false);
 
@@ -54,8 +55,8 @@ export default function TeamsScreen() {
   }, [selectedTeamId]);
 
   useEffect(() => {
-    searchUsers();
-  }, [inviteQuery, selectedTeamId]);
+    loadInvites();
+  }, [currentUser]);
 
   const selectedTeam = useMemo(
     () => teams.find(team => team.id === selectedTeamId),
@@ -104,6 +105,12 @@ export default function TeamsScreen() {
     }
   };
 
+  const loadInvites = async () => {
+    if (!currentUser?.email || !currentUser?.id) return;
+    const invites = await teamsService.getPendingInvites(currentUser.email, currentUser.id);
+    setPendingInvites(invites);
+  };
+
   const resetTeamForm = () => {
     setTeamName('');
     setTeamDescription('');
@@ -134,17 +141,6 @@ export default function TeamsScreen() {
     }
   };
 
-  const searchUsers = async () => {
-    if (!inviteQuery.trim()) {
-      setInviteResults([]);
-      return;
-    }
-    const results = await teamsService.searchUsers(inviteQuery);
-    const memberIds = new Set(teamMembers.map(member => member.userId));
-    const filtered = results.filter(user => !memberIds.has(user.id));
-    setInviteResults(filtered);
-  };
-
   const handleJoinByCode = async () => {
     if (!currentUser?.id || !joinCode.trim()) return;
     setIsWorking(true);
@@ -156,6 +152,57 @@ export default function TeamsScreen() {
       }
     } catch (error) {
       console.error('Error joining team:', error);
+    } finally {
+      setIsWorking(false);
+    }
+  };
+
+  const handleInviteByEmail = async () => {
+    if (!selectedTeamId || !currentUser?.id || !inviteEmail.trim()) return;
+    setIsWorking(true);
+    try {
+      const result = await teamsService.inviteByEmail(
+        selectedTeamId,
+        currentUser.id,
+        inviteEmail,
+        memberRole
+      );
+      if (result.success) {
+        setInviteStatus(t('inviteSent') || 'Invitation sent.');
+        setInviteEmail('');
+      }
+    } catch (error) {
+      console.error('Error inviting member:', error);
+    } finally {
+      setIsWorking(false);
+    }
+  };
+
+  const handleAcceptInvite = async (invite) => {
+    if (!currentUser?.id) return;
+    setIsWorking(true);
+    try {
+      const result = await teamsService.acceptInvite(invite.id, invite.team.id, currentUser.id, invite.role);
+      if (result.success) {
+        await loadInvites();
+        await loadTeams();
+      }
+    } catch (error) {
+      console.error('Error accepting invite:', error);
+    } finally {
+      setIsWorking(false);
+    }
+  };
+
+  const handleDeclineInvite = async (inviteId) => {
+    setIsWorking(true);
+    try {
+      const result = await teamsService.declineInvite(inviteId);
+      if (result.success) {
+        await loadInvites();
+      }
+    } catch (error) {
+      console.error('Error declining invite:', error);
     } finally {
       setIsWorking(false);
     }
@@ -303,6 +350,37 @@ export default function TeamsScreen() {
         </View>
       ) : (
         <ScrollView style={styles.scroll}>
+          {pendingInvites.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{t('invitations') || 'Invitations'}</Text>
+              <View style={styles.requestsList}>
+                {pendingInvites.map(invite => (
+                  <View key={invite.id} style={styles.requestCard}>
+                    <View>
+                      <Text style={styles.searchTitle}>{invite.team?.name || 'Team'}</Text>
+                      <Text style={styles.searchSubtitle}>
+                        {invite.inviter?.name || 'Manager'} • {invite.role}
+                      </Text>
+                    </View>
+                    <View style={styles.requestActions}>
+                      <TouchableOpacity
+                        style={[styles.requestButton, styles.requestApprove]}
+                        onPress={() => handleAcceptInvite(invite)}
+                      >
+                        <Text style={styles.requestButtonText}>{t('accept') || 'Accept'}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.requestButton, styles.requestReject]}
+                        onPress={() => handleDeclineInvite(invite.id)}
+                      >
+                        <Text style={styles.requestButtonText}>{t('decline') || 'Decline'}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('myTeams') || 'My Teams'}</Text>
             <View style={styles.teamList}>
@@ -619,11 +697,14 @@ export default function TeamsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{t('inviteMembers') || 'Invite Members'}</Text>
+            <Text style={styles.inputLabel}>{t('inviteEmail') || 'Email address'}</Text>
             <TextInput
               style={styles.input}
-              placeholder={t('search') || 'Search...'}
-              value={inviteQuery}
-              onChangeText={setInviteQuery}
+              placeholder={t('inviteEmailPlaceholder') || 'name@company.com'}
+              value={inviteEmail}
+              onChangeText={setInviteEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
             />
             <View style={styles.roleRow}>
               {['member', 'lead', 'manager'].map(role => (
@@ -646,35 +727,24 @@ export default function TeamsScreen() {
                 </TouchableOpacity>
               ))}
             </View>
-            <View style={styles.searchList}>
-              {inviteResults.map(user => (
-                <View key={user.id} style={styles.searchItem}>
-                  <View>
-                    <Text style={styles.searchTitle}>{user.name}</Text>
-                    <Text style={styles.searchSubtitle}>{user.email}</Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.searchAction}
-                    onPress={() => handleInviteMember(user.id)}
-                  >
-                    <Text style={styles.searchActionText}>{t('invite') || 'Invite'}</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
-              {inviteQuery.trim() && inviteResults.length === 0 && (
-                <Text style={styles.emptySearchText}>{t('noResults')}</Text>
-              )}
-            </View>
+            {!!inviteStatus && <Text style={styles.joinStatus}>{inviteStatus}</Text>}
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalCancel]}
                 onPress={() => {
                   setShowInviteModal(false);
-                  setInviteQuery('');
-                  setInviteResults([]);
+                  setInviteEmail('');
+                  setInviteStatus('');
                 }}
               >
                 <Text style={styles.modalCancelText}>{t('cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalSave]}
+                onPress={handleInviteByEmail}
+                disabled={isWorking}
+              >
+                <Text style={styles.modalSaveText}>{t('sendInvite') || 'Send Invite'}</Text>
               </TouchableOpacity>
             </View>
           </View>

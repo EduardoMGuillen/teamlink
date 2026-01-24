@@ -180,6 +180,142 @@ export const teamsService = {
     }
   },
 
+  // Invitar miembro por email
+  async inviteByEmail(teamId, inviterId, email, role = 'member') {
+    try {
+      const normalizedEmail = email?.trim().toLowerCase();
+      if (!teamId || !inviterId || !normalizedEmail) {
+        return { success: false, error: 'Invalid data' };
+      }
+
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id, email')
+        .eq('email', normalizedEmail)
+        .maybeSingle();
+
+      if (userError) {
+        console.error('Error searching user by email:', userError);
+        return { success: false, error: userError.message };
+      }
+
+      const { data: invite, error: inviteError } = await supabase
+        .from('team_invites')
+        .insert({
+          team_id: teamId,
+          inviter_id: inviterId,
+          invitee_email: normalizedEmail,
+          invitee_user_id: user?.id || null,
+          role,
+          status: 'pending',
+        })
+        .select()
+        .single();
+
+      if (inviteError) {
+        console.error('Error creating team invite:', inviteError);
+        return { success: false, error: inviteError.message };
+      }
+
+      if (user?.id) {
+        await supabase.from('notifications').insert({
+          user_id: user.id,
+          type: 'team_invite',
+          title: 'Team invitation',
+          message: 'You have a team invitation pending.',
+          related_id: invite.id,
+        });
+      }
+
+      return { success: true, inviteId: invite.id };
+    } catch (error) {
+      console.error('Invite by email error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Obtener invitaciones pendientes para el usuario
+  async getPendingInvites(email, userId) {
+    try {
+      if (!email && !userId) return [];
+      const { data, error } = await supabase
+        .from('team_invites')
+        .select(`
+          id,
+          status,
+          role,
+          created_at,
+          team_id,
+          teams (
+            id,
+            name,
+            description
+          ),
+          inviter:users!team_invites_inviter_id_fkey (
+            id,
+            name,
+            email
+          )
+        `)
+        .eq('status', 'pending')
+        .or(`invitee_email.eq.${email},invitee_user_id.eq.${userId}`);
+
+      if (error) {
+        console.error('Error fetching invites:', error);
+        return [];
+      }
+
+      return data.map(invite => ({
+        id: invite.id,
+        role: invite.role,
+        createdAt: invite.created_at,
+        team: invite.teams,
+        inviter: invite.inviter,
+      }));
+    } catch (error) {
+      console.error('Get invites error:', error);
+      return [];
+    }
+  },
+
+  async acceptInvite(inviteId, teamId, userId, role = 'member') {
+    try {
+      const { error: updateError } = await supabase
+        .from('team_invites')
+        .update({ status: 'accepted' })
+        .eq('id', inviteId);
+
+      if (updateError) {
+        console.error('Error accepting invite:', updateError);
+        return { success: false, error: updateError.message };
+      }
+
+      return await this.addMember(teamId, userId, role);
+    } catch (error) {
+      console.error('Accept invite error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  async declineInvite(inviteId) {
+    try {
+      const { error } = await supabase
+        .from('team_invites')
+        .update({ status: 'declined' })
+        .eq('id', inviteId);
+
+      if (error) {
+        console.error('Error declining invite:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Decline invite error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
   // Solicitar unirse por código
   async requestJoinByCode(teamCode, userId) {
     try {
