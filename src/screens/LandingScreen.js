@@ -106,6 +106,8 @@ export default function LandingScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
         nestedScrollEnabled={true}
+        scrollEnabled={true}
+        bounces={false}
       >
         {/* Hero Section */}
         <View style={[styles.heroSection, isMobile && styles.heroSectionMobile]}>
