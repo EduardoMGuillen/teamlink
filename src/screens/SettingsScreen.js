@@ -89,6 +89,26 @@ export default function SettingsScreen() {
               <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
             </View>
           </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.settingCard}
+            onPress={() => navigation.navigate('MotivationSettings')}
+          >
+            <View style={styles.settingRow}>
+              <Ionicons name="bulb" size={24} color={colors.accent} />
+              <Text style={styles.settingLabel}>Daily Motivation</Text>
+              <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.settingCard}
+            onPress={() => navigation.navigate('BackgroundSettings')}
+          >
+            <View style={styles.settingRow}>
+              <Ionicons name="image" size={24} color={colors.primary} />
+              <Text style={styles.settingLabel}>App Background</Text>
+              <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+            </View>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.settingCard}>
             <View style={styles.settingRow}>
               <Ionicons name="information-circle" size={24} color={colors.primary} />

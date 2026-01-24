@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { i18n } from '../utils/i18n';
 import { authService } from '../services/authService';
+import { backgroundService } from '../services/backgroundService';
 
 const AppStateContext = createContext();
 
@@ -18,6 +19,7 @@ export const AppStateProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [language, setLanguage] = useState('en');
+  const [selectedBackground, setSelectedBackground] = useState('default');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -31,6 +33,10 @@ export const AppStateProvider = ({ children }) => {
       const savedLanguage = i18n.getLanguage();
       setLanguage(savedLanguage);
 
+      // Load background preference
+      const savedBackground = await backgroundService.getSelectedBackground();
+      setSelectedBackground(savedBackground);
+
       // Check if user is already logged in (Supabase session)
       const session = await authService.getSession();
       if (session) {
@@ -38,28 +44,15 @@ export const AppStateProvider = ({ children }) => {
         if (user) {
           setCurrentUser(user);
           setIsAuthenticated(true);
+        } else {
+          setCurrentUser(null);
+          setIsAuthenticated(false);
         }
       } else {
-        // Fallback: check AsyncStorage for legacy user (only if valid UUID)
-        const savedUser = await AsyncStorage.getItem('@teamlink_user');
-        if (savedUser) {
-          try {
-            const user = JSON.parse(savedUser);
-            // Validate that user ID is a valid UUID format
-            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-            if (user.id && uuidRegex.test(user.id)) {
-              setCurrentUser(user);
-              setIsAuthenticated(true);
-            } else {
-              // Invalid user ID format, clear it
-              console.log('Invalid user ID format, clearing saved user');
-              await AsyncStorage.removeItem('@teamlink_user');
-            }
-          } catch (error) {
-            console.error('Error parsing saved user:', error);
-            await AsyncStorage.removeItem('@teamlink_user');
-          }
-        }
+        // No active session: ensure we don't keep stale auth state
+        setCurrentUser(null);
+        setIsAuthenticated(false);
+        await AsyncStorage.removeItem('@teamlink_user');
       }
     } catch (error) {
       console.error('Error initializing app:', error);
@@ -105,6 +98,14 @@ export const AppStateProvider = ({ children }) => {
     setLanguage(lang);
   };
 
+  const changeBackground = async (backgroundId) => {
+    const result = await backgroundService.saveSelectedBackground(backgroundId);
+    if (result.success) {
+      setSelectedBackground(backgroundId);
+    }
+    return result;
+  };
+
   return (
     <AppStateContext.Provider
       value={{
@@ -117,6 +118,8 @@ export const AppStateProvider = ({ children }) => {
         logout,
         language,
         changeLanguage,
+        selectedBackground,
+        changeBackground,
         isLoading,
       }}
     >

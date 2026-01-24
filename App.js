@@ -27,6 +27,9 @@ import ChatScreen from './src/screens/ChatScreen';
 import UpdatesScreen from './src/screens/UpdatesScreen';
 import NotificationsScreen from './src/screens/NotificationsScreen';
 import ConnectionTestScreen from './src/screens/ConnectionTestScreen';
+import MotivationSettingsScreen from './src/screens/MotivationSettingsScreen';
+import BackgroundSettingsScreen from './src/screens/BackgroundSettingsScreen';
+import BackgroundWrapper from './src/components/BackgroundWrapper';
 
 const Tab = createBottomTabNavigator();
 // Usar Stack Navigator nativo para móvil, Stack Navigator regular para web
@@ -95,7 +98,7 @@ function MainTabs() {
 }
 
 function AppNavigator() {
-  const { isAuthenticated, isLoading } = useAppState();
+  const { isAuthenticated, isLoading, selectedBackground } = useAppState();
 
   useEffect(() => {
     const initI18n = async () => {
@@ -113,9 +116,10 @@ function AppNavigator() {
   }
 
   return (
-    <NavigationContainer>
-      <StatusBar style="auto" />
-      <Stack.Navigator 
+    <BackgroundWrapper>
+      <NavigationContainer>
+        <StatusBar style="auto" />
+        <Stack.Navigator 
         initialRouteName={Platform.OS === 'web' && !isAuthenticated ? 'Landing' : 'Login'}
         screenOptions={{ 
           headerShown: false,
@@ -260,6 +264,20 @@ function AppNavigator() {
                 }),
               }}
             />
+            <Stack.Screen 
+              name="MotivationSettings" 
+              component={MotivationSettingsScreen}
+              options={{ 
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen 
+              name="BackgroundSettings" 
+              component={BackgroundSettingsScreen}
+              options={{ 
+                headerShown: false,
+              }}
+            />
           </>
         ) : (
           <>
@@ -281,6 +299,7 @@ function AppNavigator() {
         )}
       </Stack.Navigator>
     </NavigationContainer>
+    </BackgroundWrapper>
   );
 }
 

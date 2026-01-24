@@ -17,6 +17,7 @@ import { tasksService } from '../services/tasksService';
 // import { shiftsService } from '../services/shiftsService'; // Temporarily hidden
 import { notificationsService } from '../services/notificationsService';
 import { calendarScheduleService } from '../services/calendarScheduleService';
+import DailyMotivation from '../components/DailyMotivation';
 
 const toLocalDateString = (date) => {
   const pad = (n) => String(n).padStart(2, '0');
@@ -139,6 +140,7 @@ export default function DashboardScreen() {
     { id: '2', icon: 'calendar', title: t('viewSchedule'), color: colors.primary, bg: '#EEF2FF', screen: 'Schedule' },
     { id: '3', icon: 'checkmark-circle', title: t('myTasks'), color: colors.accent, bg: '#FFF7ED', screen: 'Tasks' },
     { id: '4', icon: 'chatbubble', title: t('messages'), color: '#A855F7', bg: '#F5F3FF', screen: 'Chat' },
+    { id: '5', icon: 'bulb', title: 'Spark', color: colors.accent, bg: '#FFF9E6', screen: 'MotivationSettings' },
   ];
 
   return (
@@ -153,7 +155,9 @@ export default function DashboardScreen() {
           <View style={styles.header}>
             <View>
               <Text style={styles.welcomeText}>{t('welcome')},</Text>
-              <Text style={styles.nameText}>{currentUser?.name || 'User'}</Text>
+              <Text style={styles.nameText}>
+                {currentUser?.name ? currentUser.name.split(' ')[0] : 'User'}
+              </Text>
             </View>
             <TouchableOpacity
               style={styles.notificationButton}
@@ -169,6 +173,9 @@ export default function DashboardScreen() {
               )}
             </TouchableOpacity>
           </View>
+
+          {/* Daily Motivation - Spark */}
+          <DailyMotivation />
 
         {/* Quick Actions */}
         <View style={[styles.section, isWeb && styles.sectionWeb]}>
@@ -189,6 +196,8 @@ export default function DashboardScreen() {
                     navigation.navigate('MainTabs', { screen: 'Schedule' });
                   } else if (action.screen === 'Chat') {
                     navigation.navigate('Chat');
+                  } else if (action.screen === 'MotivationSettings') {
+                    navigation.navigate('MotivationSettings');
                   }
                 }}
               >

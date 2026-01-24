@@ -20,8 +20,27 @@ import { tasksService } from '../services/tasksService';
 import { teamsService } from '../services/teamsService';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { Calendar } from 'react-native-calendars';
 
 export default function TasksScreen() {
+  const normalizeDateInput = (dateInput) => {
+    if (dateInput instanceof Date) return dateInput;
+    return new Date(dateInput);
+  };
+
+  const toLocalDateString = (date) => {
+    const safeDate = normalizeDateInput(date);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${safeDate.getFullYear()}-${pad(safeDate.getMonth() + 1)}-${pad(safeDate.getDate())}`;
+  };
+
+  const parseLocalDateString = (dateString) => {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+  const pickerTextColor = colors.text;
+  const pickerThemeVariant = 'light';
+
   const { t } = useTranslation();
   const { currentUser } = useAppState();
   const [selectedFilter, setSelectedFilter] = useState('All');
@@ -31,6 +50,7 @@ export default function TasksScreen() {
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
   const [taskPriority, setTaskPriority] = useState('medium');
+  const [taskStatus, setTaskStatus] = useState('pending');
   const [taskDueDate, setTaskDueDate] = useState(new Date());
   const [tempDate, setTempDate] = useState(new Date()); // Temporary date for picker
   const [searchQuery, setSearchQuery] = useState('');
@@ -111,6 +131,7 @@ export default function TasksScreen() {
     setTaskTitle('');
     setTaskDescription('');
     setTaskPriority('medium');
+    setTaskStatus('pending');
     const today = new Date();
     setTaskDueDate(today);
     setTempDate(today); // Initialize tempDate
@@ -123,6 +144,7 @@ export default function TasksScreen() {
     setTaskTitle(task.title);
     setTaskDescription(task.description || '');
     setTaskPriority(task.priority);
+    setTaskStatus(task.status);
     const dueDate = new Date(task.dueDate);
     setTaskDueDate(dueDate);
     setTempDate(dueDate); // Initialize tempDate for editing
@@ -147,6 +169,7 @@ export default function TasksScreen() {
           title: taskTitle.trim(),
           description: taskDescription.trim(),
           priority: taskPriority,
+          status: taskStatus,
           dueDate: taskDueDate,
         });
         if (result.success) {
@@ -507,28 +530,20 @@ export default function TasksScreen() {
               <Text style={styles.label}>{t('dueDate')}</Text>
               <View style={styles.datePickerContainer}>
                 {Platform.OS === 'web' ? (
-                  <input
-                    type="date"
-                    value={taskDueDate.toISOString().split('T')[0]}
-                    min={new Date().toISOString().split('T')[0]}
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        const nextDate = new Date(`${e.target.value}T00:00:00`);
-                        setTaskDueDate(nextDate);
-                        setTempDate(nextDate);
-                      }
+                  <TouchableOpacity
+                    style={styles.dateButton}
+                    onPress={() => {
+                      setTempDate(new Date(taskDueDate));
+                      setShowDatePicker(true);
                     }}
-                    style={{
-                      width: '100%',
-                      padding: 16,
-                      border: `1px solid ${colors.border}`,
-                      borderRadius: 12,
-                      fontSize: 16,
-                      backgroundColor: colors.surfaceAlt,
-                      fontFamily: 'inherit',
-                      color: colors.text,
-                    }}
-                  />
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="calendar" size={20} color={colors.primary} />
+                    <Text style={styles.dateText}>
+                      {taskDueDate.toLocaleDateString()}
+                    </Text>
+                    <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+                  </TouchableOpacity>
                 ) : (
                   <>
                     <TouchableOpacity
@@ -559,6 +574,40 @@ export default function TasksScreen() {
                           }
                         }}
                       />
+                    )}
+                    {Platform.OS === 'ios' && showDatePicker && (
+                      <View style={styles.inlinePicker}>
+                        <DateTimePicker
+                          value={tempDate}
+                          mode="date"
+                          display="spinner"
+                          minimumDate={new Date()}
+                          textColor={pickerTextColor}
+                          themeVariant={pickerThemeVariant}
+                          onChange={(event, selectedDate) => {
+                            if (selectedDate) {
+                              setTempDate(selectedDate);
+                            }
+                          }}
+                        />
+                        <View style={styles.inlinePickerActions}>
+                          <TouchableOpacity
+                            style={styles.inlineCancel}
+                            onPress={() => setShowDatePicker(false)}
+                          >
+                            <Text style={styles.modalCancel}>{t('cancel')}</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.inlineSave}
+                            onPress={() => {
+                              setTaskDueDate(new Date(tempDate));
+                              setShowDatePicker(false);
+                            }}
+                          >
+                            <Text style={styles.modalDone}>{t('save')}</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
                     )}
                   </>
                 )}
@@ -624,6 +673,56 @@ export default function TasksScreen() {
                   </TouchableOpacity>
                 ))}
               </View>
+
+              {editingTask && (
+                <>
+                  <Text style={styles.label}>{t('status') || 'Status'}</Text>
+                  <TouchableOpacity
+                    style={styles.statusButton}
+                    onPress={() => {
+                      let nextStatus;
+                      if (taskStatus === 'pending') {
+                        nextStatus = 'inProgress';
+                      } else if (taskStatus === 'inProgress') {
+                        nextStatus = 'completed';
+                      } else {
+                        nextStatus = 'pending';
+                      }
+                      setTaskStatus(nextStatus);
+                    }}
+                  >
+                    <View style={styles.statusButtonContent}>
+                      <Ionicons
+                        name={
+                          taskStatus === 'completed'
+                            ? 'checkmark-circle'
+                            : taskStatus === 'inProgress'
+                            ? 'time'
+                            : 'ellipse-outline'
+                        }
+                        size={20}
+                        color={
+                          taskStatus === 'completed'
+                            ? '#34C759'
+                            : taskStatus === 'inProgress'
+                            ? '#007AFF'
+                            : '#8E8E93'
+                        }
+                      />
+                      <Text style={styles.statusButtonText}>
+                        {taskStatus === 'pending'
+                          ? t('pending')
+                          : taskStatus === 'inProgress'
+                          ? t('inProgress')
+                          : t('completed')}
+                      </Text>
+                    </View>
+                    <Text style={styles.statusButtonHint}>
+                      {t('tapToChange') || 'Tap to change'}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </ScrollView>
 
             <View style={styles.modalActions}>
@@ -644,55 +743,56 @@ export default function TasksScreen() {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Date Picker Modal for iOS */}
-      {Platform.OS === 'ios' && (
+      {/* iOS date picker is rendered inline inside the add task modal */}
+
+      {/* Date Picker Modal for Web */}
+      {Platform.OS === 'web' && (
         <Modal
           visible={showDatePicker}
-          transparent={true}
-          animationType="slide"
+          transparent
+          animationType="fade"
           onRequestClose={() => setShowDatePicker(false)}
-          presentationStyle="overFullScreen"
         >
           <View style={styles.datePickerModalOverlay}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.datePickerBackdrop}
               activeOpacity={1}
               onPress={() => setShowDatePicker(false)}
             />
-            <View style={styles.datePickerModalContent} pointerEvents="box-none">
+            <View style={styles.datePickerModalContent}>
               <View style={styles.modalHeader}>
-                <TouchableOpacity 
-                  onPress={() => setShowDatePicker(false)}
-                  activeOpacity={0.7}
-                >
+                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
                   <Text style={styles.modalCancel}>{t('cancel')}</Text>
                 </TouchableOpacity>
                 <Text style={styles.modalTitle}>{t('dueDate')}</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => {
                     setTaskDueDate(new Date(tempDate));
                     setShowDatePicker(false);
                   }}
-                  activeOpacity={0.7}
                 >
                   <Text style={styles.modalDone}>{t('save')}</Text>
                 </TouchableOpacity>
               </View>
-              <View style={styles.datePickerWrapper}>
-                <DateTimePicker
-                  value={tempDate}
-                  mode="date"
-                  display="spinner"
-                  minimumDate={new Date()}
-                  onChange={(event, selectedDate) => {
-                    if (selectedDate) {
-                      setTempDate(selectedDate);
-                      setTaskDueDate(selectedDate);
-                    }
-                  }}
-                  style={styles.datePickerIOS}
-                />
-              </View>
+              <Calendar
+                current={toLocalDateString(tempDate)}
+                markedDates={{
+                  [toLocalDateString(tempDate)]: {
+                    selected: true,
+                    selectedColor: colors.primary,
+                  },
+                }}
+                onDayPress={(day) => {
+                  const nextDate = parseLocalDateString(day.dateString);
+                  setTempDate(nextDate);
+                  setTaskDueDate(nextDate);
+                }}
+                theme={{
+                  todayTextColor: colors.primary,
+                  selectedDayBackgroundColor: colors.primary,
+                  arrowColor: colors.primary,
+                }}
+              />
             </View>
           </View>
         </Modal>
@@ -1071,5 +1171,46 @@ const styles = StyleSheet.create({
     height: 200,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  inlinePicker: {
+    marginTop: 12,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radii.lg,
+    padding: 12,
+  },
+  inlinePickerActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  inlineCancel: {
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+  },
+  inlineSave: {
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+  },
+  statusButton: {
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radii.lg,
+    padding: 16,
+    marginBottom: 20,
+  },
+  statusButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  statusButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginLeft: 12,
+  },
+  statusButtonHint: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 4,
   },
 });

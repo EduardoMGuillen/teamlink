@@ -1,6 +1,31 @@
 import { supabase } from '../config/supabase';
 
 export const tasksService = {
+  toLocalDateMiddayISO(dateInput) {
+    if (!dateInput) return null;
+    if (dateInput instanceof Date) {
+      const localMidday = new Date(
+        dateInput.getFullYear(),
+        dateInput.getMonth(),
+        dateInput.getDate(),
+        12,
+        0,
+        0,
+        0
+      );
+      return localMidday.toISOString();
+    }
+    if (typeof dateInput === 'string') {
+      const dateOnlyMatch = /^\d{4}-\d{2}-\d{2}$/.test(dateInput);
+      if (dateOnlyMatch) {
+        const [year, month, day] = dateInput.split('-').map(Number);
+        const localMidday = new Date(year, month - 1, day, 12, 0, 0, 0);
+        return localMidday.toISOString();
+      }
+    }
+    return new Date(dateInput).toISOString();
+  },
+
   // Obtener todas las tareas del usuario (incluyendo asignadas y de equipo)
   async getTasks(userId) {
     try {
@@ -64,7 +89,7 @@ export const tasksService = {
         user_id: taskData.assignedTo || userId,
         title: taskData.title,
         description: taskData.description || null,
-        due_date: taskData.dueDate.toISOString(),
+        due_date: this.toLocalDateMiddayISO(taskData.dueDate),
         status: taskData.status || 'pending',
         priority: taskData.priority || 'medium',
       };
@@ -117,7 +142,7 @@ export const tasksService = {
       const updateData = {};
       if (taskData.title) updateData.title = taskData.title;
       if (taskData.description !== undefined) updateData.description = taskData.description;
-      if (taskData.dueDate) updateData.due_date = taskData.dueDate.toISOString();
+      if (taskData.dueDate) updateData.due_date = this.toLocalDateMiddayISO(taskData.dueDate);
       if (taskData.status) updateData.status = taskData.status;
       if (taskData.priority) updateData.priority = taskData.priority;
 
