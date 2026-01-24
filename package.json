@@ -8,6 +8,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build:web": "npx expo export --platform web --output-dir web-build",
+    "vercel-build": "npm run build:web",
     "build:dev:ios": "eas build --profile development --platform ios",
     "build:dev:android": "eas build --profile development --platform android",
     "deploy:web": "expo export:web && echo 'Build complete! Upload the web-build folder to your hosting service.'",
@@ -43,6 +44,10 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   },
   "private": true
 }

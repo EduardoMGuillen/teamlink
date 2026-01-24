@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build:web",
+  "buildCommand": "npm run vercel-build",
   "outputDirectory": "web-build",
   "devCommand": "npm run web",
   "installCommand": "npm install",
@@ -12,7 +12,16 @@
   ],
   "headers": [
     {
-      "source": "/static/(.*)",
+      "source": "/_expo/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
