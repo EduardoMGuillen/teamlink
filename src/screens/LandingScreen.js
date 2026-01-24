@@ -27,7 +27,11 @@ export default function LandingScreen() {
     <View style={styles.container}>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.content, isWide && styles.contentWide]}
+        contentContainerStyle={[
+          styles.content,
+          isWide && styles.contentWide,
+          isCompact && styles.contentCompact,
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.header, isCompact && styles.headerCompact]}>
@@ -93,7 +97,7 @@ export default function LandingScreen() {
           </View>
         </View>
 
-        <View style={[styles.hero, isWide && styles.heroWide]}>
+        <View style={[styles.hero, isWide && styles.heroWide, isCompact && styles.heroCompact]}>
           <View style={styles.heroContent}>
             <View style={styles.heroBadge}>
               <Ionicons name="sparkles" size={14} color={colors.primary} />
@@ -107,16 +111,16 @@ export default function LandingScreen() {
               beautiful hub. Built for growing companies that need clarity,
               speed, and alignment every day.
             </Text>
-            <View style={styles.heroActions}>
+            <View style={[styles.heroActions, isCompact && styles.heroActionsCompact]}>
               <TouchableOpacity
-                style={styles.primaryCta}
+                style={[styles.primaryCta, isCompact && styles.primaryCtaFull]}
                 onPress={() => navigation.navigate('SignUp')}
               >
                 <Text style={styles.primaryCtaText}>Start free</Text>
                 <Ionicons name="arrow-forward" size={16} color="#fff" />
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.secondaryCta}
+                style={[styles.secondaryCta, isCompact && styles.secondaryCtaFull]}
                 onPress={() => navigation.navigate('Login')}
               >
                 <Text style={styles.secondaryCtaText}>{t('login')}</Text>
@@ -140,7 +144,7 @@ export default function LandingScreen() {
               </View>
             </View>
           </View>
-          <View style={styles.heroCard}>
+          <View style={[styles.heroCard, isCompact && styles.heroCardCompact]}>
             <Text style={styles.heroCardTitle}>Today at a glance</Text>
             <View style={styles.heroCardRow}>
               <View style={styles.heroMetric}>
@@ -445,6 +449,10 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
     flexGrow: 1,
   },
+  contentCompact: {
+    paddingHorizontal: 16,
+    paddingBottom: 60,
+  },
   contentWide: {
     maxWidth: 1200,
     alignSelf: 'center',
@@ -456,6 +464,9 @@ const styles = StyleSheet.create({
   heroWide: {
     flexDirection: 'row',
     alignItems: 'stretch',
+  },
+  heroCompact: {
+    flexDirection: 'column',
   },
   heroContent: {
     flex: 1,
@@ -494,6 +505,10 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 20,
   },
+  heroActionsCompact: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+  },
   primaryCta: {
     backgroundColor: colors.primary,
     paddingHorizontal: 18,
@@ -503,6 +518,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     ...shadows.soft,
+  },
+  primaryCtaFull: {
+    justifyContent: 'center',
+    width: '100%',
   },
   primaryCtaText: {
     color: '#fff',
@@ -516,6 +535,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     backgroundColor: colors.surface,
+  },
+  secondaryCtaFull: {
+    width: '100%',
+    alignItems: 'center',
   },
   secondaryCtaText: {
     color: colors.text,
@@ -554,6 +577,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     ...shadows.soft,
+  },
+  heroCardCompact: {
+    width: '100%',
   },
   heroCardTitle: {
     fontSize: 16,
