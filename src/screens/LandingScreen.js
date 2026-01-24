@@ -269,8 +269,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
     ...(isWeb && {
-      height: '100vh',
-      overflow: 'visible',
+      position: 'relative',
+      minHeight: '100vh',
     }),
   },
   header: {
@@ -384,20 +384,13 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     ...(isWeb && {
+      marginTop: 80, // Space for fixed header
       height: 'calc(100vh - 80px)',
-      overflowY: 'auto',
-      overflowX: 'hidden',
-      WebkitOverflowScrolling: 'touch',
-      // Force scroll on web
-      display: 'block',
     }),
   },
   scrollContent: {
     flexGrow: 1,
     paddingBottom: 48,
-    ...(isWeb && {
-      paddingTop: 80, // Space for fixed header
-    }),
   },
   heroSection: {
     flexDirection: 'row',
