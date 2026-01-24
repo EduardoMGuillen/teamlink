@@ -23,6 +23,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Calendar } from 'react-native-calendars';
 
 export default function TasksScreen() {
+  const isWeb = Platform.OS === 'web';
   const normalizeDateInput = (dateInput) => {
     if (dateInput instanceof Date) return dateInput;
     return new Date(dateInput);
@@ -297,86 +298,92 @@ export default function TasksScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, hasCustomBackground && { backgroundColor: 'transparent' }]} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('tasks')}</Text>
-        <TouchableOpacity onPress={openAddModal}>
-          <Ionicons name="add-circle" size={32} color="#007AFF" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#8E8E93" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder={t('search') || 'Search tasks...'}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholderTextColor="#8E8E93"
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={20} color="#8E8E93" />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Sort Options */}
-      <View style={styles.sortContainer}>
-        <Text style={styles.sortLabel}>{t('sortBy') || 'Sort By'}:</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {[
-            { key: 'date', label: t('date') || 'Date' },
-            { key: 'priority', label: t('priority') },
-            { key: 'status', label: t('status') || 'Status' },
-          ].map((option) => (
-            <TouchableOpacity
-              key={option.key}
-              style={[
-                styles.sortButton,
-                sortBy === option.key && styles.sortButtonActive,
-              ]}
-              onPress={() => setSortBy(option.key)}
-            >
-              <Text
-                style={[
-                  styles.sortButtonText,
-                  sortBy === option.key && styles.sortButtonTextActive,
-                ]}
-              >
-                {option.label}
-              </Text>
+    <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['top']}>
+      <ScrollView
+        style={[styles.scrollView, hasCustomBackground && styles.scrollViewTransparent]}
+        contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
+          <View style={styles.header}>
+            <Text style={styles.title}>{t('tasks')}</Text>
+            <TouchableOpacity onPress={openAddModal}>
+              <Ionicons name="add-circle" size={32} color="#007AFF" />
             </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+          </View>
 
-      <View style={styles.filterContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {filters.map((filter) => (
-            <TouchableOpacity
-              key={filter.key}
-              style={[
-                styles.filterButton,
-                selectedFilter === filter.key && styles.filterButtonActive,
-              ]}
-              onPress={() => setSelectedFilter(filter.key)}
-            >
-              <Text
-                style={[
-                  styles.filterText,
-                  selectedFilter === filter.key && styles.filterTextActive,
-                ]}
-              >
-                {filter.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+          {/* Search Bar */}
+          <View style={styles.searchContainer}>
+            <Ionicons name="search" size={20} color="#8E8E93" style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={t('search') || 'Search tasks...'}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#8E8E93"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={20} color="#8E8E93" />
+              </TouchableOpacity>
+            )}
+          </View>
 
-      <ScrollView style={styles.tasksContainer}>
+          {/* Sort Options */}
+          <View style={styles.sortContainer}>
+            <Text style={styles.sortLabel}>{t('sortBy') || 'Sort By'}:</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {[
+                { key: 'date', label: t('date') || 'Date' },
+                { key: 'priority', label: t('priority') },
+                { key: 'status', label: t('status') || 'Status' },
+              ].map((option) => (
+                <TouchableOpacity
+                  key={option.key}
+                  style={[
+                    styles.sortButton,
+                    sortBy === option.key && styles.sortButtonActive,
+                  ]}
+                  onPress={() => setSortBy(option.key)}
+                >
+                  <Text
+                    style={[
+                      styles.sortButtonText,
+                      sortBy === option.key && styles.sortButtonTextActive,
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          <View style={styles.filterContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {filters.map((filter) => (
+                <TouchableOpacity
+                  key={filter.key}
+                  style={[
+                    styles.filterButton,
+                    selectedFilter === filter.key && styles.filterButtonActive,
+                  ]}
+                  onPress={() => setSelectedFilter(filter.key)}
+                >
+                  <Text
+                    style={[
+                      styles.filterText,
+                      selectedFilter === filter.key && styles.filterTextActive,
+                    ]}
+                  >
+                    {filter.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          <View style={styles.tasksContainer}>
         {filteredAndSortedTasks.length > 0 ? (
           filteredAndSortedTasks.map((task) => (
             <View key={task.id} style={styles.taskCard}>
@@ -480,6 +487,8 @@ export default function TasksScreen() {
             <Text style={styles.emptyText}>{t('noTasks')}</Text>
           </View>
         )}
+          </View>
+        </View>
       </ScrollView>
 
       <Modal
@@ -843,6 +852,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  containerTransparent: {
+    backgroundColor: 'transparent',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewTransparent: {
+    backgroundColor: 'transparent',
+  },
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  scrollContentWeb: {
+    flexGrow: 1,
+  },
+  content: {
+    width: '100%',
+  },
+  contentWeb: {
+    maxWidth: 1200,
+    alignSelf: 'center',
+    paddingHorizontal: 24,
+  },
+  contentTransparent: {
+    backgroundColor: 'transparent',
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -946,8 +981,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   tasksContainer: {
-    flex: 1,
     padding: 20,
+    paddingTop: 0,
   },
   taskCard: {
     flexDirection: 'row',
