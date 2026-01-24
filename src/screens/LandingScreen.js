@@ -278,10 +278,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    zIndex: 100,
+  },
+  headerWeb: {
     ...(isWeb && {
-      position: 'sticky',
+      position: 'fixed',
       top: 0,
-      zIndex: 100,
+      left: 0,
+      right: 0,
+      width: '100%',
     }),
   },
   headerMobile: {
@@ -374,13 +379,17 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    ...(isWeb && {
+      height: 'calc(100vh - 80px)',
+      overflowY: 'scroll',
+      WebkitOverflowScrolling: 'touch',
+    }),
   },
   scrollContent: {
     flexGrow: 1,
     paddingBottom: 48,
     ...(isWeb && {
       paddingTop: 80, // Space for fixed header
-      minHeight: '100vh',
     }),
   },
   heroSection: {
