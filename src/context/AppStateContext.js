@@ -23,6 +23,16 @@ export const AppStateProvider = ({ children }) => {
   const [selectedBackground, setSelectedBackground] = useState('default');
   const [isLoading, setIsLoading] = useState(true);
 
+  const withTimeout = async (promise, timeoutMs, fallbackValue = null) => {
+    let timeoutId;
+    const timeoutPromise = new Promise((resolve) => {
+      timeoutId = setTimeout(() => resolve(fallbackValue), timeoutMs);
+    });
+    const result = await Promise.race([promise, timeoutPromise]);
+    clearTimeout(timeoutId);
+    return result;
+  };
+
   useEffect(() => {
     initializeApp();
   }, []);
@@ -30,7 +40,7 @@ export const AppStateProvider = ({ children }) => {
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        const user = await authService.getCurrentUser();
+        const user = await withTimeout(authService.getCurrentUser(), 4000, null);
         if (user) {
           setCurrentUser(user);
           setIsAuthenticated(true);
@@ -52,18 +62,22 @@ export const AppStateProvider = ({ children }) => {
   const initializeApp = async () => {
     try {
       // Initialize i18n
-      await i18n.init();
+      await withTimeout(i18n.init(), 2000);
       const savedLanguage = i18n.getLanguage();
       setLanguage(savedLanguage);
 
       // Load background preference
-      const savedBackground = await backgroundService.getSelectedBackground();
+      const savedBackground = await withTimeout(
+        backgroundService.getSelectedBackground(),
+        2000,
+        'default'
+      );
       setSelectedBackground(savedBackground);
 
       // Check if user is already logged in (Supabase session)
-      const session = await authService.getSession();
+      const session = await withTimeout(authService.getSession(), 4000, null);
       if (session) {
-        const user = await authService.getCurrentUser();
+        const user = await withTimeout(authService.getCurrentUser(), 4000, null);
         if (user) {
           setCurrentUser(user);
           setIsAuthenticated(true);
