@@ -8,10 +8,24 @@ export default function BackgroundWrapper({ children }) {
   const { selectedBackground } = useAppState();
   const [imageError, setImageError] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(0);
+  const [imageUri, setImageUri] = useState(null);
   
   const background = useMemo(() => {
     const bg = backgroundService.getBackgroundById(selectedBackground);
     console.log('[BackgroundWrapper] Selected background:', selectedBackground, 'Background object:', bg);
+    
+    // For web, try to get the image URI
+    if (Platform.OS === 'web' && bg.path) {
+      try {
+        // In web, require() returns an object with uri or the path itself
+        const uri = bg.path.uri || bg.path.default || bg.path;
+        console.log('[BackgroundWrapper] Image URI for web:', uri);
+        setImageUri(uri);
+      } catch (e) {
+        console.error('[BackgroundWrapper] Error getting image URI:', e);
+      }
+    }
+    
     return bg;
   }, [selectedBackground, forceUpdate]);
 
@@ -19,12 +33,14 @@ export default function BackgroundWrapper({ children }) {
   useEffect(() => {
     console.log('[BackgroundWrapper] Background changed to:', selectedBackground);
     setImageError(false);
+    setImageUri(null);
     setForceUpdate(prev => prev + 1);
   }, [selectedBackground]);
 
   const handleImageError = (error) => {
     console.error('[BackgroundWrapper] Image load error:', error);
     console.error('[BackgroundWrapper] Failed to load image for background:', selectedBackground);
+    console.error('[BackgroundWrapper] Image source:', background.path);
     setImageError(true);
   };
 
@@ -52,6 +68,26 @@ export default function BackgroundWrapper({ children }) {
     );
   }
 
+  // For web, use a different approach
+  if (Platform.OS === 'web') {
+    return (
+      <View style={styles.webContainer} key={`web-container-${selectedBackground}-${forceUpdate}`}>
+        <View 
+          style={[
+            styles.webBackground,
+            imageUri && {
+              backgroundImage: `url(${imageUri})`,
+            }
+          ]}
+        />
+        <View style={styles.webOverlay}>
+          {children}
+        </View>
+      </View>
+    );
+  }
+
+  // For native platforms
   return (
     <View style={styles.backgroundContainer} key={`bg-container-${selectedBackground}-${forceUpdate}`}>
       <Image
@@ -76,22 +112,41 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  // Web-specific styles using CSS background
+  webContainer: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    position: 'relative',
+  },
+  webBackground: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100vw',
+    height: '100vh',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    zIndex: 0,
+  },
+  webOverlay: {
+    position: 'relative',
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    zIndex: 1,
+    backgroundColor: 'transparent',
+  },
+  // Native platform styles
   backgroundContainer: {
     flex: 1,
     width: '100%',
     height: '100%',
     position: 'relative',
     overflow: 'hidden',
-    ...(Platform.OS === 'web' && {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      minHeight: '100vh',
-      minWidth: '100vw',
-      zIndex: -1,
-    }),
   },
   backgroundImage: {
     position: 'absolute',
@@ -102,15 +157,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     opacity: 1,
-    ...(Platform.OS === 'web' && {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      objectFit: 'cover',
-      zIndex: -1,
-    }),
   },
   overlay: {
     position: 'relative',
@@ -118,6 +164,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     width: '100%',
     height: '100%',
-    zIndex: 0,
+    zIndex: 1,
   },
 });
