@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -21,59 +21,78 @@ export default function LandingScreen() {
   const { width } = Dimensions.get('window');
   const isWide = width >= 1024;
   const isCompact = width < 768;
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, isCompact && styles.headerCompact]}>
-        <View style={styles.brandRow}>
-          {isWeb ? (
-            <Image source={require('../../logo.png')} style={styles.logoImage} />
-          ) : (
-            <View style={styles.logoDot} />
-          )}
-          <Text style={styles.brand}>TeamLink</Text>
-        </View>
-        <View style={[styles.headerActions, isCompact && styles.headerActionsCompact]}>
-          <View style={styles.languageSelector}>
-            {availableLanguages.map((lang) => (
-              <TouchableOpacity
-                key={lang.code}
-                style={[
-                  styles.languageButton,
-                  language === lang.code && styles.languageButtonActive,
-                ]}
-                onPress={() => changeLanguage(lang.code)}
-              >
-                <Text
-                  style={[
-                    styles.languageButtonText,
-                    language === lang.code && styles.languageButtonTextActive,
-                  ]}
-                >
-                  {lang.code.toUpperCase()}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <View style={styles.authActions}>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.headerLink}>{t('login')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.headerButton}
-              onPress={() => navigation.navigate('SignUp')}
-            >
-              <Text style={styles.headerButtonText}>{t('signUp')}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.content, isWide && styles.contentWide]}
         showsVerticalScrollIndicator={false}
       >
+        <View style={[styles.header, isCompact && styles.headerCompact]}>
+          <View style={styles.brandRow}>
+            {isWeb ? (
+              <Image source={require('../../logo.png')} style={styles.logoImage} />
+            ) : (
+              <View style={styles.logoDot} />
+            )}
+            <Text style={styles.brand}>TeamLink</Text>
+          </View>
+          <View style={[styles.headerActions, isCompact && styles.headerActionsCompact]}>
+            <View style={styles.languageDropdown}>
+              <TouchableOpacity
+                style={styles.languageToggle}
+                onPress={() => setShowLanguageMenu(!showLanguageMenu)}
+              >
+                <Ionicons name="globe-outline" size={16} color={colors.textMuted} />
+                <Text style={styles.languageToggleText}>
+                  {language.toUpperCase()}
+                </Text>
+                <Ionicons
+                  name={showLanguageMenu ? 'chevron-up' : 'chevron-down'}
+                  size={14}
+                  color={colors.textMuted}
+                />
+              </TouchableOpacity>
+              {showLanguageMenu && (
+                <View style={styles.languageMenu}>
+                  {availableLanguages.map((lang) => (
+                    <TouchableOpacity
+                      key={lang.code}
+                      style={styles.languageOption}
+                      onPress={() => {
+                        changeLanguage(lang.code);
+                        setShowLanguageMenu(false);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.languageOptionText,
+                          language === lang.code && styles.languageOptionTextActive,
+                        ]}
+                      >
+                        {lang.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+            <View style={styles.authActions}>
+              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                <Text style={styles.headerLink}>{t('login')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.headerButton}
+                onPress={() => navigation.navigate('SignUp')}
+              >
+                <Text style={styles.headerButtonText}>{t('signUp')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
         <View style={[styles.hero, isWide && styles.heroWide]}>
           <View style={styles.heroContent}>
             <View style={styles.heroBadge}>
@@ -245,6 +264,42 @@ export default function LandingScreen() {
           </View>
         </View>
 
+        <View style={styles.sectionBlock}>
+          <Text style={styles.sectionHeading}>Built for real operations</Text>
+          <View style={[styles.metricsGrid, isWide && styles.metricsGridWide]}>
+            <View style={styles.metricCard}>
+              <Text style={styles.metricValue}>30%</Text>
+              <Text style={styles.metricLabel}>Faster task completion</Text>
+            </View>
+            <View style={styles.metricCard}>
+              <Text style={styles.metricValue}>2x</Text>
+              <Text style={styles.metricLabel}>Fewer scheduling conflicts</Text>
+            </View>
+            <View style={styles.metricCard}>
+              <Text style={styles.metricValue}>1 hub</Text>
+              <Text style={styles.metricLabel}>Tasks, chat, planner, updates</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.sectionBlock}>
+          <Text style={styles.sectionHeading}>Teams who love TeamLink</Text>
+          <View style={[styles.testimonialGrid, isWide && styles.testimonialGridWide]}>
+            <View style={styles.testimonialCard}>
+              <Text style={styles.testimonialQuote}>
+                “We replaced 4 tools with TeamLink. Everyone finally knows what to do.”
+              </Text>
+              <Text style={styles.testimonialMeta}>Operations Lead • 120 staff</Text>
+            </View>
+            <View style={styles.testimonialCard}>
+              <Text style={styles.testimonialQuote}>
+                “Planner + Tasks + Chat keep us aligned every shift.”
+              </Text>
+              <Text style={styles.testimonialMeta}>Retail Manager • Multi-site</Text>
+            </View>
+          </View>
+        </View>
+
         <View style={styles.ctaBanner}>
           <View>
             <Text style={styles.ctaTitle}>Ready to bring your team together?</Text>
@@ -319,25 +374,46 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 10,
   },
-  languageSelector: {
-    flexDirection: 'row',
-    gap: 6,
+  languageDropdown: {
+    position: 'relative',
   },
-  languageButton: {
+  languageToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 999,
     backgroundColor: colors.surfaceAlt,
   },
-  languageButtonActive: {
-    backgroundColor: `${colors.primary}20`,
-  },
-  languageButtonText: {
-    fontSize: 11,
+  languageToggleText: {
+    fontSize: 12,
     fontWeight: '600',
     color: colors.textMuted,
   },
-  languageButtonTextActive: {
+  languageMenu: {
+    position: 'absolute',
+    top: 38,
+    left: 0,
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    paddingVertical: 6,
+    minWidth: 120,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.soft,
+    zIndex: 10,
+  },
+  languageOption: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  languageOptionText: {
+    fontSize: 12,
+    color: colors.textMuted,
+    fontWeight: '600',
+  },
+  languageOptionTextActive: {
     color: colors.primary,
   },
   authActions: {
@@ -367,6 +443,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 24,
     paddingBottom: 48,
+    flexGrow: 1,
   },
   contentWide: {
     maxWidth: 1200,
@@ -623,6 +700,58 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textMuted,
     lineHeight: 20,
+  },
+  metricsGrid: {
+    gap: 12,
+  },
+  metricsGridWide: {
+    flexDirection: 'row',
+  },
+  metricCard: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.soft,
+  },
+  metricValue: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  metricLabel: {
+    marginTop: 6,
+    fontSize: 13,
+    color: colors.textMuted,
+  },
+  testimonialGrid: {
+    gap: 12,
+  },
+  testimonialGridWide: {
+    flexDirection: 'row',
+  },
+  testimonialCard: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.soft,
+  },
+  testimonialQuote: {
+    fontSize: 14,
+    color: colors.text,
+    lineHeight: 22,
+    fontStyle: 'italic',
+  },
+  testimonialMeta: {
+    marginTop: 10,
+    fontSize: 12,
+    color: colors.textMuted,
+    fontWeight: '600',
   },
   ctaTitle: {
     fontSize: 18,
