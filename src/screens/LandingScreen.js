@@ -385,7 +385,9 @@ const styles = StyleSheet.create({
     flex: 1,
     ...(isWeb && {
       marginTop: 80, // Space for fixed header
-      height: 'calc(100vh - 80px)',
+      maxHeight: 'calc(100vh - 80px)',
+      overflowY: 'scroll',
+      overflowX: 'hidden',
     }),
   },
   scrollContent: {
