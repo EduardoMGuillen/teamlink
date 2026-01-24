@@ -145,9 +145,9 @@ export default function DashboardScreen() {
   ];
 
   return (
-    <SafeAreaView style={[styles.container, hasCustomBackground && { backgroundColor: 'transparent' }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['top']}>
       <ScrollView
-        style={styles.scrollView}
+        style={[styles.scrollView, hasCustomBackground && styles.scrollViewTransparent]}
         contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
         showsVerticalScrollIndicator={false}
       >
@@ -324,8 +324,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  containerTransparent: {
+    backgroundColor: 'transparent',
+  },
   scrollView: {
     flex: 1,
+  },
+  scrollViewTransparent: {
+    backgroundColor: 'transparent',
   },
   scrollContent: {
     paddingBottom: 24,
