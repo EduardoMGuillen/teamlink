@@ -6,321 +6,257 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
-  Dimensions,
   Image,
+  Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radii, shadows } from '../utils/theme';
 import { useTranslation } from '../utils/useTranslation';
 
+const { width } = Dimensions.get('window');
+const isWeb = Platform.OS === 'web';
+const isMobile = width < 768;
+
 export default function LandingScreen() {
   const navigation = useNavigation();
   const { t, language, changeLanguage, availableLanguages } = useTranslation();
-  const isWeb = Platform.OS === 'web';
-  const { width } = Dimensions.get('window');
-  const isWide = width >= 1024;
-  const isCompact = width < 768;
-  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+
+  const handleLanguageSelect = (langCode) => {
+    changeLanguage(langCode);
+    setShowLanguageDropdown(false);
+  };
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.content,
-          isWide && styles.contentWide,
-          isCompact && styles.contentCompact,
-        ]}
+      {/* Header */}
+      <View style={[styles.header, isMobile && styles.headerMobile]}>
+        <View style={styles.brandRow}>
+          <Image 
+            source={require('../../logo.png')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.brand}>TeamLink</Text>
+        </View>
+        
+        <View style={styles.headerRight}>
+          {/* Language Selector */}
+          <View style={styles.languageContainer}>
+            <TouchableOpacity
+              style={styles.languageButton}
+              onPress={() => setShowLanguageDropdown(!showLanguageDropdown)}
+            >
+              <Ionicons name="globe-outline" size={18} color={colors.text} />
+              <Text style={styles.languageText}>
+                {availableLanguages.find(l => l.code === language)?.name || 'EN'}
+              </Text>
+              <Ionicons 
+                name={showLanguageDropdown ? "chevron-up" : "chevron-down"} 
+                size={16} 
+                color={colors.textMuted} 
+              />
+            </TouchableOpacity>
+            
+            {showLanguageDropdown && (
+              <View style={styles.languageDropdown}>
+                {availableLanguages.map((lang) => (
+                  <TouchableOpacity
+                    key={lang.code}
+                    style={[
+                      styles.languageOption,
+                      language === lang.code && styles.languageOptionActive
+                    ]}
+                    onPress={() => handleLanguageSelect(lang.code)}
+                  >
+                    <Text style={[
+                      styles.languageOptionText,
+                      language === lang.code && styles.languageOptionTextActive
+                    ]}>
+                      {lang.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+
+          {/* Auth Buttons */}
+          <TouchableOpacity 
+            style={styles.loginButton}
+            onPress={() => navigation.navigate('Login')}
+          >
+            <Text style={styles.loginButtonText}>Login</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.signUpButton}
+            onPress={() => navigation.navigate('SignUp')}
+          >
+            <Text style={styles.signUpButtonText}>Sign Up</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Main Content */}
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.header, isCompact && styles.headerCompact]}>
-          <View style={styles.brandRow}>
-            {isWeb ? (
-              <Image source={require('../../logo.png')} style={styles.logoImage} />
-            ) : (
-              <View style={styles.logoDot} />
-            )}
-            <Text style={styles.brand}>TeamLink</Text>
-          </View>
-          <View style={[styles.headerActions, isCompact && styles.headerActionsCompact]}>
-            <View style={styles.languageDropdown}>
-              <TouchableOpacity
-                style={styles.languageToggle}
-                onPress={() => setShowLanguageMenu(!showLanguageMenu)}
-              >
-                <Ionicons name="globe-outline" size={16} color={colors.textMuted} />
-                <Text style={styles.languageToggleText}>
-                  {language.toUpperCase()}
-                </Text>
-                <Ionicons
-                  name={showLanguageMenu ? 'chevron-up' : 'chevron-down'}
-                  size={14}
-                  color={colors.textMuted}
-                />
-              </TouchableOpacity>
-              {showLanguageMenu && (
-                <View style={styles.languageMenu}>
-                  {availableLanguages.map((lang) => (
-                    <TouchableOpacity
-                      key={lang.code}
-                      style={styles.languageOption}
-                      onPress={() => {
-                        changeLanguage(lang.code);
-                        setShowLanguageMenu(false);
-                      }}
-                    >
-                      <Text
-                        style={[
-                          styles.languageOptionText,
-                          language === lang.code && styles.languageOptionTextActive,
-                        ]}
-                      >
-                        {lang.name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-            </View>
-            <View style={styles.authActions}>
-              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                <Text style={styles.headerLink}>{t('login')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.headerButton}
-                onPress={() => navigation.navigate('SignUp')}
-              >
-                <Text style={styles.headerButtonText}>{t('signUp')}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
-        <View style={[styles.hero, isWide && styles.heroWide, isCompact && styles.heroCompact]}>
+        {/* Hero Section */}
+        <View style={[styles.heroSection, isMobile && styles.heroSectionMobile]}>
           <View style={styles.heroContent}>
-            <View style={styles.heroBadge}>
+            <View style={styles.badge}>
               <Ionicons name="sparkles" size={14} color={colors.primary} />
-              <Text style={styles.heroBadgeText}>Workforce OS</Text>
+              <Text style={styles.badgeText}>Workforce OS</Text>
             </View>
-            <Text style={styles.heroTitle}>
+            
+            <Text style={[styles.heroTitle, isMobile && styles.heroTitleMobile]}>
               The modern workspace for teams that move fast
             </Text>
-            <Text style={styles.heroSubtitle}>
-              TeamLink brings schedules, tasks, teams, and messaging into one
-              beautiful hub. Built for growing companies that need clarity,
-              speed, and alignment every day.
+            
+            <Text style={[styles.heroSubtitle, isMobile && styles.heroSubtitleMobile]}>
+              TeamLink brings schedules, tasks, teams, and messaging into one beautiful hub. 
+              Built for growing companies that need clarity, speed, and alignment every day.
             </Text>
-            <View style={[styles.heroActions, isCompact && styles.heroActionsCompact]}>
+            
+            <View style={[styles.ctaButtons, isMobile && styles.ctaButtonsMobile]}>
               <TouchableOpacity
-                style={[styles.primaryCta, isCompact && styles.primaryCtaFull]}
+                style={styles.primaryButton}
                 onPress={() => navigation.navigate('SignUp')}
               >
-                <Text style={styles.primaryCtaText}>Start free</Text>
+                <Text style={styles.primaryButtonText}>Start free</Text>
                 <Ionicons name="arrow-forward" size={16} color="#fff" />
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.secondaryCta, isCompact && styles.secondaryCtaFull]}
+                style={styles.secondaryButton}
                 onPress={() => navigation.navigate('Login')}
               >
-                <Text style={styles.secondaryCtaText}>{t('login')}</Text>
+                <Text style={styles.secondaryButtonText}>Login</Text>
               </TouchableOpacity>
             </View>
-            <View style={styles.trustRow}>
+            
+            <View style={styles.trustSection}>
               <Text style={styles.trustText}>Trusted by teams in</Text>
               <View style={styles.trustPills}>
-                <View style={styles.trustPill}>
-                  <Text style={styles.trustPillText}>Operations</Text>
-                </View>
-                <View style={styles.trustPill}>
-                  <Text style={styles.trustPillText}>Retail</Text>
-                </View>
-                <View style={styles.trustPill}>
-                  <Text style={styles.trustPillText}>Field Services</Text>
-                </View>
-                <View style={styles.trustPill}>
-                  <Text style={styles.trustPillText}>Hospitality</Text>
-                </View>
+                {['Operations', 'Retail', 'Field Services', 'Hospitality'].map((industry) => (
+                  <View key={industry} style={styles.pill}>
+                    <Text style={styles.pillText}>{industry}</Text>
+                  </View>
+                ))}
               </View>
             </View>
           </View>
-          <View style={[styles.heroCard, isCompact && styles.heroCardCompact]}>
-            <Text style={styles.heroCardTitle}>Today at a glance</Text>
-            <View style={styles.heroCardRow}>
-              <View style={styles.heroMetric}>
-                <Text style={styles.heroMetricLabel}>Active teams</Text>
-                <Text style={styles.heroMetricValue}>12</Text>
+          
+          {/* Dashboard Preview */}
+          <View style={[styles.dashboardCard, isMobile && styles.dashboardCardMobile]}>
+            <Text style={styles.dashboardTitle}>Today at a glance</Text>
+            <View style={styles.metricsGrid}>
+              <View style={styles.metric}>
+                <Text style={styles.metricLabel}>Active teams</Text>
+                <Text style={styles.metricValue}>12</Text>
               </View>
-              <View style={styles.heroMetric}>
-                <Text style={styles.heroMetricLabel}>Tasks done</Text>
-                <Text style={styles.heroMetricValue}>34</Text>
+              <View style={styles.metric}>
+                <Text style={styles.metricLabel}>Tasks done</Text>
+                <Text style={styles.metricValue}>34</Text>
+              </View>
+              <View style={styles.metric}>
+                <Text style={styles.metricLabel}>Events</Text>
+                <Text style={styles.metricValue}>5</Text>
+              </View>
+              <View style={styles.metric}>
+                <Text style={styles.metricLabel}>Messages</Text>
+                <Text style={styles.metricValue}>128</Text>
               </View>
             </View>
-            <View style={styles.heroCardRow}>
-              <View style={styles.heroMetric}>
-                <Text style={styles.heroMetricLabel}>Events</Text>
-                <Text style={styles.heroMetricValue}>5</Text>
-              </View>
-              <View style={styles.heroMetric}>
-                <Text style={styles.heroMetricLabel}>Messages</Text>
-                <Text style={styles.heroMetricValue}>128</Text>
-              </View>
-            </View>
-            <View style={styles.heroCardFooter}>
+            <View style={styles.dashboardFooter}>
               <Ionicons name="calendar" size={16} color={colors.primary} />
-              <Text style={styles.heroCardFooterText}>
+              <Text style={styles.dashboardFooterText}>
                 Planner keeps everyone aligned in real time
               </Text>
             </View>
           </View>
         </View>
 
-        <View style={[styles.featureGrid, isWide && styles.featureGridWide]}>
-          <View style={styles.featureCard}>
-            <Ionicons name="calendar" size={22} color={colors.primary} />
-            <Text style={styles.featureTitle}>Planner that stays accurate</Text>
-            <Text style={styles.featureText}>
-              Keep schedules, recurring shifts, and events perfectly aligned
-              across every device.
-            </Text>
-          </View>
-          <View style={styles.featureCard}>
-            <Ionicons name="checkmark-circle" size={22} color={colors.accent} />
-            <Text style={styles.featureTitle}>Tasks your team completes</Text>
-            <Text style={styles.featureText}>
-              Assign, track, and close tasks with clarity, ownership, and
-              momentum.
-            </Text>
-          </View>
-          <View style={styles.featureCard}>
-            <Ionicons name="chatbubbles" size={22} color="#A855F7" />
-            <Text style={styles.featureTitle}>Conversations in context</Text>
-            <Text style={styles.featureText}>
-              One-on-one and team chat keep decisions connected to the work.
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.sectionBlock}>
-          <Text style={styles.sectionHeading}>Everything your team uses daily</Text>
-          <Text style={styles.sectionSubheading}>
-            Built-in tools for planning, delivery, collaboration, and team focus.
+        {/* Features Section */}
+        <View style={styles.featuresSection}>
+          <Text style={[styles.sectionTitle, isMobile && styles.sectionTitleMobile]}>
+            Everything your team needs
           </Text>
-          <View style={[styles.stackGrid, isWide && styles.stackGridWide]}>
-            <View style={styles.stackItem}>
-              <Ionicons name="sparkles" size={20} color={colors.accent} />
-              <Text style={styles.stackTitle}>Daily Motivation</Text>
-              <Text style={styles.stackText}>
-                Spark keeps teams aligned with daily focus prompts and
-                configurable notifications.
-              </Text>
-            </View>
-            <View style={styles.stackItem}>
-              <Ionicons name="people" size={20} color="#22C55E" />
-              <Text style={styles.stackTitle}>Teams & Approvals</Text>
-              <Text style={styles.stackText}>
-                Create teams, approve join requests, and invite members by
-                email with role control.
-              </Text>
-            </View>
-            <View style={styles.stackItem}>
-              <Ionicons name="color-palette" size={20} color="#0EA5E9" />
-              <Text style={styles.stackTitle}>Custom Backgrounds</Text>
-              <Text style={styles.stackText}>
-                Personalize the workspace with curated backgrounds from
-                Settings.
-              </Text>
-            </View>
-            <View style={styles.stackItem}>
-              <Ionicons name="notifications" size={20} color="#F97316" />
-              <Text style={styles.stackTitle}>Updates & Alerts</Text>
-              <Text style={styles.stackText}>
-                Broadcast updates and keep every team member in sync.
-              </Text>
-            </View>
+          <Text style={[styles.sectionSubtitle, isMobile && styles.sectionSubtitleMobile]}>
+            Built-in tools for planning, delivery, collaboration, and team focus
+          </Text>
+          
+          <View style={[styles.featuresGrid, isMobile && styles.featuresGridMobile]}>
+            {[
+              {
+                icon: 'calendar',
+                color: colors.primary,
+                title: 'Planner that stays accurate',
+                description: 'Keep schedules, recurring shifts, and events perfectly aligned across every device.'
+              },
+              {
+                icon: 'checkmark-circle',
+                color: colors.accent,
+                title: 'Tasks your team completes',
+                description: 'Assign, track, and close tasks with clarity, ownership, and momentum.'
+              },
+              {
+                icon: 'chatbubbles',
+                color: '#A855F7',
+                title: 'Conversations in context',
+                description: 'One-on-one and team chat keep decisions connected to the work.'
+              },
+              {
+                icon: 'people',
+                color: '#10B981',
+                title: 'Teams & Approvals',
+                description: 'Create teams, approve join requests, and invite members by email with role control.'
+              },
+              {
+                icon: 'sparkles',
+                color: colors.accent,
+                title: 'Daily Motivation',
+                description: 'Spark keeps teams aligned with daily focus prompts and configurable notifications.'
+              },
+              {
+                icon: 'image',
+                color: '#3B82F6',
+                title: 'Custom Backgrounds',
+                description: 'Personalize the workspace with curated backgrounds from Settings.'
+              }
+            ].map((feature, index) => (
+              <View key={index} style={styles.featureCard}>
+                <View style={[styles.featureIcon, { backgroundColor: `${feature.color}15` }]}>
+                  <Ionicons name={feature.icon} size={24} color={feature.color} />
+                </View>
+                <Text style={styles.featureTitle}>{feature.title}</Text>
+                <Text style={styles.featureDescription}>{feature.description}</Text>
+              </View>
+            ))}
           </View>
         </View>
 
-        <View style={styles.sectionBlock}>
-          <Text style={styles.sectionHeading}>How TeamLink works</Text>
-          <View style={styles.steps}>
-            <View style={styles.stepCard}>
-              <Text style={styles.stepNumber}>01</Text>
-              <Text style={styles.stepTitle}>Create your workspace</Text>
-              <Text style={styles.stepText}>
-                Set up your team, define roles, and invite members instantly.
-              </Text>
-            </View>
-            <View style={styles.stepCard}>
-              <Text style={styles.stepNumber}>02</Text>
-              <Text style={styles.stepTitle}>Plan the week</Text>
-              <Text style={styles.stepText}>
-                Use Planner to schedule events, shifts, and recurring schedules.
-              </Text>
-            </View>
-            <View style={styles.stepCard}>
-              <Text style={styles.stepNumber}>03</Text>
-              <Text style={styles.stepTitle}>Execute with clarity</Text>
-              <Text style={styles.stepText}>
-                Track tasks, chat with members, and keep progress visible.
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.sectionBlock}>
-          <Text style={styles.sectionHeading}>Built for real operations</Text>
-          <View style={[styles.metricsGrid, isWide && styles.metricsGridWide]}>
-            <View style={styles.metricCard}>
-              <Text style={styles.metricValue}>30%</Text>
-              <Text style={styles.metricLabel}>Faster task completion</Text>
-            </View>
-            <View style={styles.metricCard}>
-              <Text style={styles.metricValue}>2x</Text>
-              <Text style={styles.metricLabel}>Fewer scheduling conflicts</Text>
-            </View>
-            <View style={styles.metricCard}>
-              <Text style={styles.metricValue}>1 hub</Text>
-              <Text style={styles.metricLabel}>Tasks, chat, planner, updates</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.sectionBlock}>
-          <Text style={styles.sectionHeading}>Teams who love TeamLink</Text>
-          <View style={[styles.testimonialGrid, isWide && styles.testimonialGridWide]}>
-            <View style={styles.testimonialCard}>
-              <Text style={styles.testimonialQuote}>
-                “We replaced 4 tools with TeamLink. Everyone finally knows what to do.”
-              </Text>
-              <Text style={styles.testimonialMeta}>Operations Lead • 120 staff</Text>
-            </View>
-            <View style={styles.testimonialCard}>
-              <Text style={styles.testimonialQuote}>
-                “Planner + Tasks + Chat keep us aligned every shift.”
-              </Text>
-              <Text style={styles.testimonialMeta}>Retail Manager • Multi-site</Text>
-            </View>
-          </View>
-        </View>
-
+        {/* CTA Banner */}
         <View style={styles.ctaBanner}>
-          <View>
-            <Text style={styles.ctaTitle}>Ready to bring your team together?</Text>
-            <Text style={styles.ctaSubtitle}>
+          <View style={styles.ctaBannerContent}>
+            <Text style={styles.ctaBannerTitle}>Ready to bring your team together?</Text>
+            <Text style={styles.ctaBannerSubtitle}>
               Launch TeamLink in minutes and stay in sync from day one.
             </Text>
           </View>
           <TouchableOpacity
-            style={styles.bannerButton}
+            style={styles.ctaBannerButton}
             onPress={() => navigation.navigate('SignUp')}
           >
-            <Text style={styles.bannerButtonText}>Create your workspace</Text>
+            <Text style={styles.ctaBannerButtonText}>Create your workspace</Text>
           </TouchableOpacity>
         </View>
 
+        {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>© {new Date().getFullYear()} TeamLink</Text>
+          <Text style={styles.footerText}>© {new Date().getFullYear()} TeamLink. All rights reserved.</Text>
         </View>
       </ScrollView>
     </View>
@@ -333,479 +269,404 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: isWeb ? 48 : 20,
+    paddingVertical: 20,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    backgroundColor: colors.surface,
+    ...(isWeb && {
+      position: 'sticky',
+      top: 0,
+      zIndex: 100,
+    }),
   },
-  headerCompact: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: 12,
+  headerMobile: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
   },
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
-  logoImage: {
-    width: 28,
-    height: 28,
-  },
-  logoDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: colors.primary,
+  logo: {
+    width: 32,
+    height: 32,
   },
   brand: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: colors.text,
   },
-  headerActions: {
+  headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
   },
-  headerActionsCompact: {
-    width: '100%',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: 10,
-  },
-  languageDropdown: {
+  languageContainer: {
     position: 'relative',
   },
-  languageToggle: {
+  languageButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
     backgroundColor: colors.surfaceAlt,
   },
-  languageToggleText: {
-    fontSize: 12,
+  languageText: {
+    fontSize: 14,
     fontWeight: '600',
-    color: colors.textMuted,
+    color: colors.text,
   },
-  languageMenu: {
+  languageDropdown: {
     position: 'absolute',
-    top: 38,
-    left: 0,
+    top: '100%',
+    right: 0,
+    marginTop: 4,
     backgroundColor: colors.surface,
-    borderRadius: radii.md,
-    paddingVertical: 6,
-    minWidth: 120,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
-    ...shadows.soft,
-    zIndex: 10,
+    minWidth: 120,
+    ...shadows.card,
+    zIndex: 1000,
   },
   languageOption: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  languageOptionActive: {
+    backgroundColor: `${colors.primary}15`,
   },
   languageOptionText: {
-    fontSize: 12,
-    color: colors.textMuted,
-    fontWeight: '600',
+    fontSize: 14,
+    color: colors.text,
   },
   languageOptionTextActive: {
     color: colors.primary,
+    fontWeight: '600',
   },
-  authActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
+  loginButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
-  headerLink: {
+  loginButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.textMuted,
+    color: colors.text,
   },
-  headerButton: {
+  signUpButton: {
     backgroundColor: colors.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
   },
-  headerButtonText: {
-    color: '#fff',
+  signUpButtonText: {
+    fontSize: 14,
     fontWeight: '600',
-    fontSize: 13,
+    color: '#fff',
   },
-  scroll: {
+  scrollView: {
     flex: 1,
   },
-  content: {
-    padding: 24,
+  scrollContent: {
     paddingBottom: 48,
-    flexGrow: 1,
   },
-  contentCompact: {
-    paddingHorizontal: 16,
-    paddingBottom: 60,
-  },
-  contentWide: {
-    maxWidth: 1200,
-    alignSelf: 'center',
-    width: '100%',
-  },
-  hero: {
-    gap: 24,
-  },
-  heroWide: {
+  heroSection: {
     flexDirection: 'row',
-    alignItems: 'stretch',
+    gap: 32,
+    paddingHorizontal: isWeb ? 48 : 20,
+    paddingTop: 48,
+    paddingBottom: 64,
+    ...(isWeb && {
+      maxWidth: 1200,
+      alignSelf: 'center',
+      width: '100%',
+    }),
   },
-  heroCompact: {
+  heroSectionMobile: {
     flexDirection: 'column',
+    paddingTop: 32,
+    paddingBottom: 40,
   },
   heroContent: {
     flex: 1,
   },
-  heroBadge: {
-    alignSelf: 'flex-start',
+  badge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 10,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 999,
+    borderRadius: 20,
     backgroundColor: '#EEF2FF',
+    marginBottom: 16,
   },
-  heroBadgeText: {
+  badgeText: {
     fontSize: 12,
     fontWeight: '600',
     color: colors.primary,
   },
   heroTitle: {
-    fontSize: Platform.OS === 'web' ? 36 : 30,
+    fontSize: 48,
     fontWeight: '800',
     color: colors.text,
-    marginTop: 16,
-    lineHeight: Platform.OS === 'web' ? 42 : 38,
+    lineHeight: 56,
+    marginBottom: 16,
+  },
+  heroTitleMobile: {
+    fontSize: 32,
+    lineHeight: 40,
   },
   heroSubtitle: {
-    fontSize: 16,
+    fontSize: 18,
     color: colors.textMuted,
-    marginTop: 12,
+    lineHeight: 28,
+    marginBottom: 32,
+  },
+  heroSubtitleMobile: {
+    fontSize: 16,
     lineHeight: 24,
   },
-  heroActions: {
+  ctaButtons: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 12,
-    marginTop: 20,
+    marginBottom: 32,
   },
-  heroActionsCompact: {
+  ctaButtonsMobile: {
     flexDirection: 'column',
-    alignItems: 'stretch',
+    width: '100%',
   },
-  primaryCta: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 12,
+  primaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
     ...shadows.soft,
   },
-  primaryCtaFull: {
-    justifyContent: 'center',
-    width: '100%',
-  },
-  primaryCtaText: {
-    color: '#fff',
+  primaryButtonText: {
+    fontSize: 16,
     fontWeight: '700',
-    fontSize: 14,
+    color: '#fff',
   },
-  secondaryCta: {
+  secondaryButton: {
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
     borderRadius: 12,
     backgroundColor: colors.surface,
   },
-  secondaryCtaFull: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  secondaryCtaText: {
-    color: colors.text,
+  secondaryButtonText: {
+    fontSize: 16,
     fontWeight: '600',
-    fontSize: 14,
+    color: colors.text,
   },
-  trustRow: {
-    marginTop: 18,
+  trustSection: {
+    marginTop: 24,
   },
   trustText: {
-    fontSize: 12,
+    fontSize: 14,
     color: colors.textMuted,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   trustPills: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
-  trustPill: {
-    paddingHorizontal: 10,
+  pill: {
+    paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 999,
+    borderRadius: 20,
     backgroundColor: colors.surfaceAlt,
   },
-  trustPillText: {
-    fontSize: 12,
+  pillText: {
+    fontSize: 13,
     fontWeight: '600',
     color: colors.text,
   },
-  heroCard: {
+  dashboardCard: {
     flex: 1,
     backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    padding: 20,
+    borderRadius: radii.xl,
+    padding: 24,
     borderWidth: 1,
     borderColor: colors.border,
-    ...shadows.soft,
+    ...shadows.card,
+    maxWidth: 400,
   },
-  heroCardCompact: {
-    width: '100%',
+  dashboardCardMobile: {
+    maxWidth: '100%',
+    marginTop: 32,
   },
-  heroCardTitle: {
-    fontSize: 16,
+  dashboardTitle: {
+    fontSize: 18,
     fontWeight: '700',
     color: colors.text,
-    marginBottom: 12,
+    marginBottom: 20,
   },
-  heroCardRow: {
+  metricsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
-    marginBottom: 12,
+    marginBottom: 20,
   },
-  heroMetric: {
+  metric: {
     flex: 1,
+    minWidth: '45%',
     backgroundColor: colors.surfaceAlt,
-    padding: 12,
+    padding: 16,
     borderRadius: radii.md,
   },
-  heroMetricLabel: {
+  metricLabel: {
     fontSize: 12,
     color: colors.textMuted,
+    marginBottom: 8,
   },
-  heroMetricValue: {
-    fontSize: 20,
+  metricValue: {
+    fontSize: 28,
     fontWeight: '700',
     color: colors.text,
-    marginTop: 4,
   },
-  heroCardFooter: {
+  dashboardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 6,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
-  heroCardFooterText: {
-    fontSize: 12,
+  dashboardFooterText: {
+    fontSize: 13,
     color: colors.textMuted,
   },
-  featureGrid: {
-    marginTop: 32,
-    gap: 16,
+  featuresSection: {
+    paddingHorizontal: isWeb ? 48 : 20,
+    paddingVertical: 64,
+    backgroundColor: colors.surfaceAlt,
+    ...(isWeb && {
+      maxWidth: 1200,
+      alignSelf: 'center',
+      width: '100%',
+    }),
   },
-  featureGridWide: {
+  sectionTitle: {
+    fontSize: 36,
+    fontWeight: '800',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  sectionTitleMobile: {
+    fontSize: 28,
+  },
+  sectionSubtitle: {
+    fontSize: 18,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginBottom: 48,
+  },
+  sectionSubtitleMobile: {
+    fontSize: 16,
+    marginBottom: 32,
+  },
+  featuresGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 24,
+  },
+  featuresGridMobile: {
+    flexDirection: 'column',
+    gap: 16,
   },
   featureCard: {
     flex: 1,
+    minWidth: isMobile ? '100%' : '30%',
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
-    padding: 18,
-    gap: 8,
+    padding: 24,
     borderWidth: 1,
     borderColor: colors.border,
     ...shadows.soft,
   },
-  featureTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  featureText: {
-    fontSize: 13,
-    color: colors.textMuted,
-    lineHeight: 20,
-  },
-  ctaBanner: {
-    marginTop: 32,
-    padding: 20,
-    borderRadius: radii.lg,
-    backgroundColor: colors.primary,
-    flexDirection: 'row',
+  featureIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: 16,
+    justifyContent: 'center',
+    marginBottom: 16,
   },
-  sectionBlock: {
-    marginTop: 32,
-  },
-  sectionHeading: {
-    fontSize: 20,
+  featureTitle: {
+    fontSize: 18,
     fontWeight: '700',
     color: colors.text,
     marginBottom: 8,
   },
-  sectionSubheading: {
+  featureDescription: {
     fontSize: 14,
     color: colors.textMuted,
-    marginBottom: 16,
+    lineHeight: 22,
   },
-  stackGrid: {
-    gap: 14,
+  ctaBanner: {
+    marginHorizontal: isWeb ? 48 : 20,
+    marginTop: 64,
+    marginBottom: 48,
+    padding: 32,
+    backgroundColor: colors.primary,
+    borderRadius: radii.xl,
+    flexDirection: isMobile ? 'column' : 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 24,
+    ...shadows.card,
+    ...(isWeb && {
+      maxWidth: 1200,
+      alignSelf: 'center',
+      width: '100%',
+    }),
   },
-  stackGridWide: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  stackItem: {
+  ctaBannerContent: {
     flex: 1,
-    minWidth: 220,
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.soft,
   },
-  stackTitle: {
-    marginTop: 8,
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.text,
+  ctaBannerTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#fff',
+    marginBottom: 8,
   },
-  stackText: {
-    marginTop: 6,
-    fontSize: 13,
-    color: colors.textMuted,
-    lineHeight: 20,
+  ctaBannerSubtitle: {
+    fontSize: 16,
+    color: '#E0E7FF',
   },
-  steps: {
-    gap: 14,
+  ctaBannerButton: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 12,
   },
-  stepCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.soft,
-  },
-  stepNumber: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  stepTitle: {
-    marginTop: 6,
+  ctaBannerButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.text,
-  },
-  stepText: {
-    marginTop: 6,
-    fontSize: 13,
-    color: colors.textMuted,
-    lineHeight: 20,
-  },
-  metricsGrid: {
-    gap: 12,
-  },
-  metricsGridWide: {
-    flexDirection: 'row',
-  },
-  metricCard: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.soft,
-  },
-  metricValue: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  metricLabel: {
-    marginTop: 6,
-    fontSize: 13,
-    color: colors.textMuted,
-  },
-  testimonialGrid: {
-    gap: 12,
-  },
-  testimonialGridWide: {
-    flexDirection: 'row',
-  },
-  testimonialCard: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.soft,
-  },
-  testimonialQuote: {
-    fontSize: 14,
-    color: colors.text,
-    lineHeight: 22,
-    fontStyle: 'italic',
-  },
-  testimonialMeta: {
-    marginTop: 10,
-    fontSize: 12,
-    color: colors.textMuted,
-    fontWeight: '600',
-  },
-  ctaTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  ctaSubtitle: {
-    fontSize: 13,
-    color: '#E0E7FF',
-    marginTop: 6,
-  },
-  bannerButton: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 999,
-  },
-  bannerButtonText: {
     color: colors.primary,
-    fontWeight: '700',
-    fontSize: 13,
   },
   footer: {
-    marginTop: 32,
+    paddingHorizontal: isWeb ? 48 : 20,
+    paddingVertical: 32,
     alignItems: 'center',
   },
   footerText: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.textMuted,
   },
 });
