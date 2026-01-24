@@ -18,6 +18,11 @@ import { tasksService } from '../services/tasksService';
 import { notificationsService } from '../services/notificationsService';
 import { calendarScheduleService } from '../services/calendarScheduleService';
 
+const toLocalDateString = (date) => {
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+};
+
 export default function DashboardScreen() {
   const { currentUser } = useAppState();
   const navigation = useNavigation();
@@ -55,7 +60,7 @@ export default function DashboardScreen() {
   const loadTodayActivities = async () => {
     if (!currentUser?.id) return;
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = toLocalDateString(new Date());
       const activities = await calendarScheduleService.getActivitiesForDate(currentUser.id, today);
       setTodayActivities(activities);
     } catch (error) {

@@ -21,10 +21,15 @@ import { useAppState } from '../context/AppStateContext';
 import { calendarScheduleService } from '../services/calendarScheduleService';
 import { colors, radii, shadows } from '../utils/theme';
 
+const toLocalDateString = (date) => {
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+};
+
 export default function ScheduleScreen() {
   const { t } = useTranslation();
   const { currentUser } = useAppState();
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(toLocalDateString(new Date()));
   const [isLoading, setIsLoading] = useState(false);
   const [recurringSchedules, setRecurringSchedules] = useState([]);
   const [calendarEvents, setCalendarEvents] = useState([]);

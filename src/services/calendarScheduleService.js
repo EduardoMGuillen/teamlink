@@ -1,6 +1,20 @@
 import { supabase } from '../config/supabase';
 
 export const calendarScheduleService = {
+  normalizeDateInput(dateInput) {
+    if (dateInput instanceof Date) {
+      return new Date(dateInput);
+    }
+    if (typeof dateInput === 'string') {
+      const dateOnlyMatch = /^\d{4}-\d{2}-\d{2}$/.test(dateInput);
+      if (dateOnlyMatch) {
+        const [year, month, day] = dateInput.split('-').map(Number);
+        return new Date(year, month - 1, day);
+      }
+    }
+    return new Date(dateInput);
+  },
+
   // ========== RECURRING SCHEDULES ==========
   
   // Obtener todos los horarios recurrentes del usuario
@@ -340,7 +354,7 @@ export const calendarScheduleService = {
   // Obtener todas las actividades para una fecha específica (recurrentes + eventos)
   async getActivitiesForDate(userId, date) {
     try {
-      const dateObj = new Date(date);
+      const dateObj = this.normalizeDateInput(date);
       const dayOfWeek = dateObj.getDay();
       const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
       const dayName = dayNames[dayOfWeek];

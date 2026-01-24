@@ -15,6 +15,7 @@ import { colors, shadows, radii } from './src/utils/theme';
 import LoginScreen from './src/screens/LoginScreen';
 import SignUpScreen from './src/screens/SignUpScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
+import LandingScreen from './src/screens/LandingScreen';
 // import TimeClockScreen from './src/screens/TimeClockScreen'; // Temporarily hidden
 import ScheduleScreen from './src/screens/ScheduleScreen';
 import TasksScreen from './src/screens/TasksScreen';
@@ -115,6 +116,7 @@ function AppNavigator() {
     <NavigationContainer>
       <StatusBar style="auto" />
       <Stack.Navigator 
+        initialRouteName={Platform.OS === 'web' && !isAuthenticated ? 'Landing' : 'Login'}
         screenOptions={{ 
           headerShown: false,
           ...(Platform.OS === 'web' && {
@@ -261,6 +263,9 @@ function AppNavigator() {
           </>
         ) : (
           <>
+            {Platform.OS === 'web' && (
+              <Stack.Screen name="Landing" component={LandingScreen} />
+            )}
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="SignUp" component={SignUpScreen} />
             <Stack.Screen 
