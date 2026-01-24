@@ -9,14 +9,16 @@ import { ActivityIndicator, View, Platform } from 'react-native';
 import { AppStateProvider, useAppState } from './src/context/AppStateContext';
 import { i18n } from './src/utils/i18n';
 import { useTranslation } from './src/utils/useTranslation';
+import { colors, shadows, radii } from './src/utils/theme';
 
 // Screens
 import LoginScreen from './src/screens/LoginScreen';
 import SignUpScreen from './src/screens/SignUpScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
-import TimeClockScreen from './src/screens/TimeClockScreen';
+// import TimeClockScreen from './src/screens/TimeClockScreen'; // Temporarily hidden
 import ScheduleScreen from './src/screens/ScheduleScreen';
 import TasksScreen from './src/screens/TasksScreen';
+import TeamsScreen from './src/screens/TeamsScreen';
 import MoreScreen from './src/screens/MoreScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import DirectoryScreen from './src/screens/DirectoryScreen';
@@ -42,33 +44,50 @@ function MainTabs() {
 
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Time') {
-            iconName = focused ? 'time' : 'time-outline';
           } else if (route.name === 'Schedule') {
             iconName = focused ? 'calendar' : 'calendar-outline';
             // Tab name will be set in screenOptions
           } else if (route.name === 'Tasks') {
             iconName = focused ? 'checkmark-circle' : 'checkmark-circle-outline';
+          } else if (route.name === 'Teams') {
+            iconName = focused ? 'people' : 'people-outline';
           } else if (route.name === 'More') {
             iconName = focused ? 'ellipsis-horizontal-circle' : 'ellipsis-horizontal-circle-outline';
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopWidth: 0,
+          height: 64,
+          paddingBottom: 8,
+          paddingTop: 6,
+          ...(Platform.OS !== 'web' ? shadows.soft : {}),
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+        },
+        tabBarItemStyle: {
+          borderRadius: radii.md,
+          marginHorizontal: 6,
+        },
         headerShown: false,
         tabBarLabel: route.name === 'Schedule' ? t('calendarSchedule') : undefined,
       })}
     >
       <Tab.Screen name="Home" component={DashboardScreen} />
-      <Tab.Screen name="Time" component={TimeClockScreen} />
+      {/* <Tab.Screen name="Time" component={TimeClockScreen} /> Temporarily hidden */}
       <Tab.Screen 
         name="Schedule" 
         component={ScheduleScreen}
         options={{ tabBarLabel: t('calendarSchedule') }}
       />
       <Tab.Screen name="Tasks" component={TasksScreen} />
+      <Tab.Screen name="Teams" component={TeamsScreen} />
       <Tab.Screen name="More" component={MoreScreen} />
     </Tab.Navigator>
   );

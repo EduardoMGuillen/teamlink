@@ -51,6 +51,19 @@ export const calendarScheduleService = {
   // Crear un nuevo horario recurrente
   async createRecurringSchedule(scheduleData) {
     try {
+      // Verificar que el usuario esté autenticado
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        console.error('No active session:', sessionError);
+        return { success: false, error: 'User not authenticated. Please log in again.' };
+      }
+
+      // Verificar que el userId coincida con el usuario autenticado
+      if (session.user.id !== scheduleData.userId) {
+        console.error('User ID mismatch:', session.user.id, scheduleData.userId);
+        return { success: false, error: 'User ID does not match authenticated user' };
+      }
+
       const { data, error } = await supabase
         .from('recurring_schedules')
         .insert({
@@ -192,6 +205,19 @@ export const calendarScheduleService = {
   // Crear un nuevo evento del calendario
   async createCalendarEvent(eventData) {
     try {
+      // Verificar que el usuario esté autenticado
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        console.error('No active session:', sessionError);
+        return { success: false, error: 'User not authenticated. Please log in again.' };
+      }
+
+      // Verificar que el userId coincida con el usuario autenticado
+      if (session.user.id !== eventData.userId) {
+        console.error('User ID mismatch:', session.user.id, eventData.userId);
+        return { success: false, error: 'User ID does not match authenticated user' };
+      }
+
       const { data, error } = await supabase
         .from('calendar_events')
         .insert({

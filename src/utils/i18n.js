@@ -86,6 +86,10 @@ const translations = {
     chat: 'Chat',
     updates: 'Updates',
     team: 'Team',
+    teams: 'Teams',
+    createTeam: 'Create Team',
+    joinTeam: 'Join Team',
+    teamsDescription: 'Create or join a team to collaborate with your colleagues',
     assignTo: 'Assign To',
     assignedBy: 'Assigned By',
     sendMessage: 'Send Message',
@@ -125,8 +129,8 @@ const translations = {
     changeStatus: 'Change Status',
     selectNewStatus: 'Select new status:',
     
-    // Calendar & Schedule
-    calendarSchedule: 'Calendar & Schedule',
+    // Planner
+    calendarSchedule: 'Planner',
     recurringSchedule: 'Recurring Schedule',
     calendarEvent: 'Calendar Event',
     addRecurringSchedule: 'Add Recurring Schedule',
@@ -260,6 +264,10 @@ const translations = {
     chat: 'Chat',
     updates: 'Actualizaciones',
     team: 'Equipo',
+    teams: 'Equipos',
+    createTeam: 'Crear Equipo',
+    joinTeam: 'Unirse a Equipo',
+    teamsDescription: 'Crea o únete a un equipo para colaborar con tus colegas',
     assignTo: 'Asignar A',
     assignedBy: 'Asignado Por',
     sendMessage: 'Enviar Mensaje',
@@ -298,8 +306,8 @@ const translations = {
     changeStatus: 'Cambiar Estado',
     selectNewStatus: 'Selecciona el nuevo estado:',
     
-    // Calendar & Schedule
-    calendarSchedule: 'Calendario y Horario',
+    // Planner
+    calendarSchedule: 'Planificador',
     recurringSchedule: 'Horario Recurrente',
     calendarEvent: 'Evento del Calendario',
     selectDays: 'Seleccionar Días',
@@ -429,6 +437,10 @@ const translations = {
     chat: 'Chat',
     updates: 'Mises à jour',
     team: 'Équipe',
+    teams: 'Équipes',
+    createTeam: 'Créer une Équipe',
+    joinTeam: 'Rejoindre une Équipe',
+    teamsDescription: 'Créez ou rejoignez une équipe pour collaborer avec vos collègues',
     assignTo: 'Assigner à',
     assignedBy: 'Assigné par',
     sendMessage: 'Envoyer un message',
@@ -467,8 +479,8 @@ const translations = {
     changeStatus: 'Changer le Statut',
     selectNewStatus: 'Sélectionnez le nouveau statut:',
     
-    // Calendar & Schedule
-    calendarSchedule: 'Calendrier et Horaires',
+    // Planner
+    calendarSchedule: 'Planificateur',
     recurringSchedule: 'Horaire Récurrent',
     calendarEvent: 'Événement du Calendrier',
     selectDays: 'Sélectionner les Jours',

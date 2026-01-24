@@ -11,8 +11,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAppState } from '../context/AppStateContext';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from '../utils/useTranslation';
+import { colors, radii, shadows } from '../utils/theme';
 import { tasksService } from '../services/tasksService';
-import { shiftsService } from '../services/shiftsService';
+// import { shiftsService } from '../services/shiftsService'; // Temporarily hidden
 import { notificationsService } from '../services/notificationsService';
 import { calendarScheduleService } from '../services/calendarScheduleService';
 
@@ -64,41 +65,19 @@ export default function DashboardScreen() {
     if (!currentUser?.id) return;
 
     try {
-      // Load tasks and shifts from database
-      const [tasks, weeklyHours] = await Promise.all([
-        tasksService.getTasks(currentUser.id),
-        shiftsService.getWeeklyHours(currentUser.id),
-      ]);
+      // Load tasks from database
+      const tasks = await tasksService.getTasks(currentUser.id);
 
       // Count completed tasks
       const completedTasks = tasks.filter((task) => task.status === 'completed').length;
 
       setStats({
-        hours: weeklyHours.toFixed(1),
+        hours: 0, // Temporarily hidden
         tasks: completedTasks,
       });
 
-      // Load recent shifts for activity
-      const shifts = await shiftsService.getShifts(currentUser.id);
-
       // Build recent activity
       const activities = [];
-
-      // Add recent shifts
-      shifts
-        .filter((shift) => shift.clockOut)
-        .slice(0, 3)
-        .forEach((shift) => {
-          activities.push({
-            id: `shift-${shift.id}`,
-            type: 'shift',
-            title: t('clockedInAt'),
-            subtitle: formatTime(shift.clockIn),
-            icon: 'time',
-            time: getTimeAgo(shift.clockIn),
-            timestamp: shift.clockIn.getTime(),
-          });
-        });
 
       // Add recent task completions
       tasks
@@ -106,7 +85,7 @@ export default function DashboardScreen() {
         .sort((a, b) => {
           return new Date(b.dueDate) - new Date(a.dueDate);
         })
-        .slice(0, 3)
+        .slice(0, 5)
         .forEach((task) => {
           activities.push({
             id: `task-${task.id}`,
@@ -149,10 +128,10 @@ export default function DashboardScreen() {
   };
 
   const quickActions = [
-    { id: '1', icon: 'time', title: t('clockIn'), color: '#34C759', screen: 'Time' },
-    { id: '2', icon: 'calendar', title: t('viewSchedule'), color: '#007AFF', screen: 'Schedule' },
-    { id: '3', icon: 'checkmark-circle', title: t('myTasks'), color: '#FF9500', screen: 'Tasks' },
-    { id: '4', icon: 'chatbubble', title: t('messages'), color: '#AF52DE', screen: 'Chat' },
+    // { id: '1', icon: 'time', title: t('clockIn'), color: '#34C759', screen: 'Time' }, // Temporarily hidden
+    { id: '2', icon: 'calendar', title: t('viewSchedule'), color: colors.primary, bg: '#EEF2FF', screen: 'Schedule' },
+    { id: '3', icon: 'checkmark-circle', title: t('myTasks'), color: colors.accent, bg: '#FFF7ED', screen: 'Tasks' },
+    { id: '4', icon: 'chatbubble', title: t('messages'), color: '#A855F7', bg: '#F5F3FF', screen: 'Chat' },
   ];
 
   return (
@@ -168,7 +147,7 @@ export default function DashboardScreen() {
             style={styles.notificationButton}
             onPress={() => navigation.navigate('Notifications')}
           >
-            <Ionicons name="notifications" size={24} color="#007AFF" />
+            <Ionicons name="notifications" size={24} color={colors.primary} />
             {unreadNotifications > 0 && (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>
@@ -186,14 +165,14 @@ export default function DashboardScreen() {
             {quickActions.map((action) => (
               <TouchableOpacity
                 key={action.id}
-                style={styles.quickActionCard}
+                style={[styles.quickActionCard, { backgroundColor: action.bg }]}
                 onPress={() => {
-                  if (action.screen === 'Time') {
-                    navigation.navigate('MainTabs', { screen: 'Time' });
-                  } else if (action.screen === 'Tasks') {
+                  if (action.screen === 'Tasks') {
                     navigation.navigate('MainTabs', { screen: 'Tasks' });
                   } else if (action.screen === 'Schedule') {
                     navigation.navigate('MainTabs', { screen: 'Schedule' });
+                  } else if (action.screen === 'Chat') {
+                    navigation.navigate('Chat');
                   }
                 }}
               >
@@ -208,11 +187,11 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('thisWeek') || 'This Week'}</Text>
           <View style={styles.statsRow}>
-            <View style={styles.statCard}>
+            {/* <View style={styles.statCard}>
               <Ionicons name="time" size={24} color="#007AFF" />
               <Text style={styles.statValue}>{stats.hours}</Text>
               <Text style={styles.statLabel}>{t('hours') || 'Hours'}</Text>
-            </View>
+            </View> */}
             <View style={styles.statCard}>
               <Ionicons name="checkmark-circle" size={24} color="#34C759" />
               <Text style={styles.statValue}>{stats.tasks}</Text>
@@ -310,7 +289,7 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -320,16 +299,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 20,
-    paddingTop: 10,
+    paddingTop: 12,
   },
   welcomeText: {
-    fontSize: 16,
-    color: '#8E8E93',
+    fontSize: 14,
+    color: colors.textMuted,
+    fontWeight: '500',
   },
   nameText: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#000',
+    fontSize: 30,
+    fontWeight: '700',
+    color: colors.text,
     marginTop: 4,
   },
   section: {
@@ -337,9 +317,9 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#000',
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
     marginBottom: 12,
   },
   quickActionsGrid: {
@@ -349,18 +329,19 @@ const styles = StyleSheet.create({
   },
   quickActionCard: {
     width: '47%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
+    borderRadius: radii.lg,
+    padding: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 100,
+    minHeight: 110,
+    ...shadows.soft,
   },
   quickActionText: {
     fontSize: 14,
-    color: '#000',
+    color: colors.text,
     marginTop: 8,
     textAlign: 'center',
+    fontWeight: '600',
   },
   statsRow: {
     flexDirection: 'row',
@@ -368,34 +349,36 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
     padding: 16,
+    ...shadows.soft,
   },
   statValue: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: '700',
+    color: colors.text,
     marginTop: 8,
   },
   statLabel: {
-    fontSize: 14,
-    color: '#8E8E93',
+    fontSize: 13,
+    color: colors.textMuted,
     marginTop: 4,
   },
   activityCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
     padding: 12,
-    marginBottom: 8,
+    marginBottom: 10,
+    ...shadows.soft,
   },
   activityIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: '#007AFF20',
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: colors.chip,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -405,17 +388,18 @@ const styles = StyleSheet.create({
   },
   activityTitle: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#000',
+    fontWeight: '600',
+    color: colors.text,
   },
   activitySubtitle: {
-    fontSize: 14,
-    color: '#8E8E93',
+    fontSize: 13,
+    color: colors.textMuted,
     marginTop: 2,
   },
   activityTime: {
     fontSize: 12,
-    color: '#8E8E93',
+    color: colors.textMuted,
+    fontWeight: '600',
   },
   activityHeader: {
     flexDirection: 'row',

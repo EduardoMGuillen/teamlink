@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAppState } from '../context/AppStateContext';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from '../utils/useTranslation';
+import { colors, radii, shadows } from '../utils/theme';
 
 export default function MoreScreen() {
   const { currentUser, logout } = useAppState();
@@ -87,7 +88,7 @@ export default function MoreScreen() {
                 <Ionicons
                   name={item.icon}
                   size={24}
-                  color={item.color || '#007AFF'}
+                  color={item.color || colors.primary}
                 />
                 <Text
                   style={[styles.menuItemText, item.color && { color: item.color }]}
@@ -112,20 +113,24 @@ export default function MoreScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: colors.background,
   },
   profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     padding: 20,
+    marginHorizontal: 20,
+    marginTop: 12,
     marginBottom: 20,
+    borderRadius: radii.lg,
+    ...shadows.card,
   },
   avatar: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -140,44 +145,49 @@ const styles = StyleSheet.create({
   },
   profileName: {
     fontSize: 20,
-    fontWeight: '600',
-    color: '#000',
+    fontWeight: '700',
+    color: colors.text,
   },
   profileEmail: {
     fontSize: 14,
-    color: '#8E8E93',
+    color: colors.textMuted,
     marginTop: 4,
   },
   profileDepartment: {
     fontSize: 12,
-    color: '#007AFF',
+    color: colors.primary,
     marginTop: 2,
+    fontWeight: '600',
   },
   section: {
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#8E8E93',
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textMuted,
     textTransform: 'uppercase',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     marginBottom: 8,
+    letterSpacing: 0.6,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     padding: 16,
     paddingHorizontal: 20,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E5EA',
+    marginHorizontal: 20,
+    marginBottom: 10,
+    borderRadius: radii.lg,
+    ...shadows.soft,
   },
   menuItemText: {
     flex: 1,
     fontSize: 16,
-    color: '#000',
+    color: colors.text,
     marginLeft: 12,
+    fontWeight: '600',
   },
   chevron: {
     marginLeft: 'auto',

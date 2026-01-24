@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../utils/useTranslation';
+import { colors, radii, shadows } from '../utils/theme';
 import { useAppState } from '../context/AppStateContext';
 import { tasksService } from '../services/tasksService';
 import { teamsService } from '../services/teamsService';
@@ -110,7 +111,9 @@ export default function TasksScreen() {
     setTaskTitle('');
     setTaskDescription('');
     setTaskPriority('medium');
-    setTaskDueDate(new Date());
+    const today = new Date();
+    setTaskDueDate(today);
+    setTempDate(today); // Initialize tempDate
     setAssignedTo(null); // Reset assignment
     setShowModal(true);
   };
@@ -120,7 +123,9 @@ export default function TasksScreen() {
     setTaskTitle(task.title);
     setTaskDescription(task.description || '');
     setTaskPriority(task.priority);
-    setTaskDueDate(new Date(task.dueDate));
+    const dueDate = new Date(task.dueDate);
+    setTaskDueDate(dueDate);
+    setTempDate(dueDate); // Initialize tempDate for editing
     setShowModal(true);
   };
 
@@ -150,6 +155,8 @@ export default function TasksScreen() {
           setEditingTask(null);
           setTaskTitle('');
           setTaskDescription('');
+          setTaskDueDate(new Date());
+          setTempDate(new Date());
         } else {
           Alert.alert('Error', result.error || 'Failed to update task');
         }
@@ -167,6 +174,8 @@ export default function TasksScreen() {
           setShowModal(false);
           setTaskTitle('');
           setTaskDescription('');
+          setTaskDueDate(new Date());
+          setTempDate(new Date());
         } else {
           Alert.alert('Error', result.error || 'Failed to create task');
         }
@@ -504,18 +513,20 @@ export default function TasksScreen() {
                     min={new Date().toISOString().split('T')[0]}
                     onChange={(e) => {
                       if (e.target.value) {
-                        setTaskDueDate(new Date(e.target.value));
+                        const nextDate = new Date(`${e.target.value}T00:00:00`);
+                        setTaskDueDate(nextDate);
+                        setTempDate(nextDate);
                       }
                     }}
                     style={{
                       width: '100%',
                       padding: 16,
-                      border: '1px solid #E5E5EA',
+                      border: `1px solid ${colors.border}`,
                       borderRadius: 12,
                       fontSize: 16,
-                      backgroundColor: '#F2F2F7',
+                      backgroundColor: colors.surfaceAlt,
                       fontFamily: 'inherit',
-                      color: '#1a1a1a',
+                      color: colors.text,
                     }}
                   />
                 ) : (
@@ -544,6 +555,7 @@ export default function TasksScreen() {
                           setShowDatePicker(false);
                           if (selectedDate) {
                             setTaskDueDate(selectedDate);
+                            setTempDate(selectedDate);
                           }
                         }}
                       />
@@ -675,6 +687,7 @@ export default function TasksScreen() {
                   onChange={(event, selectedDate) => {
                     if (selectedDate) {
                       setTempDate(selectedDate);
+                      setTaskDueDate(selectedDate);
                     }
                   }}
                   style={styles.datePickerIOS}
@@ -727,7 +740,7 @@ export default function TasksScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -737,19 +750,20 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   title: {
-    fontSize: 34,
-    fontWeight: 'bold',
-    color: '#000',
+    fontSize: 30,
+    fontWeight: '800',
+    color: colors.text,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     marginHorizontal: 20,
     marginBottom: 12,
-    borderRadius: 12,
+    borderRadius: radii.lg,
     paddingHorizontal: 12,
-    height: 44,
+    height: 46,
+    ...shadows.soft,
   },
   searchIcon: {
     marginRight: 8,
@@ -757,7 +771,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#000',
+    color: colors.text,
   },
   sortContainer: {
     flexDirection: 'row',
@@ -766,23 +780,25 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sortLabel: {
-    fontSize: 14,
-    color: '#8E8E93',
+    fontSize: 13,
+    color: colors.textMuted,
     marginRight: 12,
+    fontWeight: '600',
   },
   sortButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: '#E5E5EA',
+    backgroundColor: colors.surfaceAlt,
     marginRight: 8,
   },
   sortButtonActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
   },
   sortButtonText: {
     fontSize: 12,
-    color: '#000',
+    color: colors.text,
+    fontWeight: '600',
   },
   sortButtonTextActive: {
     color: '#fff',
@@ -798,29 +814,31 @@ const styles = StyleSheet.create({
   dateButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F2F2F7',
-    borderRadius: 12,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radii.lg,
     padding: 16,
     gap: 12,
   },
   dateText: {
     flex: 1,
     fontSize: 16,
-    color: '#000',
+    color: colors.text,
+    fontWeight: '600',
   },
   filterButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#E5E5EA',
+    backgroundColor: colors.surfaceAlt,
     marginRight: 8,
   },
   filterButtonActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
   },
   filterText: {
-    fontSize: 14,
-    color: '#000',
+    fontSize: 13,
+    color: colors.text,
+    fontWeight: '600',
   },
   filterTextActive: {
     color: '#fff',
@@ -832,11 +850,12 @@ const styles = StyleSheet.create({
   },
   taskCard: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
     padding: 16,
     marginBottom: 12,
     alignItems: 'flex-start',
+    ...shadows.soft,
   },
   taskCheckbox: {
     marginRight: 12,
@@ -846,17 +865,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   taskTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
+    fontSize: 17,
+    fontWeight: '700',
+    color: colors.text,
   },
   taskTitleCompleted: {
     textDecorationLine: 'line-through',
     opacity: 0.5,
   },
   taskDescription: {
-    fontSize: 14,
-    color: '#8E8E93',
+    fontSize: 13,
+    color: colors.textMuted,
     marginTop: 4,
   },
   taskMeta: {
@@ -884,7 +903,8 @@ const styles = StyleSheet.create({
   },
   dueDateText: {
     fontSize: 12,
-    color: '#8E8E93',
+    color: colors.textMuted,
+    fontWeight: '600',
   },
   deleteButton: {
     padding: 8,
@@ -896,9 +916,9 @@ const styles = StyleSheet.create({
     paddingVertical: 60,
   },
   emptyText: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#8E8E93',
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.textMuted,
     marginTop: 16,
   },
   modalOverlay: {
@@ -907,9 +927,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radii.xl,
+    borderTopRightRadius: radii.xl,
     padding: 20,
     maxHeight: Platform.OS === 'ios' ? '90%' : '95%',
   },
@@ -927,26 +947,27 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   modalTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000',
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.text,
   },
   input: {
-    backgroundColor: '#F2F2F7',
-    borderRadius: 12,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radii.lg,
     padding: 16,
     fontSize: 16,
     marginBottom: 16,
+    color: colors.text,
   },
   textArea: {
     height: 100,
     textAlignVertical: 'top',
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-    marginBottom: 12,
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 10,
   },
   priorityButtons: {
     flexDirection: 'row',
