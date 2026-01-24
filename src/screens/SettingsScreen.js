@@ -11,10 +11,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAppState } from '../context/AppStateContext';
 import { useTranslation } from '../utils/useTranslation';
 import { Picker } from '@react-native-picker/picker';
+import { useNavigation } from '@react-navigation/native';
 
 export default function SettingsScreen() {
   const { currentUser, logout } = useAppState();
   const { t, language, changeLanguage, availableLanguages } = useTranslation();
+  const navigation = useNavigation();
 
   const handleLanguageChange = async (lang) => {
     await changeLanguage(lang);
@@ -90,6 +92,16 @@ export default function SettingsScreen() {
             <View style={styles.settingRow}>
               <Ionicons name="information-circle" size={24} color="#007AFF" />
               <Text style={styles.settingLabel}>{t('about')}</Text>
+              <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.settingCard}
+            onPress={() => navigation.navigate('ConnectionTest')}
+          >
+            <View style={styles.settingRow}>
+              <Ionicons name="server" size={24} color="#007AFF" />
+              <Text style={styles.settingLabel}>Database Connection Test</Text>
               <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
             </View>
           </TouchableOpacity>

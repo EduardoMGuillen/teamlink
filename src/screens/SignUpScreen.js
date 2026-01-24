@@ -83,17 +83,31 @@ export default function SignUpScreen() {
       });
 
       if (result.success) {
-        Alert.alert('Success', t('registrationSuccess'), [
-          {
-            text: 'OK',
-            onPress: () => {
-              // Login automatically after signup
-              navigation.navigate('Login');
+        // Si hay un mensaje especial, mostrarlo
+        if (result.user?.message) {
+          Alert.alert('Success', result.user.message, [
+            {
+              text: 'OK',
+              onPress: () => {
+                navigation.navigate('Login');
+              },
             },
-          },
-        ]);
+          ]);
+        } else {
+          Alert.alert('Success', t('registrationSuccess'), [
+            {
+              text: 'OK',
+              onPress: () => {
+                // Login automatically after signup
+                navigation.navigate('Login');
+              },
+            },
+          ]);
+        }
       } else {
-        Alert.alert('Error', result.error || 'Registration failed');
+        // Mostrar error con formato mejorado (soporta saltos de línea)
+        const errorMessage = result.error || 'Registration failed';
+        Alert.alert('Error', errorMessage);
       }
     } catch (error) {
       console.error('Sign up error:', error);
@@ -477,18 +491,22 @@ export default function SignUpScreen() {
                     <Text style={styles.modalDone}>{t('save')}</Text>
                   </TouchableOpacity>
                 </View>
-                <View style={{ height: 250 }}>
+                <View style={styles.pickerWrapper}>
                   <Picker
                     selectedValue={country}
-                    onValueChange={setCountry}
+                    onValueChange={(value) => {
+                      setCountry(value);
+                      setShowCountryPicker(false);
+                    }}
                     style={styles.modalPicker}
-                    itemStyle={{ height: 120 }}
+                    itemStyle={styles.pickerItem}
                   >
                     {countries.map((c) => (
                       <Picker.Item
                         key={c.value}
                         label={c.label}
                         value={c.value}
+                        color="#000000"
                       />
                     ))}
                   </Picker>
@@ -517,18 +535,22 @@ export default function SignUpScreen() {
                     <Text style={styles.modalDone}>{t('save')}</Text>
                   </TouchableOpacity>
                 </View>
-                <View style={{ height: 250 }}>
+                <View style={styles.pickerWrapper}>
                   <Picker
                     selectedValue={timezone}
-                    onValueChange={setTimezone}
+                    onValueChange={(value) => {
+                      setTimezone(value);
+                      setShowTimezonePicker(false);
+                    }}
                     style={styles.modalPicker}
-                    itemStyle={{ height: 120 }}
+                    itemStyle={styles.pickerItem}
                   >
                     {timezones.map((tz) => (
                       <Picker.Item
                         key={tz.value}
                         label={tz.label}
                         value={tz.value}
+                        color="#000000"
                       />
                     ))}
                   </Picker>
@@ -557,17 +579,20 @@ export default function SignUpScreen() {
                     <Text style={styles.modalDone}>{t('save')}</Text>
                   </TouchableOpacity>
                 </View>
-                <View style={{ height: 250 }}>
+                <View style={styles.pickerWrapper}>
                   <Picker
                     selectedValue={gender}
-                    onValueChange={setGender}
+                    onValueChange={(value) => {
+                      setGender(value);
+                      setShowGenderPicker(false);
+                    }}
                     style={styles.modalPicker}
-                    itemStyle={{ height: 120 }}
+                    itemStyle={styles.pickerItem}
                   >
-                    <Picker.Item label={t('selectGender') || 'Select Gender'} value="" />
-                    <Picker.Item label={t('male')} value="male" />
-                    <Picker.Item label={t('female')} value="female" />
-                    <Picker.Item label={t('other')} value="other" />
+                    <Picker.Item label={t('selectGender') || 'Select Gender'} value="" color="#000000" />
+                    <Picker.Item label={t('male')} value="male" color="#000000" />
+                    <Picker.Item label={t('female')} value="female" color="#000000" />
+                    <Picker.Item label={t('other')} value="other" color="#000000" />
                   </Picker>
                 </View>
               </View>
@@ -707,9 +732,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingBottom: 40,
-    maxHeight: '70%',
-    minHeight: 300,
+    paddingBottom: 0,
+    height: 300,
+    width: '100%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -733,8 +758,19 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontWeight: '600',
   },
-  modalPicker: {
-    height: 250,
+  pickerWrapper: {
+    flex: 1,
     width: '100%',
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+  },
+  modalPicker: {
+    flex: 1,
+    width: '100%',
+    color: '#000000',
+  },
+  pickerItem: {
+    color: '#000000',
+    fontSize: 18,
   },
 });

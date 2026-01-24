@@ -108,6 +108,16 @@ export default function LoginScreen() {
                 {t('dontHaveAccount')} {t('signUp')}
               </Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.testConnectionButton}
+              onPress={() => navigation.navigate('ConnectionTest')}
+            >
+              <Ionicons name="server-outline" size={16} color="#fff" />
+              <Text style={styles.testConnectionText}>
+                Test Database Connection
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <Text style={styles.footer}>
@@ -190,6 +200,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#fff',
     opacity: 0.9,
+  },
+  testConnectionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  testConnectionText: {
+    fontSize: 14,
+    color: '#fff',
+    marginLeft: 8,
+    fontWeight: '500',
   },
   footer: {
     fontSize: 12,

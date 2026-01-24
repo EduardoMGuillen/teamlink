@@ -21,6 +21,7 @@ import DirectoryScreen from './src/screens/DirectoryScreen';
 import ChatScreen from './src/screens/ChatScreen';
 import UpdatesScreen from './src/screens/UpdatesScreen';
 import NotificationsScreen from './src/screens/NotificationsScreen';
+import ConnectionTestScreen from './src/screens/ConnectionTestScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -90,11 +91,21 @@ function AppNavigator() {
             <Stack.Screen name="Chat" component={ChatScreen} />
             <Stack.Screen name="Updates" component={UpdatesScreen} />
             <Stack.Screen name="Notifications" component={NotificationsScreen} />
+            <Stack.Screen 
+              name="ConnectionTest" 
+              component={ConnectionTestScreen}
+              options={{ title: 'Connection Test' }}
+            />
           </>
         ) : (
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="SignUp" component={SignUpScreen} />
+            <Stack.Screen 
+              name="ConnectionTest" 
+              component={ConnectionTestScreen}
+              options={{ title: 'Connection Test', headerShown: true }}
+            />
           </>
         )}
       </Stack.Navigator>

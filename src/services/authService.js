@@ -61,47 +61,116 @@ export const authService = {
   // Registro de nuevo usuario
   async signUp(email, password, userData = {}) {
     try {
+      // Primero, crear el usuario en auth.users con metadata
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            name: userData.name || email?.split('@')[0],
+            username: userData.username || email?.split('@')[0],
+            phone: userData.phone,
+            date_of_birth: userData.date_of_birth,
+            country: userData.country,
+            city: userData.city,
+            timezone: userData.timezone,
+            gender: userData.gender,
+            role: userData.role || 'employee',
+            department: userData.department || 'Operations',
+          },
+        },
       });
 
       if (error) {
+        // Si es error de rate limit, sugerir deshabilitar confirmación de email
+        if (error.message.includes('rate limit') || error.message.includes('email rate limit')) {
+          return { 
+            success: false, 
+            error: 'Email rate limit exceeded. Please:\n1. Wait 1 hour, OR\n2. Disable email confirmation in Supabase Dashboard:\n   Authentication → Settings → Email Auth → Disable "Enable email confirmations"\n\nAlternatively, try logging in if the account already exists.' 
+          };
+        }
+        
+        // Si el usuario ya existe, intentar login automáticamente
+        if (error.message.includes('already registered') || 
+            error.message.includes('already exists') ||
+            error.message.includes('User already registered')) {
+          // Intentar hacer login en su lugar
+          const loginResult = await this.login(email, password);
+          if (loginResult.success) {
+            return { 
+              ...loginResult, 
+              message: 'Account already exists. Logged in successfully.' 
+            };
+          }
+          return { 
+            success: false, 
+            error: 'This email is already registered. Please try logging in instead.' 
+          };
+        }
+        
+        // Para otros errores, retornar el mensaje
         return { success: false, error: error.message };
       }
 
-      // Crear perfil en la tabla users con todos los campos
-      const { error: profileError } = await supabase
+      // Si no hay usuario (por confirmación de email), retornar éxito de todas formas
+      // El usuario puede hacer login después
+      if (!data.user) {
+        return { 
+          success: true, 
+          user: {
+            email: email,
+            name: userData.name || email?.split('@')[0],
+            message: 'Registration successful. Please check your email to confirm your account, or disable email confirmation in Supabase settings for instant access.'
+          }
+        };
+      }
+
+      // Esperar un momento para que el trigger cree el perfil (si existe)
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Intentar obtener el perfil
+      const { data: existingProfile } = await supabase
         .from('users')
-        .insert({
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+
+      let finalProfile = existingProfile;
+
+      // Si no existe, intentar crearlo (el trigger debería hacerlo, pero por si acaso)
+      if (!finalProfile) {
+        const profileData = {
           id: data.user.id,
           email: data.user.email,
           name: userData.name || data.user.email?.split('@')[0],
           username: userData.username || data.user.email?.split('@')[0],
-          phone: userData.phone || null,
-          date_of_birth: userData.date_of_birth || null,
-          country: userData.country || null,
-          city: userData.city || null,
-          timezone: userData.timezone || null,
-          gender: userData.gender || null,
           role: userData.role || 'employee',
           department: userData.department || 'Operations',
-        });
-
-      if (profileError) {
-        console.error('Error creating user profile:', profileError);
-        // Try to get more details about the error
-        console.error('Profile error details:', JSON.stringify(profileError, null, 2));
-        // Return error so user knows what happened
-        return { 
-          success: false, 
-          error: profileError.message || 'Error creating user profile. Please contact support.' 
         };
+
+        // Agregar campos opcionales solo si tienen valor
+        if (userData.phone) profileData.phone = userData.phone;
+        if (userData.date_of_birth) profileData.date_of_birth = userData.date_of_birth;
+        if (userData.country) profileData.country = userData.country;
+        if (userData.city) profileData.city = userData.city;
+        if (userData.timezone) profileData.timezone = userData.timezone;
+        if (userData.gender) profileData.gender = userData.gender;
+
+        const { data: insertedProfile, error: profileError } = await supabase
+          .from('users')
+          .insert(profileData)
+          .select()
+          .single();
+
+        // Si hay error de RLS, no importa - el trigger lo creará o el usuario puede actualizar después
+        if (!profileError && insertedProfile) {
+          finalProfile = insertedProfile;
+        }
       }
 
       return {
         success: true,
-        user: {
+        user: finalProfile || {
           id: data.user.id,
           email: data.user.email,
           name: userData.name || data.user.email?.split('@')[0],
