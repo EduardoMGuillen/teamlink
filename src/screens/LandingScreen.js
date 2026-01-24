@@ -269,8 +269,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
     ...(isWeb && {
-      position: 'relative',
-      minHeight: '100vh',
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
     }),
   },
   header: {
@@ -385,9 +386,10 @@ const styles = StyleSheet.create({
     flex: 1,
     ...(isWeb && {
       marginTop: 80, // Space for fixed header
-      maxHeight: 'calc(100vh - 80px)',
-      overflowY: 'scroll',
+      flex: 1,
+      overflowY: 'auto',
       overflowX: 'hidden',
+      WebkitOverflowScrolling: 'touch',
     }),
   },
   scrollContent: {
