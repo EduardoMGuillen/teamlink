@@ -5,9 +5,11 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "icon": "./logo.png",
     "splash": {
+      "image": "./logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#007AFF"
+      "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -16,14 +18,17 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.teamlink.app",
       "deploymentTarget": "15.1",
+      "icon": "./logo.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#007AFF"
+        "foregroundImage": "./logo.png",
+        "backgroundColor": "#ffffff"
       },
+      "icon": "./logo.png",
       "package": "com.teamlink.app",
       "compileSdkVersion": 34,
       "targetSdkVersion": 34,
@@ -34,7 +39,8 @@
       }
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "favicon": "./logo.png"
     },
     "sdkVersion": "54.0.0",
     "jsEngine": "hermes",

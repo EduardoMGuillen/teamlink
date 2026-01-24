@@ -9,8 +9,8 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppState } from '../context/AppStateContext';
 import { useTranslation } from '../utils/useTranslation';
@@ -48,16 +48,16 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <LinearGradient
-        colors={['#007AFF', '#0051D5']}
-        style={styles.gradient}
-      >
-        <View style={styles.content}>
-          <View style={styles.logoContainer}>
-            <Ionicons name="link" size={80} color="#fff" />
-            <Text style={styles.title}>TeamLink</Text>
-            <Text style={styles.subtitle}>Connect your team, simplify work</Text>
-          </View>
+      <View style={styles.content}>
+        <View style={styles.logoContainer}>
+          <Image 
+            source={require('../../logo.png')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>TeamLink</Text>
+          <Text style={styles.subtitle}>Connect your team, simplify work</Text>
+        </View>
 
           <View style={styles.formContainer}>
             <View style={styles.inputContainer}>
@@ -94,7 +94,7 @@ export default function LoginScreen() {
               disabled={isLoading || !email || !password}
             >
               {isLoading ? (
-                <ActivityIndicator color="#007AFF" />
+                <ActivityIndicator color="#ffffff" />
               ) : (
                 <Text style={styles.buttonText}>{t('signIn')}</Text>
               )}
@@ -120,11 +120,10 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.footer}>
-            By signing in, you agree to our Terms of Service
-          </Text>
-        </View>
-      </LinearGradient>
+        <Text style={styles.footer}>
+          By signing in, you agree to our Terms of Service
+        </Text>
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -132,30 +131,33 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  gradient: {
-    flex: 1,
+    backgroundColor: '#ffffff',
   },
   content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
+    backgroundColor: '#ffffff',
   },
   logoContainer: {
     alignItems: 'center',
     marginBottom: 60,
   },
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: 16,
+  },
   title: {
     fontSize: 42,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#1a1a1a',
     marginTop: 16,
   },
   subtitle: {
     fontSize: 16,
-    color: '#fff',
-    opacity: 0.9,
+    color: '#666666',
     marginTop: 8,
   },
   formContainer: {
@@ -167,18 +169,21 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#fff',
+    color: '#1a1a1a',
     marginBottom: 8,
-    opacity: 0.9,
+    fontWeight: '500',
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    color: '#1a1a1a',
   },
   button: {
-    backgroundColor: '#fff',
+    backgroundColor: '#007AFF',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -186,9 +191,10 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.5,
+    backgroundColor: '#cccccc',
   },
   buttonText: {
-    color: '#007AFF',
+    color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -198,8 +204,8 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: 14,
-    color: '#fff',
-    opacity: 0.9,
+    color: '#007AFF',
+    fontWeight: '500',
   },
   testConnectionButton: {
     flexDirection: 'row',
@@ -207,22 +213,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 16,
     padding: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: '#f5f5f5',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: '#e0e0e0',
   },
   testConnectionText: {
     fontSize: 14,
-    color: '#fff',
+    color: '#666666',
     marginLeft: 8,
     fontWeight: '500',
   },
   footer: {
     fontSize: 12,
-    color: '#fff',
-    opacity: 0.8,
+    color: '#999999',
     textAlign: 'center',
+    marginTop: 20,
   },
 });
 

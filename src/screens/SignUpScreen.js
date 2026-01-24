@@ -11,8 +11,8 @@ import {
   Alert,
   ScrollView,
   Modal,
+  Image,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -130,20 +130,20 @@ export default function SignUpScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <LinearGradient
-        colors={['#007AFF', '#0051D5']}
-        style={styles.gradient}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.content}>
-            <View style={styles.logoContainer}>
-              <Ionicons name="link" size={80} color="#fff" />
-              <Text style={styles.title}>TeamLink</Text>
-              <Text style={styles.subtitle}>{t('signUpTitle')}</Text>
-            </View>
+        <View style={styles.content}>
+          <View style={styles.logoContainer}>
+            <Image 
+              source={require('../../logo.png')} 
+              style={styles.logo}
+              resizeMode="contain"
+            />
+            <Text style={styles.title}>TeamLink</Text>
+            <Text style={styles.subtitle}>{t('signUpTitle')}</Text>
+          </View>
 
             <View style={styles.formContainer}>
               {/* Full Name */}
@@ -453,7 +453,7 @@ export default function SignUpScreen() {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <ActivityIndicator color="#007AFF" />
+                  <ActivityIndicator color="#ffffff" />
                 ) : (
                   <Text style={styles.buttonText}>{t('signUp')}</Text>
                 )}
@@ -599,7 +599,7 @@ export default function SignUpScreen() {
             </View>
           </Modal>
         )}
-      </LinearGradient>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -607,33 +607,37 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  gradient: {
-    flex: 1,
+    backgroundColor: '#ffffff',
   },
   scrollContent: {
     flexGrow: 1,
+    backgroundColor: '#ffffff',
   },
   content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
+    backgroundColor: '#ffffff',
   },
   logoContainer: {
     alignItems: 'center',
     marginBottom: 40,
   },
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: 16,
+  },
   title: {
     fontSize: 42,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#1a1a1a',
     marginTop: 16,
   },
   subtitle: {
     fontSize: 18,
-    color: '#fff',
-    opacity: 0.9,
+    color: '#666666',
     marginTop: 8,
   },
   formContainer: {
@@ -645,15 +649,18 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#fff',
+    color: '#1a1a1a',
     marginBottom: 8,
-    opacity: 0.9,
+    fontWeight: '500',
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    color: '#1a1a1a',
   },
   pickerContainer: {
     backgroundColor: '#fff',
@@ -664,19 +671,21 @@ const styles = StyleSheet.create({
     height: 50,
   },
   dateButton: {
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
   },
   dateButtonText: {
     fontSize: 16,
-    color: '#000',
+    color: '#1a1a1a',
   },
   button: {
-    backgroundColor: '#fff',
+    backgroundColor: '#007AFF',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -684,9 +693,10 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.5,
+    backgroundColor: '#cccccc',
   },
   buttonText: {
-    color: '#007AFF',
+    color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -696,8 +706,8 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: 14,
-    color: '#fff',
-    opacity: 0.9,
+    color: '#007AFF',
+    fontWeight: '500',
   },
   doneButton: {
     backgroundColor: '#fff',
@@ -712,16 +722,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   pickerButton: {
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
   },
   pickerButtonText: {
     fontSize: 16,
-    color: '#000',
+    color: '#1a1a1a',
   },
   modalOverlay: {
     flex: 1,
