@@ -1048,6 +1048,25 @@ const styles = StyleSheet.create({
   content: {
     width: '100%',
   },
+  contentWeb: {
+    maxWidth: 1200,
+    alignSelf: 'center',
+    paddingHorizontal: 24,
+  },
+  contentTransparent: {
+    backgroundColor: 'transparent',
+  },
+  emptyStateContainer: {
+    width: '100%',
+    padding: 20,
+    paddingTop: 0,
+    ...(Platform.OS === 'web' && {
+      paddingHorizontal: 0,
+    }),
+  },
+  teamsContent: {
+    width: '100%',
+  },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
