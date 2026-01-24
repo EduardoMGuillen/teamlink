@@ -25,8 +25,15 @@ export default function BackgroundSettingsScreen({ navigation }) {
   }, [selectedBackground]);
 
   const handleSelectBackground = async (backgroundId) => {
+    console.log('[BackgroundSettings] Selecting background:', backgroundId);
     setCurrentBackground(backgroundId);
-    await changeBackground(backgroundId);
+    const result = await changeBackground(backgroundId);
+    console.log('[BackgroundSettings] Change result:', result);
+    if (result.success) {
+      console.log('[BackgroundSettings] Background changed successfully');
+    } else {
+      console.error('[BackgroundSettings] Failed to change background:', result.error);
+    }
   };
 
   return (
