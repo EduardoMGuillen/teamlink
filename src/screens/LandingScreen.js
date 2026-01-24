@@ -32,35 +32,37 @@ export default function LandingScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={[styles.header, isMobile && styles.headerMobile, isWeb && styles.headerWeb]}>
-        <View style={styles.brandRow}>
+        <View style={[styles.brandRow, isMobile && styles.brandRowMobile]}>
           <Image 
             source={require('../../logo.png')} 
-            style={styles.logo}
+            style={[styles.logo, isMobile && styles.logoMobile]}
             resizeMode="contain"
           />
-          <Text style={styles.brand}>TeamLink</Text>
+          {!isMobile && <Text style={styles.brand}>TeamLink</Text>}
         </View>
         
-        <View style={styles.headerRight}>
+        <View style={[styles.headerRight, isMobile && styles.headerRightMobile]}>
           {/* Language Selector */}
           <View style={styles.languageContainer}>
             <TouchableOpacity
-              style={styles.languageButton}
+              style={[styles.languageButton, isMobile && styles.languageButtonMobile]}
               onPress={() => setShowLanguageDropdown(!showLanguageDropdown)}
             >
-              <Ionicons name="globe-outline" size={18} color={colors.text} />
-              <Text style={styles.languageText}>
-                {availableLanguages.find(l => l.code === language)?.name || 'EN'}
-              </Text>
+              <Ionicons name="globe-outline" size={isMobile ? 16 : 18} color={colors.text} />
+              {!isMobile && (
+                <Text style={[styles.languageText, isMobile && styles.languageTextMobile]}>
+                  {availableLanguages.find(l => l.code === language)?.name || 'EN'}
+                </Text>
+              )}
               <Ionicons 
                 name={showLanguageDropdown ? "chevron-up" : "chevron-down"} 
-                size={16} 
+                size={isMobile ? 14 : 16} 
                 color={colors.textMuted} 
               />
             </TouchableOpacity>
             
             {showLanguageDropdown && (
-              <View style={styles.languageDropdown}>
+              <View style={[styles.languageDropdown, isMobile && styles.languageDropdownMobile]}>
                 {availableLanguages.map((lang) => (
                   <TouchableOpacity
                     key={lang.code}
@@ -84,16 +86,16 @@ export default function LandingScreen() {
 
           {/* Auth Buttons */}
           <TouchableOpacity 
-            style={styles.loginButton}
+            style={[styles.loginButton, isMobile && styles.loginButtonMobile]}
             onPress={() => navigation.navigate('Login')}
           >
-            <Text style={styles.loginButtonText}>Login</Text>
+            <Text style={[styles.loginButtonText, isMobile && styles.loginButtonTextMobile]}>Login</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.signUpButton}
+            style={[styles.signUpButton, isMobile && styles.signUpButtonMobile]}
             onPress={() => navigation.navigate('SignUp')}
           >
-            <Text style={styles.signUpButtonText}>Sign Up</Text>
+            <Text style={[styles.signUpButtonText, isMobile && styles.signUpButtonTextMobile]}>Sign Up</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -295,17 +297,26 @@ const styles = StyleSheet.create({
     }),
   },
   headerMobile: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    minHeight: 56,
   },
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flexShrink: 1,
+  },
+  brandRowMobile: {
+    gap: 8,
   },
   logo: {
     width: 32,
     height: 32,
+  },
+  logoMobile: {
+    width: 24,
+    height: 24,
   },
   brand: {
     fontSize: 20,
@@ -316,6 +327,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
+    flexShrink: 0,
+  },
+  headerRightMobile: {
+    gap: 8,
   },
   languageContainer: {
     position: 'relative',
@@ -329,10 +344,18 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: colors.surfaceAlt,
   },
+  languageButtonMobile: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    gap: 4,
+  },
   languageText: {
     fontSize: 14,
     fontWeight: '600',
     color: colors.text,
+  },
+  languageTextMobile: {
+    fontSize: 12,
   },
   languageDropdown: {
     position: 'absolute',
@@ -346,6 +369,10 @@ const styles = StyleSheet.create({
     minWidth: 120,
     ...shadows.card,
     zIndex: 1000,
+  },
+  languageDropdownMobile: {
+    right: -8,
+    minWidth: 100,
   },
   languageOption: {
     paddingHorizontal: 16,
@@ -366,10 +393,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
+  loginButtonMobile: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
   loginButtonText: {
     fontSize: 14,
     fontWeight: '600',
     color: colors.text,
+  },
+  loginButtonTextMobile: {
+    fontSize: 12,
   },
   signUpButton: {
     backgroundColor: colors.primary,
@@ -377,10 +411,18 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
   },
+  signUpButtonMobile: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
   signUpButtonText: {
     fontSize: 14,
     fontWeight: '600',
     color: '#fff',
+  },
+  signUpButtonTextMobile: {
+    fontSize: 12,
   },
   scrollView: {
     flex: 1,
@@ -689,3 +731,5 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
 });
+
+
