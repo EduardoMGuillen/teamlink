@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { i18n } from '../utils/i18n';
 import { authService } from '../services/authService';
+import { supabase } from '../config/supabase';
 import { backgroundService } from '../services/backgroundService';
 
 const AppStateContext = createContext();
@@ -24,6 +25,28 @@ export const AppStateProvider = ({ children }) => {
 
   useEffect(() => {
     initializeApp();
+  }, []);
+
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const user = await authService.getCurrentUser();
+        if (user) {
+          setCurrentUser(user);
+          setIsAuthenticated(true);
+          await AsyncStorage.setItem('@teamlink_user', JSON.stringify(user));
+          return;
+        }
+      }
+
+      setCurrentUser(null);
+      setIsAuthenticated(false);
+      await AsyncStorage.removeItem('@teamlink_user');
+    });
+
+    return () => {
+      data.subscription?.unsubscribe();
+    };
   }, []);
 
   const initializeApp = async () => {

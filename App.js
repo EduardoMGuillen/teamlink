@@ -117,24 +117,27 @@ function AppNavigator() {
 
   return (
     <BackgroundWrapper>
-      <NavigationContainer>
+      <NavigationContainer key={isAuthenticated ? 'auth' : 'guest'}>
         <StatusBar style="auto" />
-        <Stack.Navigator 
-        initialRouteName={Platform.OS === 'web' && !isAuthenticated ? 'Landing' : 'Login'}
-        screenOptions={{ 
-          headerShown: false,
-          ...(Platform.OS === 'web' && {
-            headerStyle: {
-              backgroundColor: '#fff',
-            },
-            headerTintColor: '#007AFF',
-            headerTitleStyle: {
-              fontWeight: '600',
-            },
-            headerBackTitleVisible: false,
-          }),
-        }}
-      >
+        <Stack.Navigator
+          key={isAuthenticated ? 'auth-stack' : 'guest-stack'}
+          initialRouteName={
+            isAuthenticated ? 'MainTabs' : (Platform.OS === 'web' ? 'Landing' : 'Login')
+          }
+          screenOptions={{
+            headerShown: false,
+            ...(Platform.OS === 'web' && {
+              headerStyle: {
+                backgroundColor: '#fff',
+              },
+              headerTintColor: '#007AFF',
+              headerTitleStyle: {
+                fontWeight: '600',
+              },
+              headerBackTitleVisible: false,
+            }),
+          }}
+        >
         {isAuthenticated ? (
           <>
             <Stack.Screen name="MainTabs" component={MainTabs} />

@@ -26,6 +26,7 @@ import { colors, radii, shadows } from '../utils/theme';
 export default function SignUpScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation();
+  const { login } = useAppState();
   const [isLoading, setIsLoading] = useState(false);
   
   // Form fields
@@ -95,15 +96,10 @@ export default function SignUpScreen() {
             },
           ]);
         } else {
-          Alert.alert('Success', t('registrationSuccess'), [
-            {
-              text: 'OK',
-              onPress: () => {
-                // Login automatically after signup
-                navigation.navigate('Login');
-              },
-            },
-          ]);
+          const loginResult = await login(email.trim(), password);
+          if (!loginResult.success) {
+            Alert.alert('Success', t('registrationSuccess'));
+          }
         }
       } else {
         // Mostrar error con formato mejorado (soporta saltos de línea)
@@ -132,8 +128,10 @@ export default function SignUpScreen() {
       style={styles.container}
     >
       <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.content}>
           <View style={styles.logoContainer}>
@@ -609,24 +607,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  scrollView: {
+    flex: 1,
+    ...(Platform.OS === 'web' && {
+      overflowY: 'auto',
+      overflowX: 'hidden',
+      WebkitOverflowScrolling: 'touch',
+    }),
+  },
   scrollContent: {
     flexGrow: 1,
+    paddingVertical: 24,
     backgroundColor: colors.background,
+    alignItems: 'center',
   },
   content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Platform.OS === 'web' ? 24 : 24,
+    width: '100%',
+    padding: 24,
     backgroundColor: colors.surface,
     borderRadius: radii.xl,
     marginHorizontal: 20,
     ...shadows.card,
-    ...(Platform.OS === 'web' && {
-      maxWidth: 520,
-      width: '100%',
-      alignSelf: 'center',
-    }),
+    maxWidth: 520,
+    alignSelf: 'center',
   },
   logoContainer: {
     alignItems: 'center',

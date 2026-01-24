@@ -431,19 +431,20 @@ const styles = StyleSheet.create({
     flex: 1,
     ...(isWeb && {
       marginTop: 80, // Space for fixed header
-      flex: 1,
-      overflowY: 'scroll',
+      height: 'calc(100vh - 80px)',
+      overflowY: 'auto',
       overflowX: 'hidden',
       WebkitOverflowScrolling: 'touch',
-      // Enable mouse wheel scrolling on web
       cursor: 'default',
-      // Force scroll behavior
       overscrollBehavior: 'contain',
     }),
   },
   scrollContent: {
     flexGrow: 1,
     paddingBottom: 48,
+    ...(isWeb && {
+      paddingTop: 0,
+    }),
   },
   heroSection: {
     flexDirection: 'row',
