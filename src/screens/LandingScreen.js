@@ -112,16 +112,15 @@ export default function LandingScreen() {
           <View style={styles.heroContent}>
             <View style={styles.badge}>
               <Ionicons name="sparkles" size={14} color={colors.primary} />
-              <Text style={styles.badgeText}>Workforce OS</Text>
+              <Text style={styles.badgeText}>{t('landingWorkforceOS')}</Text>
             </View>
             
             <Text style={[styles.heroTitle, isMobile && styles.heroTitleMobile]}>
-              The modern workspace for teams that move fast
+              {t('landingHeroTitle')}
             </Text>
             
             <Text style={[styles.heroSubtitle, isMobile && styles.heroSubtitleMobile]}>
-              TeamLink brings schedules, tasks, teams, and messaging into one beautiful hub. 
-              Built for growing companies that need clarity, speed, and alignment every day.
+              {t('landingHeroSubtitle')}
             </Text>
             
             <View style={[styles.ctaButtons, isMobile && styles.ctaButtonsMobile]}>
@@ -129,21 +128,21 @@ export default function LandingScreen() {
                 style={styles.primaryButton}
                 onPress={() => navigation.navigate('SignUp')}
               >
-                <Text style={styles.primaryButtonText}>Start free</Text>
+                <Text style={styles.primaryButtonText}>{t('landingStartFree')}</Text>
                 <Ionicons name="arrow-forward" size={16} color="#fff" />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.secondaryButton}
                 onPress={() => navigation.navigate('Login')}
               >
-                <Text style={styles.secondaryButtonText}>Login</Text>
+                <Text style={styles.secondaryButtonText}>{t('login')}</Text>
               </TouchableOpacity>
             </View>
             
             <View style={styles.trustSection}>
-              <Text style={styles.trustText}>Trusted by teams in</Text>
+              <Text style={styles.trustText}>{t('landingTrustedBy')}</Text>
               <View style={styles.trustPills}>
-                {['Operations', 'Retail', 'Field Services', 'Hospitality'].map((industry) => (
+                {[t('landingOperations'), t('landingRetail'), t('landingFieldServices'), t('landingHospitality')].map((industry) => (
                   <View key={industry} style={styles.pill}>
                     <Text style={styles.pillText}>{industry}</Text>
                   </View>
@@ -154,29 +153,29 @@ export default function LandingScreen() {
           
           {/* Dashboard Preview */}
           <View style={[styles.dashboardCard, isMobile && styles.dashboardCardMobile]}>
-            <Text style={styles.dashboardTitle}>Today at a glance</Text>
+            <Text style={styles.dashboardTitle}>{t('landingTodayAtGlance')}</Text>
             <View style={styles.metricsGrid}>
               <View style={styles.metric}>
-                <Text style={styles.metricLabel}>Active teams</Text>
+                <Text style={styles.metricLabel}>{t('landingActiveTeams')}</Text>
                 <Text style={styles.metricValue}>12</Text>
               </View>
               <View style={styles.metric}>
-                <Text style={styles.metricLabel}>Tasks done</Text>
+                <Text style={styles.metricLabel}>{t('landingTasksDone')}</Text>
                 <Text style={styles.metricValue}>34</Text>
               </View>
               <View style={styles.metric}>
-                <Text style={styles.metricLabel}>Events</Text>
+                <Text style={styles.metricLabel}>{t('landingEvents')}</Text>
                 <Text style={styles.metricValue}>5</Text>
               </View>
               <View style={styles.metric}>
-                <Text style={styles.metricLabel}>Messages</Text>
+                <Text style={styles.metricLabel}>{t('landingMessages')}</Text>
                 <Text style={styles.metricValue}>128</Text>
               </View>
             </View>
             <View style={styles.dashboardFooter}>
               <Ionicons name="calendar" size={16} color={colors.primary} />
               <Text style={styles.dashboardFooterText}>
-                Planner keeps everyone aligned in real time
+                {t('landingPlannerKeepsAligned')}
               </Text>
             </View>
           </View>
@@ -185,10 +184,10 @@ export default function LandingScreen() {
         {/* Features Section */}
         <View style={styles.featuresSection}>
           <Text style={[styles.sectionTitle, isMobile && styles.sectionTitleMobile]}>
-            Everything your team needs
+            {t('landingEverythingTeamNeeds')}
           </Text>
           <Text style={[styles.sectionSubtitle, isMobile && styles.sectionSubtitleMobile]}>
-            Built-in tools for planning, delivery, collaboration, and team focus
+            {t('landingBuiltInTools')}
           </Text>
           
           <View style={[styles.featuresGrid, isMobile && styles.featuresGridMobile]}>
@@ -196,46 +195,46 @@ export default function LandingScreen() {
               {
                 icon: 'calendar',
                 color: colors.primary,
-                title: 'Planner that stays accurate',
-                description: 'Keep schedules, recurring shifts, and events perfectly aligned across every device.'
+                titleKey: 'landingPlannerTitle',
+                descKey: 'landingPlannerDesc',
               },
               {
                 icon: 'checkmark-circle',
                 color: colors.accent,
-                title: 'Tasks your team completes',
-                description: 'Assign, track, and close tasks with clarity, ownership, and momentum.'
+                titleKey: 'landingTasksTitle',
+                descKey: 'landingTasksDesc',
               },
               {
                 icon: 'chatbubbles',
                 color: '#A855F7',
-                title: 'Conversations in context',
-                description: 'One-on-one and team chat keep decisions connected to the work.'
+                titleKey: 'landingChatTitle',
+                descKey: 'landingChatDesc',
               },
               {
                 icon: 'people',
                 color: '#10B981',
-                title: 'Teams & Approvals',
-                description: 'Create teams, approve join requests, and invite members by email with role control.'
+                titleKey: 'landingTeamsTitle',
+                descKey: 'landingTeamsDesc',
               },
               {
                 icon: 'sparkles',
                 color: colors.accent,
-                title: 'Daily Motivation',
-                description: 'Spark keeps teams aligned with daily focus prompts and configurable notifications.'
+                titleKey: 'landingMotivationTitle',
+                descKey: 'landingMotivationDesc',
               },
               {
                 icon: 'image',
                 color: '#3B82F6',
-                title: 'Custom Backgrounds',
-                description: 'Personalize the workspace with curated backgrounds from Settings.'
+                titleKey: 'landingBackgroundsTitle',
+                descKey: 'landingBackgroundsDesc',
               }
             ].map((feature, index) => (
               <View key={index} style={styles.featureCard}>
                 <View style={[styles.featureIcon, { backgroundColor: `${feature.color}15` }]}>
                   <Ionicons name={feature.icon} size={24} color={feature.color} />
                 </View>
-                <Text style={styles.featureTitle}>{feature.title}</Text>
-                <Text style={styles.featureDescription}>{feature.description}</Text>
+                <Text style={styles.featureTitle}>{t(feature.titleKey)}</Text>
+                <Text style={styles.featureDescription}>{t(feature.descKey)}</Text>
               </View>
             ))}
           </View>
@@ -244,22 +243,22 @@ export default function LandingScreen() {
         {/* CTA Banner */}
         <View style={styles.ctaBanner}>
           <View style={styles.ctaBannerContent}>
-            <Text style={styles.ctaBannerTitle}>Ready to bring your team together?</Text>
+            <Text style={styles.ctaBannerTitle}>{t('landingCTATitle')}</Text>
             <Text style={styles.ctaBannerSubtitle}>
-              Launch TeamLink in minutes and stay in sync from day one.
+              {t('landingCTASubtitle')}
             </Text>
           </View>
           <TouchableOpacity
             style={styles.ctaBannerButton}
             onPress={() => navigation.navigate('SignUp')}
           >
-            <Text style={styles.ctaBannerButtonText}>Create your workspace</Text>
+            <Text style={styles.ctaBannerButtonText}>{t('landingCreateWorkspace')}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>© {new Date().getFullYear()} TeamLink. All rights reserved.</Text>
+          <Text style={styles.footerText}>© {new Date().getFullYear()} TeamLink. {t('landingAllRightsReserved')}.</Text>
         </View>
       </ScrollView>
     </View>
@@ -731,5 +730,9 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
 });
+
+
+
+
 
 
