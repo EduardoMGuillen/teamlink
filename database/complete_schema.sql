@@ -317,7 +317,7 @@ CREATE TRIGGER update_teams_updated_at BEFORE UPDATE ON teams
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 DROP TRIGGER IF EXISTS update_updates_updated_at ON updates;
-CREATE TRIGGER update_updates_updated_at ON updates
+CREATE TRIGGER update_updates_updated_at BEFORE UPDATE ON updates
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Trigger para notificaciones de tareas

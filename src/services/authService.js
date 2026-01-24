@@ -90,8 +90,13 @@ export const authService = {
 
       if (profileError) {
         console.error('Error creating user profile:', profileError);
-        // Even if profile creation fails, auth user is created
-        // Return success but log the error
+        // Try to get more details about the error
+        console.error('Profile error details:', JSON.stringify(profileError, null, 2));
+        // Return error so user knows what happened
+        return { 
+          success: false, 
+          error: profileError.message || 'Error creating user profile. Please contact support.' 
+        };
       }
 
       return {

@@ -204,35 +204,7 @@ export default function SignUpScreen() {
               {/* Date of Birth */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>{t('dateOfBirth')}</Text>
-                <TouchableOpacity
-                  style={styles.dateButton}
-                  onPress={() => setShowDatePicker(true)}
-                >
-                  <Text style={styles.dateButtonText}>
-                    {formatDate(dateOfBirth)}
-                  </Text>
-                  <Ionicons name="calendar" size={20} color="#007AFF" />
-                </TouchableOpacity>
-                {showDatePicker && Platform.OS !== 'web' && (
-                  <DateTimePicker
-                    value={dateOfBirth}
-                    mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    maximumDate={new Date()}
-                    onChange={(event, selectedDate) => {
-                      if (Platform.OS === 'android') {
-                        setShowDatePicker(false);
-                      }
-                      if (selectedDate) {
-                        setDateOfBirth(selectedDate);
-                      }
-                      if (Platform.OS === 'ios') {
-                        // On iOS, keep picker open until user dismisses
-                      }
-                    }}
-                  />
-                )}
-                {showDatePicker && Platform.OS === 'web' && (
+                {Platform.OS === 'web' ? (
                   <input
                     type="date"
                     value={dateOfBirth.toISOString().split('T')[0]}
@@ -240,26 +212,58 @@ export default function SignUpScreen() {
                     onChange={(e) => {
                       if (e.target.value) {
                         setDateOfBirth(new Date(e.target.value));
-                        setShowDatePicker(false);
                       }
                     }}
                     style={{
-                      marginTop: 10,
-                      padding: 10,
-                      borderWidth: 1,
-                      borderColor: '#E5E5EA',
-                      borderRadius: 8,
+                      width: '100%',
+                      marginTop: 8,
+                      padding: 16,
+                      border: '1px solid #E5E5EA',
+                      borderRadius: 12,
                       fontSize: 16,
+                      backgroundColor: '#fff',
+                      fontFamily: 'inherit',
                     }}
                   />
-                )}
-                {Platform.OS === 'ios' && showDatePicker && (
-                  <TouchableOpacity
-                    style={styles.doneButton}
-                    onPress={() => setShowDatePicker(false)}
-                  >
-                    <Text style={styles.doneButtonText}>{t('save')}</Text>
-                  </TouchableOpacity>
+                ) : (
+                  <>
+                    <TouchableOpacity
+                      style={styles.dateButton}
+                      onPress={() => setShowDatePicker(true)}
+                    >
+                      <Text style={styles.dateButtonText}>
+                        {formatDate(dateOfBirth)}
+                      </Text>
+                      <Ionicons name="calendar" size={20} color="#007AFF" />
+                    </TouchableOpacity>
+                    {showDatePicker && (
+                      <DateTimePicker
+                        value={dateOfBirth}
+                        mode="date"
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        maximumDate={new Date()}
+                        onChange={(event, selectedDate) => {
+                          if (Platform.OS === 'android') {
+                            setShowDatePicker(false);
+                          }
+                          if (selectedDate) {
+                            setDateOfBirth(selectedDate);
+                          }
+                          if (Platform.OS === 'ios') {
+                            // On iOS, keep picker open until user dismisses
+                          }
+                        }}
+                      />
+                    )}
+                    {Platform.OS === 'ios' && showDatePicker && (
+                      <TouchableOpacity
+                        style={styles.doneButton}
+                        onPress={() => setShowDatePicker(false)}
+                      >
+                        <Text style={styles.doneButtonText}>{t('save')}</Text>
+                      </TouchableOpacity>
+                    )}
+                  </>
                 )}
               </View>
 
@@ -473,19 +477,22 @@ export default function SignUpScreen() {
                     <Text style={styles.modalDone}>{t('save')}</Text>
                   </TouchableOpacity>
                 </View>
-                <Picker
-                  selectedValue={country}
-                  onValueChange={setCountry}
-                  style={styles.modalPicker}
-                >
-                  {countries.map((c) => (
-                    <Picker.Item
-                      key={c.value}
-                      label={c.label}
-                      value={c.value}
-                    />
-                  ))}
-                </Picker>
+                <View style={{ height: 250 }}>
+                  <Picker
+                    selectedValue={country}
+                    onValueChange={setCountry}
+                    style={styles.modalPicker}
+                    itemStyle={{ height: 120 }}
+                  >
+                    {countries.map((c) => (
+                      <Picker.Item
+                        key={c.value}
+                        label={c.label}
+                        value={c.value}
+                      />
+                    ))}
+                  </Picker>
+                </View>
               </View>
             </View>
           </Modal>
@@ -510,19 +517,22 @@ export default function SignUpScreen() {
                     <Text style={styles.modalDone}>{t('save')}</Text>
                   </TouchableOpacity>
                 </View>
-                <Picker
-                  selectedValue={timezone}
-                  onValueChange={setTimezone}
-                  style={styles.modalPicker}
-                >
-                  {timezones.map((tz) => (
-                    <Picker.Item
-                      key={tz.value}
-                      label={tz.label}
-                      value={tz.value}
-                    />
-                  ))}
-                </Picker>
+                <View style={{ height: 250 }}>
+                  <Picker
+                    selectedValue={timezone}
+                    onValueChange={setTimezone}
+                    style={styles.modalPicker}
+                    itemStyle={{ height: 120 }}
+                  >
+                    {timezones.map((tz) => (
+                      <Picker.Item
+                        key={tz.value}
+                        label={tz.label}
+                        value={tz.value}
+                      />
+                    ))}
+                  </Picker>
+                </View>
               </View>
             </View>
           </Modal>
@@ -547,16 +557,19 @@ export default function SignUpScreen() {
                     <Text style={styles.modalDone}>{t('save')}</Text>
                   </TouchableOpacity>
                 </View>
-                <Picker
-                  selectedValue={gender}
-                  onValueChange={setGender}
-                  style={styles.modalPicker}
-                >
-                  <Picker.Item label={t('selectGender') || 'Select Gender'} value="" />
-                  <Picker.Item label={t('male')} value="male" />
-                  <Picker.Item label={t('female')} value="female" />
-                  <Picker.Item label={t('other')} value="other" />
-                </Picker>
+                <View style={{ height: 250 }}>
+                  <Picker
+                    selectedValue={gender}
+                    onValueChange={setGender}
+                    style={styles.modalPicker}
+                    itemStyle={{ height: 120 }}
+                  >
+                    <Picker.Item label={t('selectGender') || 'Select Gender'} value="" />
+                    <Picker.Item label={t('male')} value="male" />
+                    <Picker.Item label={t('female')} value="female" />
+                    <Picker.Item label={t('other')} value="other" />
+                  </Picker>
+                </View>
               </View>
             </View>
           </Modal>
@@ -695,7 +708,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: 40,
-    maxHeight: '50%',
+    maxHeight: '70%',
+    minHeight: 300,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -720,6 +734,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   modalPicker: {
-    height: 200,
+    height: 250,
+    width: '100%',
   },
 });
