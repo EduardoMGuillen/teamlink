@@ -1,19 +1,29 @@
-import React, { useState, createContext } from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { AppStateProvider } from './src/context/AppStateContext';
+import { ActivityIndicator, View } from 'react-native';
+import { AppStateProvider, useAppState } from './src/context/AppStateContext';
+import { i18n } from './src/utils/i18n';
 
 // Screens
 import LoginScreen from './src/screens/LoginScreen';
+import SignUpScreen from './src/screens/SignUpScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import TimeClockScreen from './src/screens/TimeClockScreen';
 import ScheduleScreen from './src/screens/ScheduleScreen';
 import TasksScreen from './src/screens/TasksScreen';
 import MoreScreen from './src/screens/MoreScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
+import DirectoryScreen from './src/screens/DirectoryScreen';
+import ChatScreen from './src/screens/ChatScreen';
+import UpdatesScreen from './src/screens/UpdatesScreen';
+import NotificationsScreen from './src/screens/NotificationsScreen';
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
 function MainTabs() {
   return (
@@ -50,16 +60,52 @@ function MainTabs() {
   );
 }
 
-export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(true); // For demo
+function AppNavigator() {
+  const { isAuthenticated, isLoading } = useAppState();
+
+  useEffect(() => {
+    const initI18n = async () => {
+      await i18n.init();
+    };
+    initI18n();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
 
   return (
-    <AppStateProvider>
-      <NavigationContainer>
-        <StatusBar style="auto" />
-        {isAuthenticated ? <MainTabs /> : <LoginScreen />}
-      </NavigationContainer>
-    </AppStateProvider>
+    <NavigationContainer>
+      <StatusBar style="auto" />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {isAuthenticated ? (
+          <>
+            <Stack.Screen name="MainTabs" component={MainTabs} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen name="Directory" component={DirectoryScreen} />
+            <Stack.Screen name="Chat" component={ChatScreen} />
+            <Stack.Screen name="Updates" component={UpdatesScreen} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="SignUp" component={SignUpScreen} />
+          </>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
+export default function App() {
+  return (
+    <AppStateProvider>
+      <AppNavigator />
+    </AppStateProvider>
+  );
+}

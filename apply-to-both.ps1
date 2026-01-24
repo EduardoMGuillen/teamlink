@@ -5,6 +5,7 @@ $newPath = "C:\TeamLink"
 # Lista de archivos que necesitan sincronizarse
 $filesToSync = @(
     "app.json",
+    "app.config.js",
     "package.json",
     "eas.json",
     "App.js",

@@ -11,6 +11,7 @@ Write-Host ""
 # Archivos de configuración críticos
 $configFiles = @(
     "app.json",
+    "app.config.js",
     "package.json",
     "eas.json",
     ".npmrc"
@@ -58,5 +59,6 @@ if (Test-Path $srcSource) {
     Write-Host "✓ src/ (carpeta completa)" -ForegroundColor Green
 }
 
-Write-Host "`nSincronizacion completada!" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Sincronizacion completada!" -ForegroundColor Cyan
 

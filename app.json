@@ -15,6 +15,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.teamlink.app",
+      "deploymentTarget": "15.1",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -23,13 +24,35 @@
       "adaptiveIcon": {
         "backgroundColor": "#007AFF"
       },
-      "package": "com.teamlink.app"
+      "package": "com.teamlink.app",
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34,
+      "buildToolsVersion": "34.0.0",
+      "minSdkVersion": 24,
+      "gradleProperties": {
+        "kotlinVersion": "2.1.0"
+      }
     },
-    "web": {},
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "static"
+    },
     "sdkVersion": "54.0.0",
     "jsEngine": "hermes",
     "plugins": [
-      "expo-dev-client"
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "2.1.0"
+          },
+          "ios": {
+            "deploymentTarget": "15.1",
+            "useFrameworks": "static"
+          }
+        }
+      ]
     ],
     "extra": {
       "eas": {

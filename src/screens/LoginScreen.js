@@ -8,22 +8,39 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppState } from '../context/AppStateContext';
+import { useTranslation } from '../utils/useTranslation';
+import { useNavigation } from '@react-navigation/native';
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen() {
+  const { login } = useAppState();
+  const { t } = useTranslation();
+  const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Error', t('invalidCredentials'));
+      return;
+    }
+
     setIsLoading(true);
-    // Simulate login
-    setTimeout(() => {
+    try {
+      const result = await login(email.trim(), password);
+      if (!result.success) {
+        Alert.alert('Error', result.error || t('invalidCredentials'));
+      }
+    } catch (error) {
+      Alert.alert('Error', t('invalidCredentials'));
+    } finally {
       setIsLoading(false);
-      // Navigate to main app (handled by App.js)
-    }, 1000);
+    }
   };
 
   return (
@@ -44,27 +61,30 @@ export default function LoginScreen({ navigation }) {
 
           <View style={styles.formContainer}>
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email</Text>
+              <Text style={styles.label}>{t('email') || 'Email'}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Enter your email"
+                placeholder={t('email') || 'Email'}
                 placeholderTextColor="#999"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoCorrect={false}
               />
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
+              <Text style={styles.label}>{t('password')}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Enter your password"
+                placeholder={t('password')}
                 placeholderTextColor="#999"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
               />
             </View>
 
@@ -74,10 +94,19 @@ export default function LoginScreen({ navigation }) {
               disabled={isLoading || !email || !password}
             >
               {isLoading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color="#007AFF" />
               ) : (
-                <Text style={styles.buttonText}>Sign In</Text>
+                <Text style={styles.buttonText}>{t('signIn')}</Text>
               )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.linkContainer}
+              onPress={() => navigation.navigate('SignUp')}
+            >
+              <Text style={styles.linkText}>
+                {t('dontHaveAccount')} {t('signUp')}
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -152,6 +181,15 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  linkContainer: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  linkText: {
+    fontSize: 14,
+    color: '#fff',
+    opacity: 0.9,
   },
   footer: {
     fontSize: 12,

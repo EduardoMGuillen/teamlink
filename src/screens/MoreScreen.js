@@ -10,10 +10,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppState } from '../context/AppStateContext';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from '../utils/useTranslation';
 
 export default function MoreScreen() {
-  const { currentUser } = useAppState();
+  const { currentUser, logout } = useAppState();
   const navigation = useNavigation();
+  const { t } = useTranslation();
 
   const menuSections = [
     {
@@ -74,9 +76,9 @@ export default function MoreScreen() {
               <TouchableOpacity
                 key={itemIndex}
                 style={styles.menuItem}
-                onPress={() => {
+                onPress={async () => {
                   if (item.action === 'signOut') {
-                    // Handle sign out
+                    await logout();
                   } else if (item.screen) {
                     navigation.navigate(item.screen);
                   }

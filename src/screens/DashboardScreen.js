@@ -1,53 +1,144 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppState } from '../context/AppStateContext';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from '../utils/useTranslation';
+import { tasksService } from '../services/tasksService';
+import { shiftsService } from '../services/shiftsService';
+import { notificationsService } from '../services/notificationsService';
+import { shiftsService } from '../services/shiftsService';
 
 export default function DashboardScreen() {
   const { currentUser } = useAppState();
   const navigation = useNavigation();
+  const { t } = useTranslation();
+  const [stats, setStats] = useState({ hours: 0, tasks: 0 });
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      loadDashboardData();
+      loadUnreadNotifications();
+      const interval = setInterval(() => {
+        loadDashboardData();
+        loadUnreadNotifications();
+      }, 30000); // Refresh every 30 seconds
+      return () => clearInterval(interval);
+    }
+  }, [currentUser]);
+
+  const loadUnreadNotifications = async () => {
+    if (!currentUser?.id) return;
+    try {
+      const unread = await notificationsService.getUnreadNotifications(currentUser.id);
+      setUnreadNotifications(unread.length);
+    } catch (error) {
+      console.error('Error loading unread notifications:', error);
+    }
+  };
+
+  const loadDashboardData = async () => {
+    if (!currentUser?.id) return;
+
+    try {
+      // Load tasks and shifts from database
+      const [tasks, weeklyHours] = await Promise.all([
+        tasksService.getTasks(currentUser.id),
+        shiftsService.getWeeklyHours(currentUser.id),
+      ]);
+
+      // Count completed tasks
+      const completedTasks = tasks.filter((task) => task.status === 'completed').length;
+
+      setStats({
+        hours: weeklyHours.toFixed(1),
+        tasks: completedTasks,
+      });
+
+      // Load recent shifts for activity
+      const shifts = await shiftsService.getShifts(currentUser.id);
+
+      // Build recent activity
+      const activities = [];
+
+      // Add recent shifts
+      shifts
+        .filter((shift) => shift.clockOut)
+        .slice(0, 3)
+        .forEach((shift) => {
+          activities.push({
+            id: `shift-${shift.id}`,
+            type: 'shift',
+            title: t('clockedInAt'),
+            subtitle: formatTime(shift.clockIn),
+            icon: 'time',
+            time: getTimeAgo(shift.clockIn),
+            timestamp: shift.clockIn.getTime(),
+          });
+        });
+
+      // Add recent task completions
+      tasks
+        .filter((task) => task.status === 'completed')
+        .sort((a, b) => {
+          return new Date(b.dueDate) - new Date(a.dueDate);
+        })
+        .slice(0, 3)
+        .forEach((task) => {
+          activities.push({
+            id: `task-${task.id}`,
+            type: 'task',
+            title: t('task') + ' ' + t('completed').toLowerCase(),
+            subtitle: task.title,
+            icon: 'checkmark-circle',
+            time: getTimeAgo(task.dueDate),
+            timestamp: task.dueDate.getTime(),
+          });
+        });
+
+      // Sort by timestamp and take most recent 5
+      activities.sort((a, b) => b.timestamp - a.timestamp);
+      setRecentActivity(activities.slice(0, 5));
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    }
+  };
+
+  const formatTime = (date) => {
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const getTimeAgo = (date) => {
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return t('justNow');
+    if (diffMins < 60) return `${diffMins} ${t('minutesAgo')}`;
+    if (diffHours < 24) return `${diffHours} ${t('hoursAgo')}`;
+    if (diffDays === 1) return t('yesterday');
+    return `${diffDays} days ago`;
+  };
 
   const quickActions = [
-    { id: '1', icon: 'time', title: 'Clock In', color: '#34C759', screen: 'Time' },
-    { id: '2', icon: 'calendar', title: 'View Schedule', color: '#007AFF', screen: 'Schedule' },
-    { id: '3', icon: 'checkmark-circle', title: 'My Tasks', color: '#FF9500', screen: 'Tasks' },
-    { id: '4', icon: 'chatbubble', title: 'Messages', color: '#AF52DE', screen: 'Chat' },
-  ];
-
-  const recentActivity = [
-    {
-      id: '1',
-      type: 'shift',
-      title: 'Clocked in',
-      subtitle: '8:45 AM',
-      icon: 'time',
-      time: 'Just now',
-    },
-    {
-      id: '2',
-      type: 'task',
-      title: 'Task completed',
-      subtitle: 'Daily checklist',
-      icon: 'checkmark-circle',
-      time: '1 hour ago',
-    },
-    {
-      id: '3',
-      type: 'message',
-      title: 'New message',
-      subtitle: 'From Manager',
-      icon: 'chatbubble',
-      time: '2 hours ago',
-    },
+    { id: '1', icon: 'time', title: t('clockIn'), color: '#34C759', screen: 'Time' },
+    { id: '2', icon: 'calendar', title: t('viewSchedule'), color: '#007AFF', screen: 'Schedule' },
+    { id: '3', icon: 'checkmark-circle', title: t('myTasks'), color: '#FF9500', screen: 'Tasks' },
+    { id: '4', icon: 'chatbubble', title: t('messages'), color: '#AF52DE', screen: 'Chat' },
   ];
 
   return (
@@ -56,23 +147,41 @@ export default function DashboardScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.welcomeText}>Welcome back,</Text>
-            <Text style={styles.nameText}>{currentUser.name}</Text>
+            <Text style={styles.welcomeText}>{t('welcome')},</Text>
+            <Text style={styles.nameText}>{currentUser?.name || 'User'}</Text>
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity
+            style={styles.notificationButton}
+            onPress={() => navigation.navigate('Notifications')}
+          >
             <Ionicons name="notifications" size={24} color="#007AFF" />
+            {unreadNotifications > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
         {/* Quick Actions */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <Text style={styles.sectionTitle}>{t('quickActions')}</Text>
           <View style={styles.quickActionsGrid}>
             {quickActions.map((action) => (
               <TouchableOpacity
                 key={action.id}
                 style={styles.quickActionCard}
-                onPress={() => navigation.navigate(action.screen)}
+                onPress={() => {
+                  if (action.screen === 'Time') {
+                    navigation.navigate('MainTabs', { screen: 'Time' });
+                  } else if (action.screen === 'Tasks') {
+                    navigation.navigate('MainTabs', { screen: 'Tasks' });
+                  } else if (action.screen === 'Schedule') {
+                    navigation.navigate('MainTabs', { screen: 'Schedule' });
+                  }
+                }}
               >
                 <Ionicons name={action.icon} size={28} color={action.color} />
                 <Text style={styles.quickActionText}>{action.title}</Text>
@@ -83,36 +192,44 @@ export default function DashboardScreen() {
 
         {/* Stats */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>This Week</Text>
+          <Text style={styles.sectionTitle}>{t('thisWeek') || 'This Week'}</Text>
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
               <Ionicons name="time" size={24} color="#007AFF" />
-              <Text style={styles.statValue}>32.5</Text>
-              <Text style={styles.statLabel}>Hours</Text>
+              <Text style={styles.statValue}>{stats.hours}</Text>
+              <Text style={styles.statLabel}>{t('hours') || 'Hours'}</Text>
             </View>
             <View style={styles.statCard}>
               <Ionicons name="checkmark-circle" size={24} color="#34C759" />
-              <Text style={styles.statValue}>8</Text>
-              <Text style={styles.statLabel}>Tasks</Text>
+              <Text style={styles.statValue}>{stats.tasks}</Text>
+              <Text style={styles.statLabel}>{t('tasks')}</Text>
             </View>
           </View>
         </View>
 
         {/* Recent Activity */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Activity</Text>
-          {recentActivity.map((activity) => (
-            <View key={activity.id} style={styles.activityCard}>
-              <View style={styles.activityIconContainer}>
-                <Ionicons name={activity.icon} size={20} color="#007AFF" />
+          <Text style={styles.sectionTitle}>{t('recentActivity')}</Text>
+          {recentActivity.length > 0 ? (
+            recentActivity.map((activity) => (
+              <View key={activity.id} style={styles.activityCard}>
+                <View style={styles.activityIconContainer}>
+                  <Ionicons name={activity.icon} size={20} color="#007AFF" />
+                </View>
+                <View style={styles.activityContent}>
+                  <Text style={styles.activityTitle}>{activity.title}</Text>
+                  <Text style={styles.activitySubtitle}>{activity.subtitle}</Text>
+                </View>
+                <Text style={styles.activityTime}>{activity.time}</Text>
               </View>
-              <View style={styles.activityContent}>
-                <Text style={styles.activityTitle}>{activity.title}</Text>
-                <Text style={styles.activitySubtitle}>{activity.subtitle}</Text>
-              </View>
-              <Text style={styles.activityTime}>{activity.time}</Text>
+            ))
+          ) : (
+            <View style={styles.emptyActivity}>
+              <Text style={styles.emptyActivityText}>
+                {t('noRecentActivity') || 'No recent activity'}
+              </Text>
             </View>
-          ))}
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -229,5 +346,35 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#8E8E93',
   },
+  emptyActivity: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  emptyActivityText: {
+    fontSize: 14,
+    color: '#8E8E93',
+  },
+  notificationButton: {
+    position: 'relative',
+    padding: 4,
+  },
+  badge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: '#FF3B30',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#F2F2F7',
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
+  },
 });
-
