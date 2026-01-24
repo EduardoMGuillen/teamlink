@@ -268,6 +268,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    ...(isWeb && {
+      height: '100vh',
+      overflow: 'visible',
+    }),
   },
   header: {
     flexDirection: 'row',
@@ -381,8 +385,11 @@ const styles = StyleSheet.create({
     flex: 1,
     ...(isWeb && {
       height: 'calc(100vh - 80px)',
-      overflowY: 'scroll',
+      overflowY: 'auto',
+      overflowX: 'hidden',
       WebkitOverflowScrolling: 'touch',
+      // Force scroll on web
+      display: 'block',
     }),
   },
   scrollContent: {
