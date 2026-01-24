@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -16,12 +16,13 @@ import { useTranslation } from '../utils/useTranslation';
 import { useAppState } from '../context/AppStateContext';
 import { messagesService } from '../services/messagesService';
 import { teamsService } from '../services/teamsService';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 
 export default function ChatScreen() {
   const { t } = useTranslation();
   const { currentUser } = useAppState();
   const route = useRoute();
+  const navigation = useNavigation();
   const { userId, teamId } = route.params || {};
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState('');
@@ -29,6 +30,13 @@ export default function ChatScreen() {
   const [isSending, setIsSending] = useState(false);
   const [recipientName, setRecipientName] = useState('');
   const flatListRef = useRef(null);
+
+  // Actualizar título del header dinámicamente
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: teamId ? t('team') : recipientName || t('chat'),
+    });
+  }, [navigation, recipientName, teamId, t]);
 
   useEffect(() => {
     loadMessages();
@@ -159,19 +167,12 @@ export default function ChatScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.container} edges={['bottom']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
-        keyboardVerticalOffset={90}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>
-            {teamId ? t('team') : recipientName || t('chat')}
-          </Text>
-        </View>
-
         {/* Messages List */}
         <FlatList
           ref={flatListRef}
@@ -228,17 +229,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  header: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E5EA',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#000',
   },
   messagesList: {
     padding: 16,

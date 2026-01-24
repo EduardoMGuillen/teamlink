@@ -2,11 +2,13 @@ import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, Platform } from 'react-native';
 import { AppStateProvider, useAppState } from './src/context/AppStateContext';
 import { i18n } from './src/utils/i18n';
+import { useTranslation } from './src/utils/useTranslation';
 
 // Screens
 import LoginScreen from './src/screens/LoginScreen';
@@ -24,9 +26,14 @@ import NotificationsScreen from './src/screens/NotificationsScreen';
 import ConnectionTestScreen from './src/screens/ConnectionTestScreen';
 
 const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
+// Usar Stack Navigator nativo para móvil, Stack Navigator regular para web
+const NativeStack = createNativeStackNavigator();
+const WebStack = createStackNavigator();
+const Stack = Platform.OS === 'web' ? WebStack : NativeStack;
 
 function MainTabs() {
+  const { t } = useTranslation();
+  
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -39,6 +46,7 @@ function MainTabs() {
             iconName = focused ? 'time' : 'time-outline';
           } else if (route.name === 'Schedule') {
             iconName = focused ? 'calendar' : 'calendar-outline';
+            // Tab name will be set in screenOptions
           } else if (route.name === 'Tasks') {
             iconName = focused ? 'checkmark-circle' : 'checkmark-circle-outline';
           } else if (route.name === 'More') {
@@ -50,11 +58,16 @@ function MainTabs() {
         tabBarActiveTintColor: '#007AFF',
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
+        tabBarLabel: route.name === 'Schedule' ? t('calendarSchedule') : undefined,
       })}
     >
       <Tab.Screen name="Home" component={DashboardScreen} />
       <Tab.Screen name="Time" component={TimeClockScreen} />
-      <Tab.Screen name="Schedule" component={ScheduleScreen} />
+      <Tab.Screen 
+        name="Schedule" 
+        component={ScheduleScreen}
+        options={{ tabBarLabel: t('calendarSchedule') }}
+      />
       <Tab.Screen name="Tasks" component={TasksScreen} />
       <Tab.Screen name="More" component={MoreScreen} />
     </Tab.Navigator>
@@ -82,19 +95,149 @@ function AppNavigator() {
   return (
     <NavigationContainer>
       <StatusBar style="auto" />
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator 
+        screenOptions={{ 
+          headerShown: false,
+          ...(Platform.OS === 'web' && {
+            headerStyle: {
+              backgroundColor: '#fff',
+            },
+            headerTintColor: '#007AFF',
+            headerTitleStyle: {
+              fontWeight: '600',
+            },
+            headerBackTitleVisible: false,
+          }),
+        }}
+      >
         {isAuthenticated ? (
           <>
             <Stack.Screen name="MainTabs" component={MainTabs} />
-            <Stack.Screen name="Settings" component={SettingsScreen} />
-            <Stack.Screen name="Directory" component={DirectoryScreen} />
-            <Stack.Screen name="Chat" component={ChatScreen} />
-            <Stack.Screen name="Updates" component={UpdatesScreen} />
-            <Stack.Screen name="Notifications" component={NotificationsScreen} />
+            <Stack.Screen 
+              name="Settings" 
+              component={SettingsScreen}
+              options={{ 
+                headerShown: true,
+                title: 'Settings',
+                headerBackTitleVisible: false,
+                ...(Platform.OS === 'web' && {
+                  headerStyle: {
+                    backgroundColor: '#fff',
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#E5E5EA',
+                  },
+                  headerTintColor: '#007AFF',
+                  headerTitleStyle: {
+                    fontWeight: '600',
+                    fontSize: 18,
+                  },
+                }),
+              }}
+            />
+            <Stack.Screen 
+              name="Directory" 
+              component={DirectoryScreen}
+              options={{ 
+                headerShown: true,
+                title: 'Directory',
+                headerBackTitleVisible: false,
+                ...(Platform.OS === 'web' && {
+                  headerStyle: {
+                    backgroundColor: '#fff',
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#E5E5EA',
+                  },
+                  headerTintColor: '#007AFF',
+                  headerTitleStyle: {
+                    fontWeight: '600',
+                    fontSize: 18,
+                  },
+                }),
+              }}
+            />
+            <Stack.Screen 
+              name="Chat" 
+              component={ChatScreen}
+              options={{ 
+                headerShown: true,
+                title: 'Chat',
+                headerBackTitleVisible: false,
+                ...(Platform.OS === 'web' && {
+                  headerStyle: {
+                    backgroundColor: '#fff',
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#E5E5EA',
+                  },
+                  headerTintColor: '#007AFF',
+                  headerTitleStyle: {
+                    fontWeight: '600',
+                    fontSize: 18,
+                  },
+                }),
+              }}
+            />
+            <Stack.Screen 
+              name="Updates" 
+              component={UpdatesScreen}
+              options={{ 
+                headerShown: true,
+                title: 'Updates',
+                headerBackTitleVisible: false,
+                ...(Platform.OS === 'web' && {
+                  headerStyle: {
+                    backgroundColor: '#fff',
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#E5E5EA',
+                  },
+                  headerTintColor: '#007AFF',
+                  headerTitleStyle: {
+                    fontWeight: '600',
+                    fontSize: 18,
+                  },
+                }),
+              }}
+            />
+            <Stack.Screen 
+              name="Notifications" 
+              component={NotificationsScreen}
+              options={{ 
+                headerShown: true,
+                title: 'Notifications',
+                headerBackTitleVisible: false,
+                ...(Platform.OS === 'web' && {
+                  headerStyle: {
+                    backgroundColor: '#fff',
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#E5E5EA',
+                  },
+                  headerTintColor: '#007AFF',
+                  headerTitleStyle: {
+                    fontWeight: '600',
+                    fontSize: 18,
+                  },
+                }),
+              }}
+            />
             <Stack.Screen 
               name="ConnectionTest" 
               component={ConnectionTestScreen}
-              options={{ title: 'Connection Test' }}
+              options={{ 
+                headerShown: true,
+                title: 'Connection Test',
+                headerBackTitleVisible: false,
+                ...(Platform.OS === 'web' && {
+                  headerStyle: {
+                    backgroundColor: '#fff',
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#E5E5EA',
+                  },
+                  headerTintColor: '#007AFF',
+                  headerTitleStyle: {
+                    fontWeight: '600',
+                    fontSize: 18,
+                  },
+                }),
+              }}
             />
           </>
         ) : (
@@ -104,7 +247,11 @@ function AppNavigator() {
             <Stack.Screen 
               name="ConnectionTest" 
               component={ConnectionTestScreen}
-              options={{ title: 'Connection Test', headerShown: true }}
+              options={{ 
+                headerShown: true,
+                title: 'Connection Test',
+                headerBackTitleVisible: false,
+              }}
             />
           </>
         )}

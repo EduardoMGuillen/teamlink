@@ -90,11 +90,7 @@ export default function DirectoryScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t('directory') || 'Directory'}</Text>
-      </View>
-
+    <SafeAreaView style={styles.container} edges={['bottom']}>
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color="#8E8E93" style={styles.searchIcon} />
@@ -191,17 +187,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  header: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E5EA',
-  },
-  headerTitle: {
-    fontSize: 34,
-    fontWeight: 'bold',
-    color: '#000',
   },
   searchContainer: {
     flexDirection: 'row',

@@ -91,16 +91,25 @@ export default function TimeClockScreen() {
       const activeShift = await shiftsService.getActiveShift(currentUser.id);
       if (activeShift) {
         setIsClockedIn(true);
-        setClockInTime(activeShift.clockIn);
+        setClockInTime(new Date(activeShift.clockIn));
         setActiveShiftId(activeShift.id);
-        // Cargar location desde el estado guardado
-        const savedState = await AsyncStorage.getItem(CLOCK_STATE_KEY);
-        if (savedState) {
-          const state = JSON.parse(savedState);
-          if (state.location) {
-            setLocation(state.location);
+        // Cargar location desde el turno activo o del estado guardado
+        if (activeShift.location) {
+          setLocation(activeShift.location);
+        } else {
+          const savedState = await AsyncStorage.getItem(CLOCK_STATE_KEY);
+          if (savedState) {
+            const state = JSON.parse(savedState);
+            if (state.location) {
+              setLocation(state.location);
+            }
           }
         }
+      } else {
+        // No hay turno activo, limpiar estado
+        setIsClockedIn(false);
+        setClockInTime(null);
+        setActiveShiftId(null);
       }
     } catch (error) {
       console.error('Error checking active shift:', error);
@@ -189,19 +198,29 @@ export default function TimeClockScreen() {
           setIsClockedIn(false);
           setClockInTime(null);
           setActiveShiftId(null);
+          // Limpiar AsyncStorage
+          await AsyncStorage.removeItem(CLOCK_STATE_KEY);
           await loadShifts();
-          await saveClockState();
+          await loadWeeklyHours();
         } else {
           Alert.alert('Error', result.error || 'Failed to clock out');
         }
       } else {
-        // Clock In
+        // Clock In - Verificar que no haya un turno activo primero
+        const activeShift = await shiftsService.getActiveShift(currentUser.id);
+        if (activeShift) {
+          Alert.alert('Error', 'You already have an active shift. Please clock out first.');
+          setIsLoading(false);
+          return;
+        }
+
         const result = await shiftsService.clockIn(currentUser.id, location);
         if (result.success) {
           setIsClockedIn(true);
           setClockInTime(result.shift.clockIn);
           setActiveShiftId(result.shift.id);
           await saveClockState();
+          await loadShifts();
         } else {
           Alert.alert('Error', result.error || 'Failed to clock in');
         }

@@ -8,6 +8,7 @@ import {
   TextInput,
   Modal,
   Alert,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +17,7 @@ import { useAppState } from '../context/AppStateContext';
 import { tasksService } from '../services/tasksService';
 import { teamsService } from '../services/teamsService';
 import { Picker } from '@react-native-picker/picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Platform } from 'react-native';
 
 export default function TasksScreen() {
@@ -35,6 +37,7 @@ export default function TasksScreen() {
   const [assignedTo, setAssignedTo] = useState(null); // null = self, userId = assign to other
   const [availableUsers, setAvailableUsers] = useState([]);
   const [showUserPicker, setShowUserPicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   React.useEffect(() => {
     if (currentUser?.id) {
@@ -451,7 +454,12 @@ export default function TasksScreen() {
         transparent={true}
         onRequestClose={() => setShowModal(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+          enabled={Platform.OS !== 'web'}
+        >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
@@ -462,103 +470,144 @@ export default function TasksScreen() {
               </TouchableOpacity>
             </View>
 
-            <TextInput
-              style={styles.input}
-              placeholder={t('taskTitle')}
-              value={taskTitle}
-              onChangeText={setTaskTitle}
-            />
+            <ScrollView
+              style={styles.modalScrollView}
+              contentContainerStyle={styles.modalScrollContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <TextInput
+                style={styles.input}
+                placeholder={t('taskTitle')}
+                value={taskTitle}
+                onChangeText={setTaskTitle}
+                returnKeyType="next"
+              />
 
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              placeholder={t('taskDescription')}
-              value={taskDescription}
-              onChangeText={setTaskDescription}
-              multiline
-              numberOfLines={4}
-            />
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                placeholder={t('taskDescription')}
+                value={taskDescription}
+                onChangeText={setTaskDescription}
+                multiline
+                numberOfLines={4}
+                returnKeyType="done"
+              />
 
-            <Text style={styles.label}>{t('dueDate')}</Text>
-            <View style={styles.datePickerContainer}>
-              <TouchableOpacity
-                style={styles.dateButton}
-                onPress={() => {
-                  // Simple date picker - increment by days
-                  const newDate = new Date(taskDueDate);
-                  newDate.setDate(newDate.getDate() + 1);
-                  if (newDate > new Date()) {
-                    setTaskDueDate(newDate);
-                  }
-                }}
-              >
-                <Ionicons name="calendar" size={20} color="#007AFF" />
-                <Text style={styles.dateText}>
-                  {taskDueDate.toLocaleDateString()}
-                </Text>
-                <Ionicons name="chevron-forward" size={16} color="#8E8E93" />
-              </TouchableOpacity>
-            </View>
-
-            {!editingTask && (
-              <>
-                <Text style={styles.label}>{t('assignTo') || 'Assign To'}</Text>
-                {Platform.OS === 'ios' ? (
-                  <TouchableOpacity
-                    style={styles.pickerButton}
-                    onPress={() => setShowUserPicker(true)}
-                  >
-                    <Text style={styles.pickerButtonText}>
-                      {assignedTo
-                        ? availableUsers.find(u => u.id === assignedTo)?.name || 'Select User'
-                        : currentUser.name + ' (Me)'}
-                    </Text>
-                    <Ionicons name="chevron-down" size={20} color="#007AFF" />
-                  </TouchableOpacity>
+              <Text style={styles.label}>{t('dueDate')}</Text>
+              <View style={styles.datePickerContainer}>
+                {Platform.OS === 'web' ? (
+                  <input
+                    type="date"
+                    value={taskDueDate.toISOString().split('T')[0]}
+                    min={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setTaskDueDate(new Date(e.target.value));
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: 16,
+                      border: '1px solid #E5E5EA',
+                      borderRadius: 12,
+                      fontSize: 16,
+                      backgroundColor: '#F2F2F7',
+                      fontFamily: 'inherit',
+                      color: '#1a1a1a',
+                    }}
+                  />
                 ) : (
-                  <View style={styles.pickerContainer}>
-                    <Picker
-                      selectedValue={assignedTo || currentUser.id}
-                      onValueChange={(value) => setAssignedTo(value === currentUser.id ? null : value)}
-                      style={styles.picker}
+                  <>
+                    <TouchableOpacity
+                      style={styles.dateButton}
+                      onPress={() => setShowDatePicker(true)}
                     >
-                      <Picker.Item label={`${currentUser.name} (Me)`} value={currentUser.id} />
-                      {availableUsers
-                        .filter(u => u.id !== currentUser.id)
-                        .map((user) => (
-                          <Picker.Item key={user.id} label={user.name} value={user.id} />
-                        ))}
-                    </Picker>
-                  </View>
+                      <Ionicons name="calendar" size={20} color="#007AFF" />
+                      <Text style={styles.dateText}>
+                        {taskDueDate.toLocaleDateString()}
+                      </Text>
+                      <Ionicons name="chevron-forward" size={16} color="#8E8E93" />
+                    </TouchableOpacity>
+                    {Platform.OS === 'android' && showDatePicker && (
+                      <DateTimePicker
+                        value={taskDueDate}
+                        mode="date"
+                        display="default"
+                        minimumDate={new Date()}
+                        onChange={(event, selectedDate) => {
+                          setShowDatePicker(false);
+                          if (selectedDate) {
+                            setTaskDueDate(selectedDate);
+                          }
+                        }}
+                      />
+                    )}
+                  </>
                 )}
-              </>
-            )}
+              </View>
 
-            <Text style={styles.label}>{t('priority')}</Text>
-            <View style={styles.priorityButtons}>
-              {['low', 'medium', 'high'].map((priority) => (
-                <TouchableOpacity
-                  key={priority}
-                  style={[
-                    styles.priorityButton,
-                    taskPriority === priority && styles.priorityButtonActive,
-                    { borderColor: getPriorityColor(priority) },
-                  ]}
-                  onPress={() => setTaskPriority(priority)}
-                >
-                  <Text
+              {!editingTask && (
+                <>
+                  <Text style={styles.label}>{t('assignTo') || 'Assign To'}</Text>
+                  {Platform.OS === 'ios' ? (
+                    <TouchableOpacity
+                      style={styles.pickerButton}
+                      onPress={() => setShowUserPicker(true)}
+                    >
+                      <Text style={styles.pickerButtonText}>
+                        {assignedTo
+                          ? availableUsers.find(u => u.id === assignedTo)?.name || 'Select User'
+                          : currentUser.name + ' (Me)'}
+                      </Text>
+                      <Ionicons name="chevron-down" size={20} color="#007AFF" />
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={styles.pickerContainer}>
+                      <Picker
+                        selectedValue={assignedTo || currentUser.id}
+                        onValueChange={(value) => setAssignedTo(value === currentUser.id ? null : value)}
+                        style={styles.picker}
+                      >
+                        <Picker.Item label={`${currentUser.name} (Me)`} value={currentUser.id} />
+                        {availableUsers
+                          .filter(u => u.id !== currentUser.id)
+                          .map((user) => (
+                            <Picker.Item key={user.id} label={user.name} value={user.id} />
+                          ))}
+                      </Picker>
+                    </View>
+                  )}
+                </>
+              )}
+
+              <Text style={styles.label}>{t('priority')}</Text>
+              <View style={styles.priorityButtons}>
+                {['low', 'medium', 'high'].map((priority) => (
+                  <TouchableOpacity
+                    key={priority}
                     style={[
-                      styles.priorityButtonText,
-                      taskPriority === priority && {
-                        color: getPriorityColor(priority),
-                        fontWeight: '600',
-                      },
+                      styles.priorityButton,
+                      taskPriority === priority && styles.priorityButtonActive,
+                      { borderColor: getPriorityColor(priority) },
                     ]}
+                    onPress={() => setTaskPriority(priority)}
                   >
-                    {t(priority)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+                    <Text
+                      style={[
+                        styles.priorityButtonText,
+                        taskPriority === priority && {
+                          color: getPriorityColor(priority),
+                          fontWeight: '600',
+                        },
+                      ]}
+                    >
+                      {t(priority)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
 
             <View style={styles.modalActions}>
               <TouchableOpacity
@@ -575,8 +624,44 @@ export default function TasksScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
+
+      {/* Date Picker Modal for iOS */}
+      {Platform.OS === 'ios' && showDatePicker && (
+        <Modal
+          visible={showDatePicker}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowDatePicker(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                  <Text style={styles.modalCancel}>{t('cancel')}</Text>
+                </TouchableOpacity>
+                <Text style={styles.modalTitle}>{t('dueDate')}</Text>
+                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                  <Text style={styles.modalDone}>{t('save')}</Text>
+                </TouchableOpacity>
+              </View>
+              <DateTimePicker
+                value={taskDueDate}
+                mode="date"
+                display="spinner"
+                minimumDate={new Date()}
+                onChange={(event, selectedDate) => {
+                  if (selectedDate) {
+                    setTaskDueDate(selectedDate);
+                  }
+                }}
+                style={styles.datePickerIOS}
+              />
+            </View>
+          </View>
+        </Modal>
+      )}
 
       {/* User Picker Modal for iOS */}
       {Platform.OS === 'ios' && (
@@ -804,7 +889,14 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
-    maxHeight: '80%',
+    maxHeight: Platform.OS === 'ios' ? '90%' : '95%',
+  },
+  modalScrollView: {
+    flexGrow: 1,
+  },
+  modalScrollContent: {
+    paddingBottom: 10,
+    flexGrow: 1,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -912,5 +1004,9 @@ const styles = StyleSheet.create({
   },
   modalPicker: {
     height: 200,
+  },
+  datePickerIOS: {
+    height: 200,
+    width: '100%',
   },
 });

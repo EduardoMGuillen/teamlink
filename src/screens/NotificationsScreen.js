@@ -133,18 +133,14 @@ export default function NotificationsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#007AFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('notifications')}</Text>
-        {unreadCount > 0 && (
-          <TouchableOpacity onPress={markAllAsRead}>
+    <SafeAreaView style={styles.container} edges={['bottom']}>
+      {unreadCount > 0 && (
+        <View style={styles.markAllReadContainer}>
+          <TouchableOpacity onPress={markAllAsRead} style={styles.markAllReadButton}>
             <Text style={styles.markAllRead}>{t('markAllRead') || 'Mark all read'}</Text>
           </TouchableOpacity>
-        )}
-      </View>
+        </View>
+      )}
 
       <ScrollView
         style={styles.list}
@@ -203,21 +199,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  markAllReadContainer: {
     backgroundColor: '#fff',
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#E5E5EA',
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#000',
-    flex: 1,
-    marginLeft: 16,
+  markAllReadButton: {
+    alignSelf: 'flex-end',
   },
   markAllRead: {
     fontSize: 14,

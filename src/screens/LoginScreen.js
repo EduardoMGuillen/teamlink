@@ -137,35 +137,43 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
+    padding: Platform.OS === 'web' ? 24 : 32,
     backgroundColor: '#ffffff',
+    ...(Platform.OS === 'web' && {
+      maxWidth: 420,
+      width: '100%',
+      alignSelf: 'center',
+    }),
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 60,
+    marginBottom: Platform.OS === 'web' ? 32 : 60,
   },
   logo: {
-    width: 120,
-    height: 120,
-    marginBottom: 16,
+    width: Platform.OS === 'web' ? 80 : 120,
+    height: Platform.OS === 'web' ? 80 : 120,
+    marginBottom: Platform.OS === 'web' ? 12 : 16,
   },
   title: {
-    fontSize: 42,
+    fontSize: Platform.OS === 'web' ? 32 : 42,
     fontWeight: 'bold',
     color: '#1a1a1a',
-    marginTop: 16,
+    marginTop: Platform.OS === 'web' ? 12 : 16,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'web' ? 14 : 16,
     color: '#666666',
-    marginTop: 8,
+    marginTop: Platform.OS === 'web' ? 4 : 8,
   },
   formContainer: {
     width: '100%',
-    marginBottom: 40,
+    marginBottom: Platform.OS === 'web' ? 24 : 40,
+    ...(Platform.OS === 'web' && {
+      maxWidth: 400,
+    }),
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: Platform.OS === 'web' ? 16 : 20,
   },
   label: {
     fontSize: 14,
@@ -185,9 +193,9 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: '#007AFF',
     borderRadius: 12,
-    padding: 16,
+    padding: Platform.OS === 'web' ? 14 : 16,
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: Platform.OS === 'web' ? 12 : 8,
   },
   buttonDisabled: {
     opacity: 0.5,
@@ -199,7 +207,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   linkContainer: {
-    marginTop: 16,
+    marginTop: Platform.OS === 'web' ? 12 : 16,
     alignItems: 'center',
   },
   linkText: {
@@ -211,8 +219,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 16,
-    padding: 12,
+    marginTop: Platform.OS === 'web' ? 12 : 16,
+    padding: Platform.OS === 'web' ? 10 : 12,
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
     borderWidth: 1,
@@ -228,7 +236,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999999',
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: Platform.OS === 'web' ? 16 : 20,
   },
 });
 

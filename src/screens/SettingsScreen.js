@@ -27,7 +27,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['bottom']}>
       <ScrollView>
         {/* Profile Section */}
         <View style={styles.profileSection}>

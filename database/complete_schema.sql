@@ -51,6 +51,19 @@ CREATE TABLE IF NOT EXISTS shifts (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Tabla de schedules (horarios programados)
+CREATE TABLE IF NOT EXISTS schedules (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  location TEXT NOT NULL,
+  position TEXT DEFAULT 'Operations',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- ============================================
 -- PARTE 2: Esquema de Trabajo en Equipo
 -- ============================================
@@ -125,6 +138,8 @@ CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
 CREATE INDEX IF NOT EXISTS idx_shifts_user_id ON shifts(user_id);
 CREATE INDEX IF NOT EXISTS idx_shifts_clock_in ON shifts(clock_in);
+CREATE INDEX IF NOT EXISTS idx_schedules_user_id ON schedules(user_id);
+CREATE INDEX IF NOT EXISTS idx_schedules_date ON schedules(date);
 CREATE INDEX IF NOT EXISTS idx_team_members_team_id ON team_members(team_id);
 CREATE INDEX IF NOT EXISTS idx_team_members_user_id ON team_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_team_id ON tasks(team_id);
@@ -142,6 +157,7 @@ CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE shifts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE schedules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
@@ -167,8 +183,12 @@ CREATE POLICY "Users can view own tasks" ON tasks
   FOR SELECT USING (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Users can insert own tasks" ON tasks;
+-- Permitir insertar tareas propias O tareas asignadas a otros (si assigned_by = auth.uid())
 CREATE POLICY "Users can insert own tasks" ON tasks
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (
+    auth.uid() = user_id 
+    OR auth.uid() = assigned_by
+  );
 
 DROP POLICY IF EXISTS "Users can update own tasks" ON tasks;
 CREATE POLICY "Users can update own tasks" ON tasks
@@ -178,6 +198,18 @@ DROP POLICY IF EXISTS "Users can delete own tasks" ON tasks;
 CREATE POLICY "Users can delete own tasks" ON tasks
   FOR DELETE USING (auth.uid() = user_id);
 
+-- Función auxiliar para obtener equipos del usuario sin recursión
+-- DEBE crearse ANTES de usarse en las políticas RLS
+CREATE OR REPLACE FUNCTION get_user_teams(user_uuid UUID)
+RETURNS TABLE(team_id UUID) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT tm.team_id
+  FROM team_members tm
+  WHERE tm.user_id = user_uuid;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Actualizar políticas de tasks para permitir ver tareas del equipo
 DROP POLICY IF EXISTS "Users can view team tasks" ON tasks;
 CREATE POLICY "Users can view team tasks" ON tasks
@@ -185,7 +217,7 @@ CREATE POLICY "Users can view team tasks" ON tasks
     user_id = auth.uid()
     OR assigned_by = auth.uid()
     OR (team_id IS NOT NULL AND team_id IN (
-      SELECT team_id FROM team_members WHERE user_id = auth.uid()
+      SELECT team_id FROM get_user_teams(auth.uid())
     ))
   );
 
@@ -206,12 +238,29 @@ DROP POLICY IF EXISTS "Users can delete own shifts" ON shifts;
 CREATE POLICY "Users can delete own shifts" ON shifts
   FOR DELETE USING (auth.uid() = user_id);
 
+-- Políticas para schedules
+DROP POLICY IF EXISTS "Users can view own schedules" ON schedules;
+CREATE POLICY "Users can view own schedules" ON schedules
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own schedules" ON schedules;
+CREATE POLICY "Users can insert own schedules" ON schedules
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own schedules" ON schedules;
+CREATE POLICY "Users can update own schedules" ON schedules
+  FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own schedules" ON schedules;
+CREATE POLICY "Users can delete own schedules" ON schedules
+  FOR DELETE USING (auth.uid() = user_id);
+
 -- Políticas para teams
 DROP POLICY IF EXISTS "Users can view their teams" ON teams;
 CREATE POLICY "Users can view their teams" ON teams
   FOR SELECT USING (
     id IN (
-      SELECT team_id FROM team_members WHERE user_id = auth.uid()
+      SELECT team_id FROM get_user_teams(auth.uid())
     )
     OR manager_id = auth.uid()
   );
@@ -225,20 +274,29 @@ CREATE POLICY "Managers can create teams" ON teams
   );
 
 -- Políticas para team_members
+-- IMPORTANTE: Usar función SECURITY DEFINER para evitar recursión infinita
 DROP POLICY IF EXISTS "Users can view team members" ON team_members;
+DROP POLICY IF EXISTS "Users can view own team membership" ON team_members;
+
+-- Política: Los usuarios pueden ver miembros de equipos donde ellos son miembros
+-- Usamos la función auxiliar para evitar recursión
 CREATE POLICY "Users can view team members" ON team_members
   FOR SELECT USING (
     team_id IN (
-      SELECT team_id FROM team_members WHERE user_id = auth.uid()
+      SELECT team_id FROM get_user_teams(auth.uid())
     )
   );
+
+-- Política adicional: Los usuarios pueden ver sus propios registros de membresía
+CREATE POLICY "Users can view own team membership" ON team_members
+  FOR SELECT USING (user_id = auth.uid());
 
 -- Políticas para messages
 DROP POLICY IF EXISTS "Users can view team messages" ON messages;
 CREATE POLICY "Users can view team messages" ON messages
   FOR SELECT USING (
     (team_id IS NOT NULL AND team_id IN (
-      SELECT team_id FROM team_members WHERE user_id = auth.uid()
+      SELECT team_id FROM get_user_teams(auth.uid())
     ))
     OR sender_id = auth.uid()
     OR recipient_id = auth.uid()
@@ -253,7 +311,7 @@ DROP POLICY IF EXISTS "Users can view team updates" ON updates;
 CREATE POLICY "Users can view team updates" ON updates
   FOR SELECT USING (
     team_id IS NULL OR team_id IN (
-      SELECT team_id FROM team_members WHERE user_id = auth.uid()
+      SELECT team_id FROM get_user_teams(auth.uid())
     )
   );
 
@@ -310,6 +368,10 @@ CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON tasks
 
 DROP TRIGGER IF EXISTS update_shifts_updated_at ON shifts;
 CREATE TRIGGER update_shifts_updated_at BEFORE UPDATE ON shifts
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_schedules_updated_at ON schedules;
+CREATE TRIGGER update_schedules_updated_at BEFORE UPDATE ON schedules
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 DROP TRIGGER IF EXISTS update_teams_updated_at ON teams;
