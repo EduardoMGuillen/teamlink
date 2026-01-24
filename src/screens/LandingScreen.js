@@ -102,7 +102,8 @@ export default function LandingScreen() {
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
+        nestedScrollEnabled={true}
       >
         {/* Hero Section */}
         <View style={[styles.heroSection, isMobile && styles.heroSectionMobile]}>
@@ -373,16 +374,13 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    ...(isWeb && {
-      height: '100%',
-      overflowY: 'auto',
-      overflowX: 'hidden',
-    }),
   },
   scrollContent: {
+    flexGrow: 1,
     paddingBottom: 48,
     ...(isWeb && {
       paddingTop: 80, // Space for fixed header
+      minHeight: '100vh',
     }),
   },
   heroSection: {
