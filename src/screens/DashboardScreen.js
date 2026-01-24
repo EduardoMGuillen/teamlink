@@ -14,7 +14,6 @@ import { useTranslation } from '../utils/useTranslation';
 import { tasksService } from '../services/tasksService';
 import { shiftsService } from '../services/shiftsService';
 import { notificationsService } from '../services/notificationsService';
-import { shiftsService } from '../services/shiftsService';
 
 export default function DashboardScreen() {
   const { currentUser } = useAppState();

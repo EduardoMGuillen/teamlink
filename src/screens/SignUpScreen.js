@@ -213,7 +213,7 @@ export default function SignUpScreen() {
                   </Text>
                   <Ionicons name="calendar" size={20} color="#007AFF" />
                 </TouchableOpacity>
-                {showDatePicker && (
+                {showDatePicker && Platform.OS !== 'web' && (
                   <DateTimePicker
                     value={dateOfBirth}
                     mode="date"
@@ -229,6 +229,27 @@ export default function SignUpScreen() {
                       if (Platform.OS === 'ios') {
                         // On iOS, keep picker open until user dismisses
                       }
+                    }}
+                  />
+                )}
+                {showDatePicker && Platform.OS === 'web' && (
+                  <input
+                    type="date"
+                    value={dateOfBirth.toISOString().split('T')[0]}
+                    max={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setDateOfBirth(new Date(e.target.value));
+                        setShowDatePicker(false);
+                      }
+                    }}
+                    style={{
+                      marginTop: 10,
+                      padding: 10,
+                      borderWidth: 1,
+                      borderColor: '#E5E5EA',
+                      borderRadius: 8,
+                      fontSize: 16,
                     }}
                   />
                 )}
@@ -255,6 +276,26 @@ export default function SignUpScreen() {
                     </Text>
                     <Ionicons name="chevron-down" size={20} color="#007AFF" />
                   </TouchableOpacity>
+                ) : Platform.OS === 'web' ? (
+                  <select
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    style={{
+                      marginTop: 8,
+                      padding: 12,
+                      borderWidth: 1,
+                      borderColor: '#E5E5EA',
+                      borderRadius: 8,
+                      fontSize: 16,
+                      backgroundColor: '#fff',
+                    }}
+                  >
+                    {countries.map((c) => (
+                      <option key={c.value} value={c.value}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
                 ) : (
                   <View style={styles.pickerContainer}>
                     <Picker
@@ -300,6 +341,26 @@ export default function SignUpScreen() {
                     </Text>
                     <Ionicons name="chevron-down" size={20} color="#007AFF" />
                   </TouchableOpacity>
+                ) : Platform.OS === 'web' ? (
+                  <select
+                    value={timezone}
+                    onChange={(e) => setTimezone(e.target.value)}
+                    style={{
+                      marginTop: 8,
+                      padding: 12,
+                      borderWidth: 1,
+                      borderColor: '#E5E5EA',
+                      borderRadius: 8,
+                      fontSize: 16,
+                      backgroundColor: '#fff',
+                    }}
+                  >
+                    {timezones.map((tz) => (
+                      <option key={tz.value} value={tz.value}>
+                        {tz.label}
+                      </option>
+                    ))}
+                  </select>
                 ) : (
                   <View style={styles.pickerContainer}>
                     <Picker
@@ -332,6 +393,25 @@ export default function SignUpScreen() {
                     </Text>
                     <Ionicons name="chevron-down" size={20} color="#007AFF" />
                   </TouchableOpacity>
+                ) : Platform.OS === 'web' ? (
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    style={{
+                      marginTop: 8,
+                      padding: 12,
+                      borderWidth: 1,
+                      borderColor: '#E5E5EA',
+                      borderRadius: 8,
+                      fontSize: 16,
+                      backgroundColor: '#fff',
+                    }}
+                  >
+                    <option value="">{t('selectGender') || 'Select Gender'}</option>
+                    <option value="male">{t('male')}</option>
+                    <option value="female">{t('female')}</option>
+                    <option value="other">{t('other')}</option>
+                  </select>
                 ) : (
                   <View style={styles.pickerContainer}>
                     <Picker
