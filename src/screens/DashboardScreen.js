@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +22,7 @@ export default function DashboardScreen() {
   const { currentUser } = useAppState();
   const navigation = useNavigation();
   const { t } = useTranslation();
+  const isWeb = Platform.OS === 'web';
   const [stats, setStats] = useState({ hours: 0, tasks: 0 });
   const [recentActivity, setRecentActivity] = useState([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
@@ -136,36 +138,45 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.welcomeText}>{t('welcome')},</Text>
-            <Text style={styles.nameText}>{currentUser?.name || 'User'}</Text>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.content, isWeb && styles.contentWeb]}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.welcomeText}>{t('welcome')},</Text>
+              <Text style={styles.nameText}>{currentUser?.name || 'User'}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.notificationButton}
+              onPress={() => navigation.navigate('Notifications')}
+            >
+              <Ionicons name="notifications" size={24} color={colors.primary} />
+              {unreadNotifications > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.notificationButton}
-            onPress={() => navigation.navigate('Notifications')}
-          >
-            <Ionicons name="notifications" size={24} color={colors.primary} />
-            {unreadNotifications > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>
-                  {unreadNotifications > 99 ? '99+' : unreadNotifications}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
 
         {/* Quick Actions */}
-        <View style={styles.section}>
+        <View style={[styles.section, isWeb && styles.sectionWeb]}>
           <Text style={styles.sectionTitle}>{t('quickActions')}</Text>
-          <View style={styles.quickActionsGrid}>
+          <View style={[styles.quickActionsGrid, isWeb && styles.quickActionsGridWeb]}>
             {quickActions.map((action) => (
               <TouchableOpacity
                 key={action.id}
-                style={[styles.quickActionCard, { backgroundColor: action.bg }]}
+                style={[
+                  styles.quickActionCard,
+                  isWeb && styles.quickActionCardWeb,
+                  { backgroundColor: action.bg },
+                ]}
                 onPress={() => {
                   if (action.screen === 'Tasks') {
                     navigation.navigate('MainTabs', { screen: 'Tasks' });
@@ -184,9 +195,9 @@ export default function DashboardScreen() {
         </View>
 
         {/* Stats */}
-        <View style={styles.section}>
+        <View style={[styles.section, isWeb && styles.sectionWeb]}>
           <Text style={styles.sectionTitle}>{t('thisWeek') || 'This Week'}</Text>
-          <View style={styles.statsRow}>
+          <View style={[styles.statsRow, isWeb && styles.statsRowWeb]}>
             {/* <View style={styles.statCard}>
               <Ionicons name="time" size={24} color="#007AFF" />
               <Text style={styles.statValue}>{stats.hours}</Text>
@@ -201,11 +212,14 @@ export default function DashboardScreen() {
         </View>
 
         {/* Today's Activities */}
-        <View style={styles.section}>
+        <View style={[styles.section, isWeb && styles.sectionWeb]}>
           <Text style={styles.sectionTitle}>{t('yourActivitiesToday')}</Text>
           {todayActivities.length > 0 ? (
             todayActivities.map((activity) => (
-              <View key={activity.id} style={styles.activityCard}>
+              <View
+                key={activity.id}
+                style={[styles.activityCard, isWeb && styles.activityCardWeb]}
+              >
                 <View style={[
                   styles.activityIconContainer,
                   { backgroundColor: activity.type === 'recurring' ? '#007AFF20' : '#FF950020' }
@@ -258,11 +272,14 @@ export default function DashboardScreen() {
         </View>
 
         {/* Recent Activity */}
-        <View style={styles.section}>
+        <View style={[styles.section, isWeb && styles.sectionWeb]}>
           <Text style={styles.sectionTitle}>{t('recentActivity')}</Text>
           {recentActivity.length > 0 ? (
             recentActivity.map((activity) => (
-              <View key={activity.id} style={styles.activityCard}>
+              <View
+                key={activity.id}
+                style={[styles.activityCard, isWeb && styles.activityCardWeb]}
+              >
                 <View style={styles.activityIconContainer}>
                   <Ionicons name={activity.icon} size={20} color="#007AFF" />
                 </View>
@@ -281,6 +298,7 @@ export default function DashboardScreen() {
             </View>
           )}
         </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -293,6 +311,17 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  content: {
+    width: '100%',
+  },
+  contentWeb: {
+    maxWidth: 1200,
+    alignSelf: 'center',
+    paddingHorizontal: 24,
   },
   header: {
     flexDirection: 'row',
@@ -316,6 +345,9 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 0,
   },
+  sectionWeb: {
+    paddingHorizontal: 0,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
@@ -327,6 +359,9 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 12,
   },
+  quickActionsGridWeb: {
+    justifyContent: 'space-between',
+  },
   quickActionCard: {
     width: '47%',
     borderRadius: radii.lg,
@@ -335,6 +370,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 110,
     ...shadows.soft,
+  },
+  quickActionCardWeb: {
+    width: '31%',
+    minHeight: 130,
   },
   quickActionText: {
     fontSize: 14,
@@ -346,6 +385,9 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: 'row',
     gap: 12,
+  },
+  statsRowWeb: {
+    maxWidth: 360,
   },
   statCard: {
     flex: 1,
@@ -373,6 +415,9 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 10,
     ...shadows.soft,
+  },
+  activityCardWeb: {
+    padding: 16,
   },
   activityIconContainer: {
     width: 34,

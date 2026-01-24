@@ -10,6 +10,7 @@ import {
   Alert,
   Platform,
   ActivityIndicator,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar } from 'react-native-calendars';
@@ -52,8 +53,6 @@ export default function ScheduleScreen() {
 
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
-  const [showStartTimeModal, setShowStartTimeModal] = useState(false);
-  const [showEndTimeModal, setShowEndTimeModal] = useState(false);
   const [tempStartTime, setTempStartTime] = useState(new Date());
   const [tempEndTime, setTempEndTime] = useState(new Date());
 
@@ -67,8 +66,6 @@ export default function ScheduleScreen() {
   const [showEventStartTimePicker, setShowEventStartTimePicker] = useState(false);
   const [showEventEndPicker, setShowEventEndPicker] = useState(false);
   const [showEventEndTimePicker, setShowEventEndTimePicker] = useState(false);
-  const [showEventStartModal, setShowEventStartModal] = useState(false);
-  const [showEventEndModal, setShowEventEndModal] = useState(false);
   const [tempEventStartTime, setTempEventStartTime] = useState(new Date());
   const [tempEventEndTime, setTempEventEndTime] = useState(new Date());
 
@@ -82,17 +79,17 @@ export default function ScheduleScreen() {
     if (!currentUser?.id) return;
     setIsLoading(true);
     try {
-      const startDate = new Date(selectedDate);
+      const startDate = parseLocalDateString(selectedDate);
       startDate.setMonth(startDate.getMonth() - 1);
       startDate.setHours(0, 0, 0, 0);
-      const endDate = new Date(selectedDate);
+      const endDate = parseLocalDateString(selectedDate);
       endDate.setMonth(endDate.getMonth() + 1);
       endDate.setHours(23, 59, 59, 999);
 
       const [recurring, events, dayActivities] = await Promise.all([
         calendarScheduleService.getRecurringSchedules(currentUser.id),
         calendarScheduleService.getCalendarEvents(currentUser.id, startDate, endDate),
-        calendarScheduleService.getActivitiesForDate(currentUser.id, selectedDate),
+        calendarScheduleService.getActivitiesForDate(currentUser.id, `${selectedDate}T00:00:00`),
       ]);
 
       setRecurringSchedules(recurring);
@@ -121,6 +118,11 @@ export default function ScheduleScreen() {
   const toLocalDateTimeInput = (date) => {
     const pad = (n) => String(n).padStart(2, '0');
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  };
+
+  const parseLocalDateString = (dateString) => {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
   };
 
   const webInputStyle = {
@@ -165,7 +167,7 @@ export default function ScheduleScreen() {
   const openAddEvent = () => {
     setModalType('event');
     setEditingItem(null);
-    const baseDate = new Date(selectedDate);
+    const baseDate = parseLocalDateString(selectedDate);
     const start = new Date(baseDate);
     start.setHours(9, 0, 0, 0);
     const end = new Date(baseDate);
@@ -434,17 +436,26 @@ export default function ScheduleScreen() {
       {/* Recurring Schedule Modal */}
       <Modal visible={showModal && modalType === 'recurring'} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {editingItem ? t('editRecurringSchedule') : t('addRecurringSchedule')}
-              </Text>
-              <TouchableOpacity onPress={() => setShowModal(false)}>
-                <Ionicons name="close" size={24} color={colors.textMuted} />
-              </TouchableOpacity>
-            </View>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.modalKeyboardView}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+          >
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>
+                  {editingItem ? t('editRecurringSchedule') : t('addRecurringSchedule')}
+                </Text>
+                <TouchableOpacity onPress={() => setShowModal(false)}>
+                  <Ionicons name="close" size={24} color={colors.textMuted} />
+                </TouchableOpacity>
+              </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={styles.modalScrollContent}
+              >
               <TextInput
                 style={styles.input}
                 placeholder={t('title')}
@@ -502,12 +513,8 @@ export default function ScheduleScreen() {
                 <TouchableOpacity
                   style={styles.timeButton}
                   onPress={() => {
-                    if (Platform.OS === 'ios') {
-                      setTempStartTime(parseTimeToDate(scheduleStartTime));
-                      setShowStartTimeModal(true);
-                    } else {
-                      setShowStartTimePicker(true);
-                    }
+                    setTempStartTime(parseTimeToDate(scheduleStartTime));
+                    setShowStartTimePicker(true);
                   }}
                 >
                   <Text style={styles.timeButtonText}>{scheduleStartTime}</Text>
@@ -526,58 +533,126 @@ export default function ScheduleScreen() {
                 <TouchableOpacity
                   style={styles.timeButton}
                   onPress={() => {
-                    if (Platform.OS === 'ios') {
-                      setTempEndTime(parseTimeToDate(scheduleEndTime));
-                      setShowEndTimeModal(true);
-                    } else {
-                      setShowEndTimePicker(true);
-                    }
+                    setTempEndTime(parseTimeToDate(scheduleEndTime));
+                    setShowEndTimePicker(true);
                   }}
                 >
                   <Text style={styles.timeButtonText}>{scheduleEndTime}</Text>
                 </TouchableOpacity>
               )}
 
+              {Platform.OS === 'ios' && showStartTimePicker && (
+                <View style={styles.inlinePicker}>
+                  <DateTimePicker
+                    value={tempStartTime}
+                    mode="time"
+                    display="spinner"
+                    textColor={colors.text}
+                    themeVariant="light"
+                    onChange={(event, date) => date && setTempStartTime(date)}
+                  />
+                  <View style={styles.inlinePickerActions}>
+                    <TouchableOpacity
+                      style={styles.inlineCancel}
+                      onPress={() => setShowStartTimePicker(false)}
+                    >
+                      <Text style={styles.cancelText}>{t('cancel')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.inlineSave}
+                      onPress={() => {
+                        setScheduleStartTime(formatTimeString(tempStartTime));
+                        setShowStartTimePicker(false);
+                      }}
+                    >
+                      <Text style={styles.saveText}>{t('save')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              {Platform.OS === 'ios' && showEndTimePicker && (
+                <View style={styles.inlinePicker}>
+                  <DateTimePicker
+                    value={tempEndTime}
+                    mode="time"
+                    display="spinner"
+                    textColor={colors.text}
+                    themeVariant="light"
+                    onChange={(event, date) => date && setTempEndTime(date)}
+                  />
+                  <View style={styles.inlinePickerActions}>
+                    <TouchableOpacity
+                      style={styles.inlineCancel}
+                      onPress={() => setShowEndTimePicker(false)}
+                    >
+                      <Text style={styles.cancelText}>{t('cancel')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.inlineSave}
+                      onPress={() => {
+                        setScheduleEndTime(formatTimeString(tempEndTime));
+                        setShowEndTimePicker(false);
+                      }}
+                    >
+                      <Text style={styles.saveText}>{t('save')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              <Text style={styles.label}>{t('location')}</Text>
               <TextInput
                 style={styles.input}
                 placeholder={t('location')}
                 value={scheduleLocation}
                 onChangeText={setScheduleLocation}
               />
+              <Text style={styles.label}>{t('position')}</Text>
               <TextInput
                 style={styles.input}
                 placeholder={t('position')}
                 value={schedulePosition}
                 onChangeText={setSchedulePosition}
               />
-            </ScrollView>
+              </ScrollView>
 
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setShowModal(false)}>
-                <Text style={styles.cancelText}>{t('cancel')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.saveButton} onPress={handleSaveRecurring}>
-                <Text style={styles.saveText}>{t('save')}</Text>
-              </TouchableOpacity>
+              <View style={styles.modalActions}>
+                <TouchableOpacity style={styles.cancelButton} onPress={() => setShowModal(false)}>
+                  <Text style={styles.cancelText}>{t('cancel')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.saveButton} onPress={handleSaveRecurring}>
+                  <Text style={styles.saveText}>{t('save')}</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
 
       {/* Event Modal */}
       <Modal visible={showModal && modalType === 'event'} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {editingItem ? t('editEvent') : t('addEvent')}
-              </Text>
-              <TouchableOpacity onPress={() => setShowModal(false)}>
-                <Ionicons name="close" size={24} color={colors.textMuted} />
-              </TouchableOpacity>
-            </View>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.modalKeyboardView}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+          >
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>
+                  {editingItem ? t('editEvent') : t('addEvent')}
+                </Text>
+                <TouchableOpacity onPress={() => setShowModal(false)}>
+                  <Ionicons name="close" size={24} color={colors.textMuted} />
+                </TouchableOpacity>
+              </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={styles.modalScrollContent}
+              >
               <TextInput
                 style={styles.input}
                 placeholder={t('title')}
@@ -604,12 +679,8 @@ export default function ScheduleScreen() {
                 <TouchableOpacity
                   style={styles.timeButton}
                   onPress={() => {
-                    if (Platform.OS === 'ios') {
-                      setTempEventStartTime(new Date(eventStartTime));
-                      setShowEventStartModal(true);
-                    } else {
-                      setShowEventStartPicker(true);
-                    }
+                    setTempEventStartTime(new Date(eventStartTime));
+                    setShowEventStartPicker(true);
                   }}
                 >
                   <Text style={styles.timeButtonText}>
@@ -630,12 +701,8 @@ export default function ScheduleScreen() {
                 <TouchableOpacity
                   style={styles.timeButton}
                   onPress={() => {
-                    if (Platform.OS === 'ios') {
-                      setTempEventEndTime(new Date(eventEndTime));
-                      setShowEventEndModal(true);
-                    } else {
-                      setShowEventEndPicker(true);
-                    }
+                    setTempEventEndTime(new Date(eventEndTime));
+                    setShowEventEndPicker(true);
                   }}
                 >
                   <Text style={styles.timeButtonText}>
@@ -644,136 +711,87 @@ export default function ScheduleScreen() {
                 </TouchableOpacity>
               )}
 
+              {Platform.OS === 'ios' && showEventStartPicker && (
+                <View style={styles.inlinePicker}>
+                  <DateTimePicker
+                    value={tempEventStartTime}
+                    mode="datetime"
+                    display="spinner"
+                    textColor={colors.text}
+                    themeVariant="light"
+                    onChange={(event, date) => date && setTempEventStartTime(date)}
+                  />
+                  <View style={styles.inlinePickerActions}>
+                    <TouchableOpacity
+                      style={styles.inlineCancel}
+                      onPress={() => setShowEventStartPicker(false)}
+                    >
+                      <Text style={styles.cancelText}>{t('cancel')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.inlineSave}
+                      onPress={() => {
+                        setEventStartTime(new Date(tempEventStartTime));
+                        setShowEventStartPicker(false);
+                      }}
+                    >
+                      <Text style={styles.saveText}>{t('save')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              {Platform.OS === 'ios' && showEventEndPicker && (
+                <View style={styles.inlinePicker}>
+                  <DateTimePicker
+                    value={tempEventEndTime}
+                    mode="datetime"
+                    display="spinner"
+                    textColor={colors.text}
+                    themeVariant="light"
+                    onChange={(event, date) => date && setTempEventEndTime(date)}
+                  />
+                  <View style={styles.inlinePickerActions}>
+                    <TouchableOpacity
+                      style={styles.inlineCancel}
+                      onPress={() => setShowEventEndPicker(false)}
+                    >
+                      <Text style={styles.cancelText}>{t('cancel')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.inlineSave}
+                      onPress={() => {
+                        setEventEndTime(new Date(tempEventEndTime));
+                        setShowEventEndPicker(false);
+                      }}
+                    >
+                      <Text style={styles.saveText}>{t('save')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              <Text style={styles.label}>{t('location')}</Text>
               <TextInput
                 style={styles.input}
                 placeholder={t('location')}
                 value={eventLocation}
                 onChangeText={setEventLocation}
               />
-            </ScrollView>
+              </ScrollView>
 
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setShowModal(false)}>
-                <Text style={styles.cancelText}>{t('cancel')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.saveButton} onPress={handleSaveEvent}>
-                <Text style={styles.saveText}>{t('save')}</Text>
-              </TouchableOpacity>
+              <View style={styles.modalActions}>
+                <TouchableOpacity style={styles.cancelButton} onPress={() => setShowModal(false)}>
+                  <Text style={styles.cancelText}>{t('cancel')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.saveButton} onPress={handleSaveEvent}>
+                  <Text style={styles.saveText}>{t('save')}</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
-
-      {/* iOS recurring time modals */}
-      {Platform.OS === 'ios' && (
-        <>
-          <Modal visible={showStartTimeModal} transparent animationType="slide">
-            <View style={styles.pickerOverlay}>
-              <View style={styles.pickerContent}>
-                <View style={styles.pickerHeader}>
-                  <TouchableOpacity onPress={() => setShowStartTimeModal(false)}>
-                    <Text style={styles.cancelText}>{t('cancel')}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => {
-                      const time = formatTimeString(tempStartTime);
-                      setScheduleStartTime(time);
-                      setShowStartTimeModal(false);
-                    }}
-                  >
-                    <Text style={styles.saveText}>{t('save')}</Text>
-                  </TouchableOpacity>
-                </View>
-                <DateTimePicker
-                  value={tempStartTime}
-                  mode="time"
-                  display="spinner"
-                  onChange={(event, date) => date && setTempStartTime(date)}
-                />
-              </View>
-            </View>
-          </Modal>
-
-          <Modal visible={showEndTimeModal} transparent animationType="slide">
-            <View style={styles.pickerOverlay}>
-              <View style={styles.pickerContent}>
-                <View style={styles.pickerHeader}>
-                  <TouchableOpacity onPress={() => setShowEndTimeModal(false)}>
-                    <Text style={styles.cancelText}>{t('cancel')}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => {
-                      const time = formatTimeString(tempEndTime);
-                      setScheduleEndTime(time);
-                      setShowEndTimeModal(false);
-                    }}
-                  >
-                    <Text style={styles.saveText}>{t('save')}</Text>
-                  </TouchableOpacity>
-                </View>
-                <DateTimePicker
-                  value={tempEndTime}
-                  mode="time"
-                  display="spinner"
-                  onChange={(event, date) => date && setTempEndTime(date)}
-                />
-              </View>
-            </View>
-          </Modal>
-
-          <Modal visible={showEventStartModal} transparent animationType="slide">
-            <View style={styles.pickerOverlay}>
-              <View style={styles.pickerContent}>
-                <View style={styles.pickerHeader}>
-                  <TouchableOpacity onPress={() => setShowEventStartModal(false)}>
-                    <Text style={styles.cancelText}>{t('cancel')}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setEventStartTime(new Date(tempEventStartTime));
-                      setShowEventStartModal(false);
-                    }}
-                  >
-                    <Text style={styles.saveText}>{t('save')}</Text>
-                  </TouchableOpacity>
-                </View>
-                <DateTimePicker
-                  value={tempEventStartTime}
-                  mode="datetime"
-                  display="spinner"
-                  onChange={(event, date) => date && setTempEventStartTime(date)}
-                />
-              </View>
-            </View>
-          </Modal>
-
-          <Modal visible={showEventEndModal} transparent animationType="slide">
-            <View style={styles.pickerOverlay}>
-              <View style={styles.pickerContent}>
-                <View style={styles.pickerHeader}>
-                  <TouchableOpacity onPress={() => setShowEventEndModal(false)}>
-                    <Text style={styles.cancelText}>{t('cancel')}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setEventEndTime(new Date(tempEventEndTime));
-                      setShowEventEndModal(false);
-                    }}
-                  >
-                    <Text style={styles.saveText}>{t('save')}</Text>
-                  </TouchableOpacity>
-                </View>
-                <DateTimePicker
-                  value={tempEventEndTime}
-                  mode="datetime"
-                  display="spinner"
-                  onChange={(event, date) => date && setTempEventEndTime(date)}
-                />
-              </View>
-            </View>
-          </Modal>
-        </>
-      )}
 
       {/* Android pickers */}
       {Platform.OS === 'android' && showStartTimePicker && (
@@ -987,12 +1005,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
+  modalKeyboardView: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
   modalContent: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: radii.xl,
     borderTopRightRadius: radii.xl,
     padding: 20,
     maxHeight: '90%',
+  },
+  modalScrollContent: {
+    paddingBottom: 12,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1053,6 +1078,28 @@ const styles = StyleSheet.create({
   timeButtonText: {
     color: colors.text,
     fontWeight: '600',
+  },
+  inlinePicker: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    padding: 12,
+    marginBottom: 12,
+    ...shadows.soft,
+  },
+  inlinePickerActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  inlineCancel: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+  inlineSave: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    backgroundColor: colors.primary,
+    borderRadius: radii.md,
   },
   modalActions: {
     flexDirection: 'row',
