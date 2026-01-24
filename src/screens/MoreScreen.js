@@ -98,6 +98,7 @@ export default function MoreScreen() {
             ))}
           </View>
         ))}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
