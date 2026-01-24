@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
     ...(isWeb && {
-      height: '100vh',
+      minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
     }),
@@ -430,8 +430,6 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     ...(isWeb && {
-      marginTop: 80, // Space for fixed header
-      height: 'calc(100vh - 80px)',
       overflowY: 'auto',
       overflowX: 'hidden',
       WebkitOverflowScrolling: 'touch',
@@ -443,7 +441,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: 48,
     ...(isWeb && {
-      paddingTop: 0,
+      paddingTop: 80, // Space for fixed header
     }),
   },
   heroSection: {
