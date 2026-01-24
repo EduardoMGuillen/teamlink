@@ -7,34 +7,65 @@ import {
   TouchableOpacity,
   Platform,
   Dimensions,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radii, shadows } from '../utils/theme';
+import { useTranslation } from '../utils/useTranslation';
 
 export default function LandingScreen() {
   const navigation = useNavigation();
+  const { t, language, changeLanguage, availableLanguages } = useTranslation();
   const isWeb = Platform.OS === 'web';
   const { width } = Dimensions.get('window');
   const isWide = width >= 1024;
+  const isCompact = width < 768;
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, isCompact && styles.headerCompact]}>
         <View style={styles.brandRow}>
-          <View style={styles.logoDot} />
+          {isWeb ? (
+            <Image source={require('../../logo.png')} style={styles.logoImage} />
+          ) : (
+            <View style={styles.logoDot} />
+          )}
           <Text style={styles.brand}>TeamLink</Text>
         </View>
-        <View style={styles.headerActions}>
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.headerLink}>Login</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.headerButton}
-            onPress={() => navigation.navigate('SignUp')}
-          >
-            <Text style={styles.headerButtonText}>Sign Up</Text>
-          </TouchableOpacity>
+        <View style={[styles.headerActions, isCompact && styles.headerActionsCompact]}>
+          <View style={styles.languageSelector}>
+            {availableLanguages.map((lang) => (
+              <TouchableOpacity
+                key={lang.code}
+                style={[
+                  styles.languageButton,
+                  language === lang.code && styles.languageButtonActive,
+                ]}
+                onPress={() => changeLanguage(lang.code)}
+              >
+                <Text
+                  style={[
+                    styles.languageButtonText,
+                    language === lang.code && styles.languageButtonTextActive,
+                  ]}
+                >
+                  {lang.code.toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={styles.authActions}>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.headerLink}>{t('login')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerButton}
+              onPress={() => navigation.navigate('SignUp')}
+            >
+              <Text style={styles.headerButtonText}>{t('signUp')}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -69,7 +100,7 @@ export default function LandingScreen() {
                 style={styles.secondaryCta}
                 onPress={() => navigation.navigate('Login')}
               >
-                <Text style={styles.secondaryCtaText}>Login</Text>
+                <Text style={styles.secondaryCtaText}>{t('login')}</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.trustRow}>
@@ -83,6 +114,9 @@ export default function LandingScreen() {
                 </View>
                 <View style={styles.trustPill}>
                   <Text style={styles.trustPillText}>Field Services</Text>
+                </View>
+                <View style={styles.trustPill}>
+                  <Text style={styles.trustPillText}>Hospitality</Text>
                 </View>
               </View>
             </View>
@@ -144,6 +178,73 @@ export default function LandingScreen() {
           </View>
         </View>
 
+        <View style={styles.sectionBlock}>
+          <Text style={styles.sectionHeading}>Everything your team uses daily</Text>
+          <Text style={styles.sectionSubheading}>
+            Built-in tools for planning, delivery, collaboration, and team focus.
+          </Text>
+          <View style={[styles.stackGrid, isWide && styles.stackGridWide]}>
+            <View style={styles.stackItem}>
+              <Ionicons name="sparkles" size={20} color={colors.accent} />
+              <Text style={styles.stackTitle}>Daily Motivation</Text>
+              <Text style={styles.stackText}>
+                Spark keeps teams aligned with daily focus prompts and
+                configurable notifications.
+              </Text>
+            </View>
+            <View style={styles.stackItem}>
+              <Ionicons name="people" size={20} color="#22C55E" />
+              <Text style={styles.stackTitle}>Teams & Approvals</Text>
+              <Text style={styles.stackText}>
+                Create teams, approve join requests, and invite members by
+                email with role control.
+              </Text>
+            </View>
+            <View style={styles.stackItem}>
+              <Ionicons name="color-palette" size={20} color="#0EA5E9" />
+              <Text style={styles.stackTitle}>Custom Backgrounds</Text>
+              <Text style={styles.stackText}>
+                Personalize the workspace with curated backgrounds from
+                Settings.
+              </Text>
+            </View>
+            <View style={styles.stackItem}>
+              <Ionicons name="notifications" size={20} color="#F97316" />
+              <Text style={styles.stackTitle}>Updates & Alerts</Text>
+              <Text style={styles.stackText}>
+                Broadcast updates and keep every team member in sync.
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.sectionBlock}>
+          <Text style={styles.sectionHeading}>How TeamLink works</Text>
+          <View style={styles.steps}>
+            <View style={styles.stepCard}>
+              <Text style={styles.stepNumber}>01</Text>
+              <Text style={styles.stepTitle}>Create your workspace</Text>
+              <Text style={styles.stepText}>
+                Set up your team, define roles, and invite members instantly.
+              </Text>
+            </View>
+            <View style={styles.stepCard}>
+              <Text style={styles.stepNumber}>02</Text>
+              <Text style={styles.stepTitle}>Plan the week</Text>
+              <Text style={styles.stepText}>
+                Use Planner to schedule events, shifts, and recurring schedules.
+              </Text>
+            </View>
+            <View style={styles.stepCard}>
+              <Text style={styles.stepNumber}>03</Text>
+              <Text style={styles.stepTitle}>Execute with clarity</Text>
+              <Text style={styles.stepText}>
+                Track tasks, chat with members, and keep progress visible.
+              </Text>
+            </View>
+          </View>
+        </View>
+
         <View style={styles.ctaBanner}>
           <View>
             <Text style={styles.ctaTitle}>Ready to bring your team together?</Text>
@@ -182,10 +283,19 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     backgroundColor: colors.surface,
   },
+  headerCompact: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+  },
+  logoImage: {
+    width: 28,
+    height: 28,
   },
   logoDot: {
     width: 14,
@@ -202,6 +312,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
+  },
+  headerActionsCompact: {
+    width: '100%',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  languageSelector: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  languageButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    backgroundColor: colors.surfaceAlt,
+  },
+  languageButtonActive: {
+    backgroundColor: `${colors.primary}20`,
+  },
+  languageButtonText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  languageButtonTextActive: {
+    color: colors.primary,
+  },
+  authActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
   },
   headerLink: {
     fontSize: 14,
@@ -257,11 +399,11 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   heroTitle: {
-    fontSize: 36,
+    fontSize: Platform.OS === 'web' ? 36 : 30,
     fontWeight: '800',
     color: colors.text,
     marginTop: 16,
-    lineHeight: 42,
+    lineHeight: Platform.OS === 'web' ? 42 : 38,
   },
   heroSubtitle: {
     fontSize: 16,
@@ -410,6 +552,77 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     flexWrap: 'wrap',
     gap: 16,
+  },
+  sectionBlock: {
+    marginTop: 32,
+  },
+  sectionHeading: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  sectionSubheading: {
+    fontSize: 14,
+    color: colors.textMuted,
+    marginBottom: 16,
+  },
+  stackGrid: {
+    gap: 14,
+  },
+  stackGridWide: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  stackItem: {
+    flex: 1,
+    minWidth: 220,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.soft,
+  },
+  stackTitle: {
+    marginTop: 8,
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  stackText: {
+    marginTop: 6,
+    fontSize: 13,
+    color: colors.textMuted,
+    lineHeight: 20,
+  },
+  steps: {
+    gap: 14,
+  },
+  stepCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.soft,
+  },
+  stepNumber: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  stepTitle: {
+    marginTop: 6,
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  stepText: {
+    marginTop: 6,
+    fontSize: 13,
+    color: colors.textMuted,
+    lineHeight: 20,
   },
   ctaTitle: {
     fontSize: 18,
