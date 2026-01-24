@@ -9,6 +9,7 @@ import {
   Modal,
   Alert,
   KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,7 +19,6 @@ import { tasksService } from '../services/tasksService';
 import { teamsService } from '../services/teamsService';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Platform } from 'react-native';
 
 export default function TasksScreen() {
   const { t } = useTranslation();
@@ -31,6 +31,7 @@ export default function TasksScreen() {
   const [taskDescription, setTaskDescription] = useState('');
   const [taskPriority, setTaskPriority] = useState('medium');
   const [taskDueDate, setTaskDueDate] = useState(new Date());
+  const [tempDate, setTempDate] = useState(new Date()); // Temporary date for picker
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('date'); // 'date', 'priority', 'status'
   const [isLoading, setIsLoading] = useState(false);
@@ -521,7 +522,11 @@ export default function TasksScreen() {
                   <>
                     <TouchableOpacity
                       style={styles.dateButton}
-                      onPress={() => setShowDatePicker(true)}
+                      onPress={() => {
+                        setTempDate(new Date(taskDueDate));
+                        setShowDatePicker(true);
+                      }}
+                      activeOpacity={0.7}
                     >
                       <Ionicons name="calendar" size={20} color="#007AFF" />
                       <Text style={styles.dateText}>
@@ -628,36 +633,53 @@ export default function TasksScreen() {
       </Modal>
 
       {/* Date Picker Modal for iOS */}
-      {Platform.OS === 'ios' && showDatePicker && (
+      {Platform.OS === 'ios' && (
         <Modal
           visible={showDatePicker}
           transparent={true}
           animationType="slide"
           onRequestClose={() => setShowDatePicker(false)}
+          presentationStyle="overFullScreen"
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
+          <View style={styles.datePickerModalOverlay}>
+            <TouchableOpacity 
+              style={styles.datePickerBackdrop}
+              activeOpacity={1}
+              onPress={() => setShowDatePicker(false)}
+            />
+            <View style={styles.datePickerModalContent} pointerEvents="box-none">
               <View style={styles.modalHeader}>
-                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                <TouchableOpacity 
+                  onPress={() => setShowDatePicker(false)}
+                  activeOpacity={0.7}
+                >
                   <Text style={styles.modalCancel}>{t('cancel')}</Text>
                 </TouchableOpacity>
                 <Text style={styles.modalTitle}>{t('dueDate')}</Text>
-                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                <TouchableOpacity 
+                  onPress={() => {
+                    setTaskDueDate(new Date(tempDate));
+                    setShowDatePicker(false);
+                  }}
+                  activeOpacity={0.7}
+                >
                   <Text style={styles.modalDone}>{t('save')}</Text>
                 </TouchableOpacity>
               </View>
-              <DateTimePicker
-                value={taskDueDate}
-                mode="date"
-                display="spinner"
-                minimumDate={new Date()}
-                onChange={(event, selectedDate) => {
-                  if (selectedDate) {
-                    setTaskDueDate(selectedDate);
-                  }
-                }}
-                style={styles.datePickerIOS}
-              />
+              <View style={styles.datePickerWrapper}>
+                <DateTimePicker
+                  value={tempDate}
+                  mode="date"
+                  display="spinner"
+                  minimumDate={new Date()}
+                  onChange={(event, selectedDate) => {
+                    if (selectedDate) {
+                      setTempDate(selectedDate);
+                    }
+                  }}
+                  style={styles.datePickerIOS}
+                />
+              </View>
             </View>
           </View>
         </Modal>
@@ -1008,5 +1030,25 @@ const styles = StyleSheet.create({
   datePickerIOS: {
     height: 200,
     width: '100%',
+  },
+  datePickerModalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  datePickerBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  datePickerModalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    paddingBottom: 40,
+  },
+  datePickerWrapper: {
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

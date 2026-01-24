@@ -14,6 +14,7 @@ import { useTranslation } from '../utils/useTranslation';
 import { tasksService } from '../services/tasksService';
 import { shiftsService } from '../services/shiftsService';
 import { notificationsService } from '../services/notificationsService';
+import { calendarScheduleService } from '../services/calendarScheduleService';
 
 export default function DashboardScreen() {
   const { currentUser } = useAppState();
@@ -22,14 +23,17 @@ export default function DashboardScreen() {
   const [stats, setStats] = useState({ hours: 0, tasks: 0 });
   const [recentActivity, setRecentActivity] = useState([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [todayActivities, setTodayActivities] = useState([]);
 
   useEffect(() => {
     if (currentUser?.id) {
       loadDashboardData();
       loadUnreadNotifications();
+      loadTodayActivities();
       const interval = setInterval(() => {
         loadDashboardData();
         loadUnreadNotifications();
+        loadTodayActivities();
       }, 30000); // Refresh every 30 seconds
       return () => clearInterval(interval);
     }
@@ -42,6 +46,17 @@ export default function DashboardScreen() {
       setUnreadNotifications(unread.length);
     } catch (error) {
       console.error('Error loading unread notifications:', error);
+    }
+  };
+
+  const loadTodayActivities = async () => {
+    if (!currentUser?.id) return;
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const activities = await calendarScheduleService.getActivitiesForDate(currentUser.id, today);
+      setTodayActivities(activities);
+    } catch (error) {
+      console.error('Error loading today activities:', error);
     }
   };
 
@@ -206,6 +221,63 @@ export default function DashboardScreen() {
           </View>
         </View>
 
+        {/* Today's Activities */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('yourActivitiesToday')}</Text>
+          {todayActivities.length > 0 ? (
+            todayActivities.map((activity) => (
+              <View key={activity.id} style={styles.activityCard}>
+                <View style={[
+                  styles.activityIconContainer,
+                  { backgroundColor: activity.type === 'recurring' ? '#007AFF20' : '#FF950020' }
+                ]}>
+                  <Ionicons 
+                    name={activity.type === 'recurring' ? 'repeat' : 'calendar'} 
+                    size={20} 
+                    color={activity.type === 'recurring' ? '#007AFF' : '#FF9500'} 
+                  />
+                </View>
+                <View style={styles.activityContent}>
+                  <View style={styles.activityHeader}>
+                    <Text style={styles.activityTitle}>{activity.title}</Text>
+                    <View style={[
+                      styles.activityTypeBadge,
+                      { backgroundColor: activity.type === 'recurring' ? '#007AFF20' : '#FF950020' }
+                    ]}>
+                      <Text style={[
+                        styles.activityTypeText,
+                        { color: activity.type === 'recurring' ? '#007AFF' : '#FF9500' }
+                      ]}>
+                        {activity.type === 'recurring' ? t('recurring') : t('event')}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.activitySubtitle}>
+                    {typeof activity.startTime === 'string' 
+                      ? `${activity.startTime} - ${activity.endTime}`
+                      : `${formatTime(activity.startTime)} - ${formatTime(activity.endTime)}`}
+                  </Text>
+                  {activity.description && (
+                    <Text style={styles.activityDescription}>{activity.description}</Text>
+                  )}
+                  {activity.location && (
+                    <View style={styles.activityLocation}>
+                      <Ionicons name="location" size={12} color="#8E8E93" />
+                      <Text style={styles.activityLocationText}>{activity.location}</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            ))
+          ) : (
+            <View style={styles.emptyActivity}>
+              <Text style={styles.emptyActivityText}>
+                {t('noActivitiesToday')}
+              </Text>
+            </View>
+          )}
+        </View>
+
         {/* Recent Activity */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('recentActivity')}</Text>
@@ -344,6 +416,36 @@ const styles = StyleSheet.create({
   activityTime: {
     fontSize: 12,
     color: '#8E8E93',
+  },
+  activityHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  activityTypeBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  activityTypeText: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  activityDescription: {
+    fontSize: 12,
+    color: '#8E8E93',
+    marginTop: 4,
+  },
+  activityLocation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  activityLocationText: {
+    fontSize: 12,
+    color: '#8E8E93',
+    marginLeft: 4,
   },
   emptyActivity: {
     padding: 20,

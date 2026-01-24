@@ -53,6 +53,19 @@ export const shiftsService = {
         return { success: false, error: 'Invalid user ID format' };
       }
 
+      // Verificar que el usuario esté autenticado
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        console.error('No active session:', sessionError);
+        return { success: false, error: 'User not authenticated. Please log in again.' };
+      }
+
+      // Verificar que el userId coincida con el usuario autenticado
+      if (session.user.id !== userId) {
+        console.error('User ID mismatch:', session.user.id, userId);
+        return { success: false, error: 'User ID does not match authenticated user' };
+      }
+
       const { data, error } = await supabase
         .from('shifts')
         .insert({
