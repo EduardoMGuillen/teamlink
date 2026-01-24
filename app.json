@@ -40,7 +40,20 @@
     },
     "web": {
       "bundler": "metro",
-      "favicon": "./logo.png"
+      "favicon": "./logo.png",
+      "config": {
+        "head": {
+          "scripts": [
+            {
+              "src": "https://www.googletagmanager.com/gtag/js?id=G-ZGSCPDY50J",
+              "async": true
+            },
+            {
+              "innerHTML": "window.dataLayer = window.dataLayer || [];\\nfunction gtag(){dataLayer.push(arguments);}\\ngtag('js', new Date());\\n\\ngtag('config', 'G-ZGSCPDY50J');"
+            }
+          ]
+        }
+      }
     },
     "sdkVersion": "54.0.0",
     "jsEngine": "hermes",
