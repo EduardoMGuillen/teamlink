@@ -259,9 +259,10 @@ export default function LandingScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>© {new Date().getFullYear()} TeamLink. {t('landingAllRightsReserved')}.</Text>
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>© {new Date().getFullYear()} TeamLink. {t('landingAllRightsReserved')}.</Text>
+          </View>
         </View>
       </ScrollView>
     </View>
