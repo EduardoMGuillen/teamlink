@@ -23,6 +23,7 @@ export default function TeamsScreen() {
   const navigation = useNavigation();
   const { currentUser, selectedBackground } = useAppState();
   const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
+  const isWeb = Platform.OS === 'web';
   const [isLoading, setIsLoading] = useState(true);
   const [teams, setTeams] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState(null);
@@ -306,50 +307,56 @@ export default function TeamsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, hasCustomBackground && { backgroundColor: 'transparent' }]} edges={['top']}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>{t('teams')}</Text>
-          <Text style={styles.subtitle}>{t('teamsOverview') || 'Build and manage your team workspace'}</Text>
-        </View>
-      </View>
-
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      ) : teams.length === 0 ? (
-        <View style={styles.content}>
-          <View style={styles.emptyState}>
-            <Ionicons name="people-outline" size={80} color={colors.textMuted} />
-            <Text style={styles.emptyTitle}>{t('teams')}</Text>
-            <Text style={styles.emptySubtitle}>
-              {t('teamsDescription') || 'Create or join a team to collaborate with your colleagues'}
-            </Text>
-
-            <View style={styles.buttonsContainer}>
-              <TouchableOpacity
-                style={[styles.button, styles.createButton]}
-                onPress={() => setShowCreateModal(true)}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="add-circle" size={24} color="#fff" />
-                <Text style={styles.buttonText}>{t('createTeam')}</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.button, styles.joinButton]}
-                onPress={() => setShowJoinModal(true)}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="person-add" size={24} color="#fff" />
-                <Text style={styles.buttonText}>{t('joinTeam')}</Text>
-              </TouchableOpacity>
+    <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['top']}>
+      <ScrollView
+        style={[styles.scrollView, hasCustomBackground && styles.scrollViewTransparent]}
+        contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.title}>{t('teams')}</Text>
+              <Text style={styles.subtitle}>{t('teamsOverview') || 'Build and manage your team workspace'}</Text>
             </View>
           </View>
-        </View>
-      ) : (
-        <ScrollView style={styles.scroll}>
+
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+          ) : teams.length === 0 ? (
+            <View style={styles.emptyStateContainer}>
+              <View style={styles.emptyState}>
+                <Ionicons name="people-outline" size={80} color={colors.textMuted} />
+                <Text style={styles.emptyTitle}>{t('teams')}</Text>
+                <Text style={styles.emptySubtitle}>
+                  {t('teamsDescription') || 'Create or join a team to collaborate with your colleagues'}
+                </Text>
+
+                <View style={styles.buttonsContainer}>
+                  <TouchableOpacity
+                    style={[styles.button, styles.createButton]}
+                    onPress={() => setShowCreateModal(true)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="add-circle" size={24} color="#fff" />
+                    <Text style={styles.buttonText}>{t('createTeam')}</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.button, styles.joinButton]}
+                    onPress={() => setShowJoinModal(true)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="person-add" size={24} color="#fff" />
+                    <Text style={styles.buttonText}>{t('joinTeam')}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.teamsContent}>
           {pendingInvites.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>{t('invitations') || 'Invitations'}</Text>
@@ -563,8 +570,10 @@ export default function TeamsScreen() {
               </View>
             </>
           )}
-        </ScrollView>
-      )}
+            </View>
+          )}
+        </View>
+      </ScrollView>
 
       <Modal visible={showCreateModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>

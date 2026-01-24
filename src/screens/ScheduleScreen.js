@@ -30,6 +30,7 @@ export default function ScheduleScreen() {
   const { t } = useTranslation();
   const { currentUser, selectedBackground } = useAppState();
   const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
+  const isWeb = Platform.OS === 'web';
   const [selectedDate, setSelectedDate] = useState(toLocalDateString(new Date()));
   const [isLoading, setIsLoading] = useState(false);
   const [recurringSchedules, setRecurringSchedules] = useState([]);
@@ -358,9 +359,14 @@ export default function ScheduleScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, hasCustomBackground && { backgroundColor: 'transparent' }]} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
+    <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['top']}>
+      <ScrollView
+        style={[styles.scrollView, hasCustomBackground && styles.scrollViewTransparent]}
+        contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
+          <View style={styles.header}>
           <Text style={styles.title}>{t('calendarSchedule')}</Text>
           <Text style={styles.subtitle}>
             {t('today')}: {selectedDate}
@@ -436,6 +442,7 @@ export default function ScheduleScreen() {
               <Text style={styles.emptyText}>{t('noActivitiesToday')}</Text>
             </View>
           )}
+        </View>
         </View>
       </ScrollView>
 
@@ -893,8 +900,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  containerTransparent: {
+    backgroundColor: 'transparent',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewTransparent: {
+    backgroundColor: 'transparent',
+  },
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  scrollContentWeb: {
+    flexGrow: 1,
+  },
   content: {
+    width: '100%',
     padding: 20,
+  },
+  contentWeb: {
+    maxWidth: 1200,
+    alignSelf: 'center',
+    paddingHorizontal: 24,
+  },
+  contentTransparent: {
+    backgroundColor: 'transparent',
   },
   header: {
     marginBottom: 16,
