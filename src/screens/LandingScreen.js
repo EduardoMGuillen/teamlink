@@ -430,9 +430,13 @@ const styles = StyleSheet.create({
     ...(isWeb && {
       marginTop: 80, // Space for fixed header
       flex: 1,
-      overflowY: 'auto',
+      overflowY: 'scroll',
       overflowX: 'hidden',
       WebkitOverflowScrolling: 'touch',
+      // Enable mouse wheel scrolling on web
+      cursor: 'default',
+      // Force scroll behavior
+      overscrollBehavior: 'contain',
     }),
   },
   scrollContent: {
