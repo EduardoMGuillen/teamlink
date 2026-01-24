@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../utils/useTranslation';
-import { colors, radii, shadows } from '../utils/theme';
+import { radii, shadows } from '../utils/theme';
 import { useAppState } from '../context/AppStateContext';
 import { tasksService } from '../services/tasksService';
 import { teamsService } from '../services/teamsService';
@@ -23,6 +23,9 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Calendar } from 'react-native-calendars';
 
 export default function TasksScreen() {
+  const { currentUser, theme } = useAppState();
+  const { colors } = theme;
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const isWeb = Platform.OS === 'web';
   const normalizeDateInput = (dateInput) => {
     if (dateInput instanceof Date) return dateInput;
@@ -43,8 +46,6 @@ export default function TasksScreen() {
   const pickerThemeVariant = 'light';
 
   const { t } = useTranslation();
-  const { currentUser, selectedBackground } = useAppState();
-  const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [tasks, setTasks] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -298,13 +299,13 @@ export default function TasksScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
-        style={[styles.scrollView, hasCustomBackground && styles.scrollViewTransparent]}
+        style={styles.scrollView}
         contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
+        <View style={[styles.content, isWeb && styles.contentWeb]}>
           <View style={styles.header}>
             <Text style={styles.title}>{t('tasks')}</Text>
             <TouchableOpacity onPress={openAddModal}>
@@ -847,19 +848,13 @@ export default function TasksScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  containerTransparent: {
-    backgroundColor: 'transparent',
-  },
   scrollView: {
     flex: 1,
-  },
-  scrollViewTransparent: {
-    backgroundColor: 'transparent',
   },
   scrollContent: {
     paddingBottom: 24,
@@ -874,9 +869,6 @@ const styles = StyleSheet.create({
     maxWidth: 1200,
     alignSelf: 'center',
     paddingHorizontal: 24,
-  },
-  contentTransparent: {
-    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',

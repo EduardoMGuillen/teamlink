@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -11,17 +11,21 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radii, shadows } from '../utils/theme';
+import { radii, shadows } from '../utils/theme';
 import { useTranslation } from '../utils/useTranslation';
+import { useAppState } from '../context/AppStateContext';
 
 const { width } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 const isMobile = width < 768;
 
 export default function LandingScreen() {
+  const { theme } = useAppState();
+  const { colors } = theme;
   const navigation = useNavigation();
   const { t, language, changeLanguage, availableLanguages } = useTranslation();
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const handleLanguageSelect = (langCode) => {
     changeLanguage(langCode);
@@ -269,7 +273,7 @@ export default function LandingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

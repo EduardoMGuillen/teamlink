@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,15 +11,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppState } from '../context/AppStateContext';
 import { useTranslation } from '../utils/useTranslation';
-import { colors, radii, shadows } from '../utils/theme';
+import { radii, shadows, themes } from '../utils/theme';
 import { useNavigation } from '@react-navigation/native';
 
 export default function SettingsScreen() {
-  const { currentUser, logout, selectedBackground } = useAppState();
+  const { currentUser, logout, selectedTheme, changeTheme, theme } = useAppState();
+  const { colors } = theme;
   const { t, language, changeLanguage, availableLanguages } = useTranslation();
   const navigation = useNavigation();
-  const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
   const isWeb = Platform.OS === 'web';
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const handleLanguageChange = async (lang) => {
     await changeLanguage(lang);
@@ -29,8 +31,12 @@ export default function SettingsScreen() {
     await logout();
   };
 
+  const handleThemeChange = async (themeId) => {
+    await changeTheme(themeId);
+  };
+
   return (
-    <SafeAreaView style={[styles.container, hasCustomBackground && { backgroundColor: 'transparent' }]} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={['bottom']}>
       <ScrollView>
         {/* Profile Section */}
         <View style={styles.profileSection}>
@@ -83,6 +89,47 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Theme Settings */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('themes') || 'Themes'}</Text>
+          <View style={styles.settingCard}>
+            <View style={styles.settingRow}>
+              <Ionicons name="color-palette" size={24} color={colors.primary} />
+              <Text style={styles.settingLabel}>{t('theme') || 'Theme'}</Text>
+            </View>
+            <View style={styles.themeButtonsContainer}>
+              {Object.values(themes).map((themeOption) => (
+                <TouchableOpacity
+                  key={themeOption.id}
+                  style={[
+                    styles.themeButton,
+                    selectedTheme === themeOption.id && styles.themeButtonActive,
+                  ]}
+                  onPress={() => handleThemeChange(themeOption.id)}
+                >
+                  <View
+                    style={[
+                      styles.themeSwatch,
+                      { backgroundColor: themeOption.colors.primary },
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.themeButtonText,
+                      selectedTheme === themeOption.id && styles.themeButtonTextActive,
+                    ]}
+                  >
+                    {themeOption.name}
+                  </Text>
+                  {selectedTheme === themeOption.id && (
+                    <Ionicons name="checkmark-circle" size={18} color={colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+
         {/* Other Settings */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('settings')}</Text>
@@ -103,16 +150,6 @@ export default function SettingsScreen() {
             <View style={styles.settingRow}>
               <Ionicons name="bulb" size={24} color={colors.accent} />
               <Text style={styles.settingLabel}>Daily Motivation</Text>
-              <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.settingCard}
-            onPress={() => navigation.navigate('BackgroundSettings')}
-          >
-            <View style={styles.settingRow}>
-              <Ionicons name="image" size={24} color={colors.primary} />
-              <Text style={styles.settingLabel}>App Background</Text>
               <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
             </View>
           </TouchableOpacity>
@@ -154,7 +191,7 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -261,6 +298,74 @@ const styles = StyleSheet.create({
   languageButtonTextActive: {
     color: colors.primary,
     fontWeight: '600',
+  },
+  themeButtonsContainer: {
+    marginTop: 12,
+    gap: 8,
+  },
+  themeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceAlt,
+  },
+  themeButtonActive: {
+    borderColor: colors.primary,
+    backgroundColor: `${colors.primary}10`,
+  },
+  themeSwatch: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+  },
+  themeButtonText: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  themeButtonTextActive: {
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  themeButtonsContainer: {
+    marginTop: 12,
+    gap: 8,
+  },
+  themeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceAlt,
+  },
+  themeButtonActive: {
+    borderColor: colors.primary,
+    backgroundColor: `${colors.primary}10`,
+  },
+  themeSwatch: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+  },
+  themeButtonText: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  themeButtonTextActive: {
+    color: colors.primary,
+    fontWeight: '700',
   },
   languageCheckIcon: {
     marginLeft: 8,

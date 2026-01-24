@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../utils/useTranslation';
 import { useAppState } from '../context/AppStateContext';
-import { colors, radii, shadows } from '../utils/theme';
+import { radii, shadows } from '../utils/theme';
 import { teamsService } from '../services/teamsService';
 import { updatesService } from '../services/updatesService';
 import { useNavigation } from '@react-navigation/native';
@@ -22,9 +22,10 @@ import { useNavigation } from '@react-navigation/native';
 export default function TeamsScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation();
-  const { currentUser, selectedBackground } = useAppState();
-  const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
+  const { currentUser, theme } = useAppState();
+  const { colors } = theme;
   const isWeb = Platform.OS === 'web';
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [isLoading, setIsLoading] = useState(true);
   const [teams, setTeams] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState(null);
@@ -308,13 +309,13 @@ export default function TeamsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
-        style={[styles.scrollView, hasCustomBackground && styles.scrollViewTransparent]}
+        style={styles.scrollView}
         contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
+        <View style={[styles.content, isWeb && styles.contentWeb]}>
           <View style={styles.header}>
             <View>
               <Text style={styles.title}>{t('teams')}</Text>
@@ -764,7 +765,7 @@ export default function TeamsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -1053,8 +1054,14 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: 24,
   },
-  contentTransparent: {
-    backgroundColor: 'transparent',
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  scrollContentWeb: {
+    flexGrow: 1,
   },
   emptyStateContainer: {
     width: '100%',

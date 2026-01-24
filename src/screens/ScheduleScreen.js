@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from '../utils/useTranslation';
 import { useAppState } from '../context/AppStateContext';
 import { calendarScheduleService } from '../services/calendarScheduleService';
-import { colors, radii, shadows } from '../utils/theme';
+import { radii, shadows } from '../utils/theme';
 
 const toLocalDateString = (date) => {
   const pad = (n) => String(n).padStart(2, '0');
@@ -28,9 +28,10 @@ const toLocalDateString = (date) => {
 
 export default function ScheduleScreen() {
   const { t } = useTranslation();
-  const { currentUser, selectedBackground } = useAppState();
-  const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
+  const { currentUser, theme } = useAppState();
+  const { colors } = theme;
   const isWeb = Platform.OS === 'web';
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [selectedDate, setSelectedDate] = useState(toLocalDateString(new Date()));
   const [isLoading, setIsLoading] = useState(false);
   const [recurringSchedules, setRecurringSchedules] = useState([]);
@@ -359,13 +360,13 @@ export default function ScheduleScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
-        style={[styles.scrollView, hasCustomBackground && styles.scrollViewTransparent]}
+        style={styles.scrollView}
         contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
+        <View style={[styles.content, isWeb && styles.contentWeb]}>
           <View style={styles.header}>
           <Text style={styles.title}>{t('calendarSchedule')}</Text>
           <Text style={styles.subtitle}>
@@ -895,19 +896,13 @@ export default function ScheduleScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  containerTransparent: {
-    backgroundColor: 'transparent',
-  },
   scrollView: {
     flex: 1,
-  },
-  scrollViewTransparent: {
-    backgroundColor: 'transparent',
   },
   scrollContent: {
     paddingBottom: 24,
@@ -923,9 +918,6 @@ const styles = StyleSheet.create({
     maxWidth: 1200,
     alignSelf: 'center',
     paddingHorizontal: 24,
-  },
-  contentTransparent: {
-    backgroundColor: 'transparent',
   },
   header: {
     marginBottom: 16,

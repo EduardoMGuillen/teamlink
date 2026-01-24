@@ -19,8 +19,7 @@ import { useNavigation } from '@react-navigation/native';
 
 export default function DirectoryScreen() {
   const { t } = useTranslation();
-  const { currentUser, selectedBackground } = useAppState();
-  const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
+  const { currentUser } = useAppState();
   const isWeb = Platform.OS === 'web';
   const navigation = useNavigation();
   const [users, setUsers] = useState([]);
@@ -93,13 +92,13 @@ export default function DirectoryScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={['bottom']}>
       <ScrollView
-        style={[styles.scrollView, hasCustomBackground && styles.scrollViewTransparent]}
+        style={styles.scrollView}
         contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
+        <View style={[styles.content, isWeb && styles.contentWeb]}>
           {/* Search Bar */}
           <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color="#8E8E93" style={styles.searchIcon} />

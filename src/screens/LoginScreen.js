@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -14,13 +14,15 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAppState } from '../context/AppStateContext';
 import { useTranslation } from '../utils/useTranslation';
-import { colors, radii, shadows } from '../utils/theme';
+import { radii, shadows } from '../utils/theme';
 import { useNavigation } from '@react-navigation/native';
 
 export default function LoginScreen() {
-  const { login } = useAppState();
+  const { login, theme } = useAppState();
+  const { colors } = theme;
   const { t } = useTranslation();
   const navigation = useNavigation();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -129,7 +131,7 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

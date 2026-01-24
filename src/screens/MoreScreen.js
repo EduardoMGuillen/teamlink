@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,14 +12,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAppState } from '../context/AppStateContext';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from '../utils/useTranslation';
-import { colors, radii, shadows } from '../utils/theme';
+import { radii, shadows } from '../utils/theme';
 
 export default function MoreScreen() {
-  const { currentUser, logout, selectedBackground } = useAppState();
+  const { currentUser, logout, theme } = useAppState();
+  const { colors } = theme;
   const navigation = useNavigation();
   const { t } = useTranslation();
-  const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
   const isWeb = Platform.OS === 'web';
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const menuSections = [
     {
@@ -40,13 +42,13 @@ export default function MoreScreen() {
   ];
 
   return (
-    <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
-        style={[styles.scrollView, hasCustomBackground && styles.scrollViewTransparent]}
+        style={styles.scrollView}
         contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
+        <View style={[styles.content, isWeb && styles.contentWeb]}>
         {/* Profile Section */}
         <View style={styles.profileSection}>
           <View style={styles.avatar}>
@@ -105,10 +107,24 @@ export default function MoreScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  content: {
+    width: '100%',
+  },
+  contentWeb: {
+    maxWidth: 1200,
+    alignSelf: 'center',
+    paddingHorizontal: 24,
   },
   profileSection: {
     flexDirection: 'row',

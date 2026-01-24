@@ -73,6 +73,8 @@ const translations = {
     
     // Settings
     settings: 'Settings',
+    theme: 'Theme',
+    themes: 'Themes',
     language: 'Language',
     english: 'English',
     spanish: 'Spanish',
@@ -345,6 +347,8 @@ const translations = {
     
     // Settings
     settings: 'Configuración',
+    theme: 'Tema',
+    themes: 'Temas',
     language: 'Idioma',
     english: 'Inglés',
     spanish: 'Español',
@@ -612,6 +616,8 @@ const translations = {
     
     // Settings
     settings: 'Paramètres',
+    theme: 'Thème',
+    themes: 'Thèmes',
     language: 'Langue',
     english: 'Anglais',
     spanish: 'Espagnol',

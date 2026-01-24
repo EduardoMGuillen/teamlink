@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -21,13 +21,15 @@ import { useTranslation } from '../utils/useTranslation';
 import { useNavigation } from '@react-navigation/native';
 import { authService } from '../services/authService';
 import { timezones, countries } from '../utils/timezones';
-import { colors, radii, shadows } from '../utils/theme';
+import { radii, shadows } from '../utils/theme';
 
 export default function SignUpScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation();
-  const { login } = useAppState();
+  const { login, theme } = useAppState();
+  const { colors } = theme;
   const [isLoading, setIsLoading] = useState(false);
+  const styles = useMemo(() => createStyles(colors), [colors]);
   
   // Form fields
   const [fullName, setFullName] = useState('');
@@ -602,7 +604,7 @@ export default function SignUpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

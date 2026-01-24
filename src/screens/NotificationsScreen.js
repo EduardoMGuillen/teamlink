@@ -18,8 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 
 export default function NotificationsScreen() {
   const { t } = useTranslation();
-  const { currentUser, selectedBackground } = useAppState();
-  const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
+  const { currentUser } = useAppState();
   const isWeb = Platform.OS === 'web';
   const navigation = useNavigation();
   const [notifications, setNotifications] = useState([]);
@@ -136,15 +135,15 @@ export default function NotificationsScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={['bottom']}>
       <ScrollView
-        style={[styles.scrollView, hasCustomBackground && styles.scrollViewTransparent]}
+        style={styles.scrollView}
         contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
+        <View style={[styles.content, isWeb && styles.contentWeb]}>
           {unreadCount > 0 && (
             <View style={styles.markAllReadContainer}>
               <TouchableOpacity onPress={markAllAsRead} style={styles.markAllReadButton}>

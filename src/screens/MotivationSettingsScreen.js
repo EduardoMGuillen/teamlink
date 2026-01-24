@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,12 +12,16 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../utils/useTranslation';
-import { colors, radii, shadows } from '../utils/theme';
+import { radii, shadows } from '../utils/theme';
+import { useAppState } from '../context/AppStateContext';
 import { motivationService } from '../services/motivationService';
 import { Picker } from '@react-native-picker/picker';
 
 export default function MotivationSettingsScreen({ navigation }) {
   const { t } = useTranslation();
+  const { theme } = useAppState();
+  const { colors } = theme;
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [preferences, setPreferences] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -244,7 +248,7 @@ export default function MotivationSettingsScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

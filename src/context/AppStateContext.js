@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { i18n } from '../utils/i18n';
 import { authService } from '../services/authService';
 import { supabase } from '../config/supabase';
-import { backgroundService } from '../services/backgroundService';
+import { DEFAULT_THEME_ID, getTheme } from '../utils/theme';
 
 const AppStateContext = createContext();
 
@@ -20,7 +20,7 @@ export const AppStateProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [language, setLanguage] = useState('en');
-  const [selectedBackground, setSelectedBackground] = useState('default');
+  const [selectedTheme, setSelectedTheme] = useState(DEFAULT_THEME_ID);
   const [isLoading, setIsLoading] = useState(true);
 
   const withTimeout = async (promise, timeoutMs, fallbackValue = null) => {
@@ -66,13 +66,13 @@ export const AppStateProvider = ({ children }) => {
       const savedLanguage = i18n.getLanguage();
       setLanguage(savedLanguage);
 
-      // Load background preference
-      const savedBackground = await withTimeout(
-        backgroundService.getSelectedBackground(),
+      // Load theme preference
+      const savedTheme = await withTimeout(
+        AsyncStorage.getItem('@teamlink_theme'),
         2000,
-        'default'
+        DEFAULT_THEME_ID
       );
-      setSelectedBackground(savedBackground);
+      setSelectedTheme(savedTheme || DEFAULT_THEME_ID);
 
       // Check if user is already logged in (Supabase session)
       const session = await withTimeout(authService.getSession(), 4000, null);
@@ -135,16 +135,15 @@ export const AppStateProvider = ({ children }) => {
     setLanguage(lang);
   };
 
-  const changeBackground = async (backgroundId) => {
-    console.log('[AppStateContext] Changing background to:', backgroundId);
-    const result = await backgroundService.saveSelectedBackground(backgroundId);
-    if (result.success) {
-      console.log('[AppStateContext] Background saved successfully, updating state');
-      setSelectedBackground(backgroundId);
-    } else {
-      console.error('[AppStateContext] Failed to save background:', result.error);
+  const changeTheme = async (themeId) => {
+    setSelectedTheme(themeId);
+    try {
+      await AsyncStorage.setItem('@teamlink_theme', themeId);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to save theme:', error);
+      return { success: false, error: error.message };
     }
-    return result;
   };
 
   return (
@@ -159,8 +158,9 @@ export const AppStateProvider = ({ children }) => {
         logout,
         language,
         changeLanguage,
-        selectedBackground,
-        changeBackground,
+        selectedTheme,
+        theme: getTheme(selectedTheme),
+        changeTheme,
         isLoading,
       }}
     >

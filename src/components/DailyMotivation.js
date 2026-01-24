@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { motivationService } from '../services/motivationService';
 import { useTranslation } from '../utils/useTranslation';
-import { colors, radii, shadows } from '../utils/theme';
+import { radii, shadows } from '../utils/theme';
+import { useAppState } from '../context/AppStateContext';
 
 export default function DailyMotivation() {
+  const { theme } = useAppState();
+  const { colors } = theme;
   const [quote, setQuote] = useState(null);
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [preferences, setPreferences] = useState(null);
   const [showSpark, setShowSpark] = useState(true);
   const { language } = useTranslation();
@@ -74,7 +78,7 @@ export default function DailyMotivation() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     marginBottom: 20,
     marginHorizontal: 20,

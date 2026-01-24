@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAppState } from '../context/AppStateContext';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from '../utils/useTranslation';
-import { colors, radii, shadows } from '../utils/theme';
+import { radii, shadows } from '../utils/theme';
 import { tasksService } from '../services/tasksService';
 // import { shiftsService } from '../services/shiftsService'; // Temporarily hidden
 import { notificationsService } from '../services/notificationsService';
@@ -25,12 +25,13 @@ const toLocalDateString = (date) => {
 };
 
 export default function DashboardScreen() {
-  const { currentUser, selectedBackground } = useAppState();
+  const { currentUser, theme } = useAppState();
+  const { colors } = theme;
   const navigation = useNavigation();
   const { t } = useTranslation();
   const isWeb = Platform.OS === 'web';
-  const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
   const [stats, setStats] = useState({ hours: 0, tasks: 0 });
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [todayActivities, setTodayActivities] = useState([]);
@@ -145,13 +146,13 @@ export default function DashboardScreen() {
   ];
 
   return (
-    <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
-        style={[styles.scrollView, hasCustomBackground && styles.scrollViewTransparent]}
+        style={styles.scrollView}
         contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
+        <View style={[styles.content, isWeb && styles.contentWeb]}>
           {/* Header */}
           <View style={styles.header}>
             <View>
@@ -319,19 +320,13 @@ export default function DashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  containerTransparent: {
-    backgroundColor: 'transparent',
-  },
   scrollView: {
     flex: 1,
-  },
-  scrollViewTransparent: {
-    backgroundColor: 'transparent',
   },
   scrollContent: {
     paddingBottom: 24,

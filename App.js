@@ -9,7 +9,7 @@ import { ActivityIndicator, View, Platform } from 'react-native';
 import { AppStateProvider, useAppState } from './src/context/AppStateContext';
 import { i18n } from './src/utils/i18n';
 import { useTranslation } from './src/utils/useTranslation';
-import { colors, shadows, radii } from './src/utils/theme';
+import { radii, shadows } from './src/utils/theme';
 
 // Screens
 import LoginScreen from './src/screens/LoginScreen';
@@ -28,8 +28,6 @@ import UpdatesScreen from './src/screens/UpdatesScreen';
 import NotificationsScreen from './src/screens/NotificationsScreen';
 import ConnectionTestScreen from './src/screens/ConnectionTestScreen';
 import MotivationSettingsScreen from './src/screens/MotivationSettingsScreen';
-import BackgroundSettingsScreen from './src/screens/BackgroundSettingsScreen';
-import BackgroundWrapper from './src/components/BackgroundWrapper';
 
 const Tab = createBottomTabNavigator();
 // Usar Stack Navigator nativo para móvil, Stack Navigator regular para web
@@ -39,6 +37,8 @@ const Stack = Platform.OS === 'web' ? WebStack : NativeStack;
 
 function MainTabs() {
   const { t } = useTranslation();
+  const { theme } = useAppState();
+  const { colors } = theme;
   
   return (
     <Tab.Navigator
@@ -98,7 +98,8 @@ function MainTabs() {
 }
 
 function AppNavigator() {
-  const { isAuthenticated, isLoading, selectedBackground } = useAppState();
+  const { isAuthenticated, isLoading, theme } = useAppState();
+  const { colors } = theme;
 
   useEffect(() => {
     const initI18n = async () => {
@@ -116,7 +117,6 @@ function AppNavigator() {
   }
 
   return (
-    <BackgroundWrapper>
       <NavigationContainer key={isAuthenticated ? 'auth' : 'guest'}>
         <StatusBar style="auto" />
         <Stack.Navigator
@@ -274,13 +274,6 @@ function AppNavigator() {
                 headerShown: false,
               }}
             />
-            <Stack.Screen 
-              name="BackgroundSettings" 
-              component={BackgroundSettingsScreen}
-              options={{ 
-                headerShown: false,
-              }}
-            />
           </>
         ) : (
           <>
@@ -301,8 +294,7 @@ function AppNavigator() {
           </>
         )}
       </Stack.Navigator>
-    </NavigationContainer>
-    </BackgroundWrapper>
+      </NavigationContainer>
   );
 }
 

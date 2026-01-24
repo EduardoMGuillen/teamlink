@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../utils/useTranslation';
-import { colors, radii, shadows } from '../utils/theme';
+import { radii, shadows } from '../utils/theme';
 import { useAppState } from '../context/AppStateContext';
 import { messagesService } from '../services/messagesService';
 import { teamsService } from '../services/teamsService';
@@ -21,9 +21,10 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 
 export default function ChatScreen() {
   const { t } = useTranslation();
-  const { currentUser, selectedBackground } = useAppState();
-  const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
+  const { currentUser, theme } = useAppState();
+  const { colors } = theme;
   const isWeb = Platform.OS === 'web';
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const route = useRoute();
   const navigation = useNavigation();
   const { userId, teamId } = route.params || {};
@@ -356,7 +357,7 @@ export default function ChatScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.container, hasCustomBackground && { backgroundColor: 'transparent' }]} edges={['top', 'bottom']}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
         </View>
@@ -367,8 +368,8 @@ export default function ChatScreen() {
   // Mostrar lista de conversaciones
   if (!showConversation) {
     return (
-      <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['top', 'bottom']}>
-        <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <View style={[styles.content, isWeb && styles.contentWeb]}>
           <FlatList
             data={conversations}
             renderItem={renderConversation}
@@ -388,8 +389,8 @@ export default function ChatScreen() {
 
   // Mostrar conversación individual
   return (
-    <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['bottom']}>
-      <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
+    <SafeAreaView style={styles.container} edges={['bottom']}>
+      <View style={[styles.content, isWeb && styles.contentWeb]}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
@@ -440,13 +441,10 @@ export default function ChatScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  containerTransparent: {
-    backgroundColor: 'transparent',
   },
   content: {
     flex: 1,
@@ -456,9 +454,6 @@ const styles = StyleSheet.create({
     maxWidth: 1200,
     alignSelf: 'center',
     paddingHorizontal: 24,
-  },
-  contentTransparent: {
-    backgroundColor: 'transparent',
   },
   keyboardView: {
     flex: 1,
