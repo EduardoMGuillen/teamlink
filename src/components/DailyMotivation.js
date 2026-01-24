@@ -2,16 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { motivationService } from '../services/motivationService';
+import { useTranslation } from '../utils/useTranslation';
 import { colors, radii, shadows } from '../utils/theme';
 
 export default function DailyMotivation() {
   const [quote, setQuote] = useState(null);
   const [preferences, setPreferences] = useState(null);
   const [showSpark, setShowSpark] = useState(true);
+  const { language } = useTranslation();
 
   useEffect(() => {
     loadMotivation();
-  }, []);
+  }, [language]); // Recargar cuando cambie el idioma
 
   const loadMotivation = async () => {
     try {

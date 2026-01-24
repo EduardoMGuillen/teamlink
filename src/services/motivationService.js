@@ -1,42 +1,30 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { i18n } from '../utils/i18n';
 
-// Base de datos de frases motivacionales organizadas por categoría
-const MOTIVATIONAL_QUOTES = {
-  progress: [
-    'El progreso pequeño de hoy impulsa al equipo completo.',
-    'Cada paso cuenta, sin importar lo pequeño que parezca.',
-    'El avance constante supera los grandes saltos ocasionales.',
-    'Hoy avanzaste. Eso es suficiente.',
-    'Los pequeños logros se suman en grandes resultados.',
-  ],
-  focus: [
-    'Enfócate en una tarea. El impulso llegará.',
-    'La claridad viene de hacer una cosa a la vez.',
-    'La atención plena transforma el trabajo.',
-    'Un paso a la vez es la forma más rápida.',
-    'La concentración es tu superpoder.',
-  ],
-  consistency: [
-    'La consistencia supera a la intensidad.',
-    'Las rutinas pequeñas crean grandes cambios.',
-    'Hoy es otro día para mantener el ritmo.',
-    'La disciplina diaria construye el éxito.',
-    'La regularidad es más poderosa que la perfección.',
-  ],
-  teamwork: [
-    'Juntos logramos más de lo que imaginamos.',
-    'Tu contribución hace la diferencia en el equipo.',
-    'La colaboración multiplica los resultados.',
-    'Cada miembro del equipo importa.',
-    'El trabajo en equipo convierte desafíos en oportunidades.',
-  ],
-  growth: [
-    'Cada desafío es una oportunidad de crecer.',
-    'El aprendizaje continuo es tu ventaja.',
-    'Los errores son lecciones disfrazadas.',
-    'Tu potencial se expande con cada intento.',
-    'El crecimiento personal beneficia a todo el equipo.',
-  ],
+// Función para obtener quotes traducidos según el idioma actual
+const getTranslatedQuotes = () => {
+  const lang = i18n.getLanguage();
+  const quotes = [];
+  for (let i = 1; i <= 25; i++) {
+    const quoteKey = `sparkQuote${i}`;
+    const quote = i18n.t(quoteKey);
+    if (quote && quote !== quoteKey) {
+      quotes.push(quote);
+    }
+  }
+  return quotes;
+};
+
+// Base de datos de frases motivacionales organizadas por categoría (usando traducciones)
+const getMOTIVATIONAL_QUOTES = () => {
+  const allQuotes = getTranslatedQuotes();
+  return {
+    progress: allQuotes.slice(0, 5),
+    focus: allQuotes.slice(5, 10),
+    consistency: allQuotes.slice(10, 15),
+    teamwork: allQuotes.slice(15, 20),
+    growth: allQuotes.slice(20, 25),
+  };
 };
 
 // Función determinística para obtener frase del día
@@ -52,6 +40,9 @@ export const getDailyMotivation = () => {
     hash = ((hash << 5) - hash) + char;
     hash = hash & hash; // Convert to 32bit integer
   }
+  
+  // Obtener quotes traducidos según el idioma actual
+  const MOTIVATIONAL_QUOTES = getMOTIVATIONAL_QUOTES();
   
   // Combinar todas las categorías
   const allQuotes = Object.values(MOTIVATIONAL_QUOTES).flat();
@@ -70,6 +61,7 @@ export const getDailyMotivation = () => {
 
 // Obtener frase de una categoría específica
 export const getMotivationByCategory = (category) => {
+  const MOTIVATIONAL_QUOTES = getMOTIVATIONAL_QUOTES();
   const quotes = MOTIVATIONAL_QUOTES[category] || [];
   if (quotes.length === 0) return null;
   
@@ -136,12 +128,12 @@ export const motivationService = {
 
   // Obtener todas las categorías disponibles
   getCategories() {
-    return Object.keys(MOTIVATIONAL_QUOTES);
+    return Object.keys(getMOTIVATIONAL_QUOTES());
   },
 
   // Obtener todas las frases (útil para historial futuro)
   getAllQuotes() {
-    return MOTIVATIONAL_QUOTES;
+    return getMOTIVATIONAL_QUOTES();
   },
 
   // Calcular horarios de notificaciones basados en preferencias

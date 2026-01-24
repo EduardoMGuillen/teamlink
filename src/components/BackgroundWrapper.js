@@ -1,5 +1,5 @@
-import React, { useMemo, useEffect } from 'react';
-import { View, ImageBackground, StyleSheet, Image } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, ImageBackground, StyleSheet, Platform } from 'react-native';
 import { useAppState } from '../context/AppStateContext';
 import { backgroundService } from '../services/backgroundService';
 import { colors } from '../utils/theme';
@@ -8,13 +8,7 @@ export default function BackgroundWrapper({ children }) {
   const { selectedBackground } = useAppState();
   
   const background = useMemo(() => {
-    const bg = backgroundService.getBackgroundById(selectedBackground);
-    console.log('BackgroundWrapper - Selected:', selectedBackground, 'Background:', bg.id, 'Has path:', !!bg.path);
-    return bg;
-  }, [selectedBackground]);
-
-  useEffect(() => {
-    console.log('BackgroundWrapper - Background changed to:', selectedBackground);
+    return backgroundService.getBackgroundById(selectedBackground);
   }, [selectedBackground]);
 
   if (background.id === 'default' || !background.path) {
@@ -25,26 +19,18 @@ export default function BackgroundWrapper({ children }) {
     );
   }
 
-  console.log('BackgroundWrapper - Rendering background:', background.id, 'Path type:', typeof background.path, 'Path value:', background.path);
-
   return (
-    <View style={styles.backgroundContainer}>
-      <Image
-        key={`bg-${selectedBackground}`}
-        source={background.path}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-        onError={(error) => {
-          console.error('BackgroundWrapper - Image load error:', error);
-        }}
-        onLoad={() => {
-          console.log('BackgroundWrapper - Image loaded successfully');
-        }}
-      />
+    <ImageBackground
+      key={`bg-${selectedBackground}`}
+      source={background.path}
+      style={styles.backgroundContainer}
+      imageStyle={styles.backgroundImage}
+      resizeMode="cover"
+    >
       <View style={styles.overlay}>
         {children}
       </View>
-    </View>
+    </ImageBackground>
   );
 }
 
@@ -57,22 +43,12 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
-    position: 'relative',
   },
   backgroundImage: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: '100%',
-    height: '100%',
-    opacity: 0.8,
-    zIndex: 0,
+    opacity: 1, // Imagen completamente visible
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'transparent',
-    zIndex: 1,
+    backgroundColor: 'transparent', // Sin overlay para ver el background claramente
   },
 });

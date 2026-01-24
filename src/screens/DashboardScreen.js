@@ -25,10 +25,11 @@ const toLocalDateString = (date) => {
 };
 
 export default function DashboardScreen() {
-  const { currentUser } = useAppState();
+  const { currentUser, selectedBackground } = useAppState();
   const navigation = useNavigation();
   const { t } = useTranslation();
   const isWeb = Platform.OS === 'web';
+  const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
   const [stats, setStats] = useState({ hours: 0, tasks: 0 });
   const [recentActivity, setRecentActivity] = useState([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
@@ -144,7 +145,7 @@ export default function DashboardScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, hasCustomBackground && { backgroundColor: 'transparent' }]} edges={['top']}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}

@@ -14,44 +14,31 @@ import { useTranslation } from '../utils/useTranslation';
 import { colors, radii, shadows } from '../utils/theme';
 
 export default function MoreScreen() {
-  const { currentUser, logout } = useAppState();
+  const { currentUser, logout, selectedBackground } = useAppState();
   const navigation = useNavigation();
   const { t } = useTranslation();
+  const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
 
   const menuSections = [
     {
-      title: 'Operations Hub',
-      items: [
-        { icon: 'document-text', label: 'Forms & Checklists', screen: 'Forms' },
-        { icon: 'chatbubble', label: 'Chat', screen: 'Chat' },
-      ],
-    },
-    {
       title: 'Communications',
       items: [
-        { icon: 'notifications', label: 'Updates', screen: 'Updates' },
-        { icon: 'people', label: 'Directory', screen: 'Directory' },
-        { icon: 'book', label: 'Knowledge Base', screen: 'KnowledgeBase' },
+        { icon: 'chatbubble', label: t('messages'), screen: 'Chat' },
+        { icon: 'notifications', label: t('updates'), screen: 'Updates' },
+        { icon: 'people', label: t('directory'), screen: 'Directory' },
       ],
     },
     {
-      title: 'HR Hub',
+      title: t('settings'),
       items: [
-        { icon: 'school', label: 'Training', screen: 'Training' },
-        { icon: 'folder', label: 'Documents', screen: 'Documents' },
-      ],
-    },
-    {
-      title: 'Settings',
-      items: [
-        { icon: 'settings', label: 'Settings', screen: 'Settings' },
-        { icon: 'log-out', label: 'Sign Out', action: 'signOut', color: '#FF3B30' },
+        { icon: 'settings', label: t('settings'), screen: 'Settings' },
+        { icon: 'log-out', label: t('signOut'), action: 'signOut', color: '#FF3B30' },
       ],
     },
   ];
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, hasCustomBackground && { backgroundColor: 'transparent' }]} edges={['top']}>
       <ScrollView>
         {/* Profile Section */}
         <View style={styles.profileSection}>

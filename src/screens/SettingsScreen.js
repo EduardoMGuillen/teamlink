@@ -11,13 +11,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAppState } from '../context/AppStateContext';
 import { useTranslation } from '../utils/useTranslation';
 import { colors, radii, shadows } from '../utils/theme';
-import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 
 export default function SettingsScreen() {
-  const { currentUser, logout } = useAppState();
+  const { currentUser, logout, selectedBackground } = useAppState();
   const { t, language, changeLanguage, availableLanguages } = useTranslation();
   const navigation = useNavigation();
+  const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
 
   const handleLanguageChange = async (lang) => {
     await changeLanguage(lang);
@@ -28,7 +28,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, hasCustomBackground && { backgroundColor: 'transparent' }]} edges={['bottom']}>
       <ScrollView>
         {/* Profile Section */}
         <View style={styles.profileSection}>
@@ -54,20 +54,29 @@ export default function SettingsScreen() {
               <Ionicons name="language" size={24} color={colors.primary} />
               <Text style={styles.settingLabel}>{t('language')}</Text>
             </View>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={language}
-                onValueChange={handleLanguageChange}
-                style={styles.picker}
-              >
-                {availableLanguages.map((lang) => (
-                  <Picker.Item
-                    key={lang.code}
-                    label={lang.name}
-                    value={lang.code}
-                  />
-                ))}
-              </Picker>
+            <View style={styles.languageButtonsContainer}>
+              {availableLanguages.map((lang) => (
+                <TouchableOpacity
+                  key={lang.code}
+                  style={[
+                    styles.languageButton,
+                    language === lang.code && styles.languageButtonActive
+                  ]}
+                  onPress={() => handleLanguageChange(lang.code)}
+                >
+                  <Text
+                    style={[
+                      styles.languageButtonText,
+                      language === lang.code && styles.languageButtonTextActive
+                    ]}
+                  >
+                    {lang.name}
+                  </Text>
+                  {language === lang.code && (
+                    <Ionicons name="checkmark-circle" size={20} color={colors.primary} style={styles.languageCheckIcon} />
+                  )}
+                </TouchableOpacity>
+              ))}
             </View>
           </View>
         </View>
@@ -75,14 +84,10 @@ export default function SettingsScreen() {
         {/* Other Settings */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('settings')}</Text>
-          <TouchableOpacity style={styles.settingCard}>
-            <View style={styles.settingRow}>
-              <Ionicons name="person" size={24} color={colors.primary} />
-              <Text style={styles.settingLabel}>{t('profile')}</Text>
-              <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.settingCard}>
+          <TouchableOpacity 
+            style={styles.settingCard}
+            onPress={() => navigation.navigate('Notifications')}
+          >
             <View style={styles.settingRow}>
               <Ionicons name="notifications" size={24} color={colors.primary} />
               <Text style={styles.settingLabel}>{t('notifications')}</Text>
@@ -228,14 +233,35 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     fontWeight: '600',
   },
-  pickerContainer: {
+  languageButtonsContainer: {
     marginTop: 12,
+    gap: 8,
+  },
+  languageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: colors.surfaceAlt,
     borderRadius: radii.md,
-    overflow: 'hidden',
+    padding: 14,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
-  picker: {
-    height: 50,
+  languageButtonActive: {
+    backgroundColor: `${colors.primary}15`,
+    borderColor: colors.primary,
+  },
+  languageButtonText: {
+    fontSize: 16,
+    color: colors.text,
+    fontWeight: '500',
+  },
+  languageButtonTextActive: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  languageCheckIcon: {
+    marginLeft: 8,
   },
   signOutCard: {
     borderBottomWidth: 0,

@@ -42,7 +42,8 @@ export default function TasksScreen() {
   const pickerThemeVariant = 'light';
 
   const { t } = useTranslation();
-  const { currentUser } = useAppState();
+  const { currentUser, selectedBackground } = useAppState();
+  const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [tasks, setTasks] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -296,7 +297,7 @@ export default function TasksScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, hasCustomBackground && { backgroundColor: 'transparent' }]} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>{t('tasks')}</Text>
         <TouchableOpacity onPress={openAddModal}>

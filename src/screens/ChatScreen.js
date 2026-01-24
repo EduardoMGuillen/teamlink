@@ -21,7 +21,8 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 
 export default function ChatScreen() {
   const { t } = useTranslation();
-  const { currentUser } = useAppState();
+  const { currentUser, selectedBackground } = useAppState();
+  const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
   const route = useRoute();
   const navigation = useNavigation();
   const { userId, teamId } = route.params || {};
@@ -354,7 +355,7 @@ export default function ChatScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.container, hasCustomBackground && { backgroundColor: 'transparent' }]} edges={['top', 'bottom']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
         </View>
@@ -365,7 +366,7 @@ export default function ChatScreen() {
   // Mostrar lista de conversaciones
   if (!showConversation) {
     return (
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.container, hasCustomBackground && { backgroundColor: 'transparent' }]} edges={['top', 'bottom']}>
         <FlatList
           data={conversations}
           renderItem={renderConversation}
@@ -384,7 +385,7 @@ export default function ChatScreen() {
 
   // Mostrar conversación individual
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, hasCustomBackground && { backgroundColor: 'transparent' }]} edges={['bottom']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}

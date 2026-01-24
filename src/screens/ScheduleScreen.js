@@ -28,7 +28,8 @@ const toLocalDateString = (date) => {
 
 export default function ScheduleScreen() {
   const { t } = useTranslation();
-  const { currentUser } = useAppState();
+  const { currentUser, selectedBackground } = useAppState();
+  const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
   const [selectedDate, setSelectedDate] = useState(toLocalDateString(new Date()));
   const [isLoading, setIsLoading] = useState(false);
   const [recurringSchedules, setRecurringSchedules] = useState([]);
@@ -357,7 +358,7 @@ export default function ScheduleScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, hasCustomBackground && { backgroundColor: 'transparent' }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.title}>{t('calendarSchedule')}</Text>
