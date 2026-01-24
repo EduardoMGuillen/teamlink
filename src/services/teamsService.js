@@ -1,5 +1,14 @@
 import { supabase } from '../config/supabase';
 
+const generateTeamCode = () => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i += 1) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+};
+
 export const teamsService = {
   // Crear un equipo y asignar manager
   async createTeam(managerId, teamData) {
@@ -16,6 +25,7 @@ export const teamsService = {
           description: teamData.description?.trim() || '',
           department: teamData.department?.trim() || '',
           manager_id: managerId,
+          team_code: teamData.teamCode || generateTeamCode(),
         })
         .select()
         .single();
@@ -46,6 +56,7 @@ export const teamsService = {
           description: team.description,
           department: team.department,
           managerId: team.manager_id,
+          teamCode: team.team_code,
         },
       };
     } catch (error) {
@@ -77,6 +88,7 @@ export const teamsService = {
         description: team.description,
         department: team.department,
         managerId: team.manager_id,
+        teamCode: team.team_code,
       }));
     } catch (error) {
       console.error('Search teams error:', error);
@@ -167,6 +179,125 @@ export const teamsService = {
       return { success: false, error: error.message };
     }
   },
+
+  // Solicitar unirse por código
+  async requestJoinByCode(teamCode, userId) {
+    try {
+      const code = teamCode?.trim().toUpperCase();
+      if (!code || !userId) {
+        return { success: false, error: 'Invalid data' };
+      }
+
+      const { data: team, error: teamError } = await supabase
+        .from('teams')
+        .select('id')
+        .eq('team_code', code)
+        .single();
+
+      if (teamError || !team) {
+        return { success: false, error: 'Team not found' };
+      }
+
+      const { error: requestError } = await supabase
+        .from('team_join_requests')
+        .insert({
+          team_id: team.id,
+          user_id: userId,
+          status: 'pending',
+        });
+
+      if (requestError) {
+        console.error('Error creating join request:', requestError);
+        return { success: false, error: requestError.message };
+      }
+
+      return { success: true, teamId: team.id };
+    } catch (error) {
+      console.error('Request join error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Obtener solicitudes pendientes
+  async getJoinRequests(teamId) {
+    try {
+      const { data, error } = await supabase
+        .from('team_join_requests')
+        .select(`
+          id,
+          status,
+          created_at,
+          user_id,
+          users (
+            id,
+            name,
+            email
+          )
+        `)
+        .eq('team_id', teamId)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching join requests:', error);
+        return [];
+      }
+
+      return data.map(item => ({
+        id: item.id,
+        userId: item.user_id,
+        createdAt: item.created_at,
+        user: {
+          id: item.users?.id,
+          name: item.users?.name,
+          email: item.users?.email,
+        },
+      }));
+    } catch (error) {
+      console.error('Get join requests error:', error);
+      return [];
+    }
+  },
+
+  // Aprobar solicitud
+  async approveJoinRequest(requestId, teamId, userId) {
+    try {
+      const { error: updateError } = await supabase
+        .from('team_join_requests')
+        .update({ status: 'approved' })
+        .eq('id', requestId);
+
+      if (updateError) {
+        console.error('Error approving join request:', updateError);
+        return { success: false, error: updateError.message };
+      }
+
+      return await this.addMember(teamId, userId, 'member');
+    } catch (error) {
+      console.error('Approve join request error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Rechazar solicitud
+  async rejectJoinRequest(requestId) {
+    try {
+      const { error } = await supabase
+        .from('team_join_requests')
+        .update({ status: 'rejected' })
+        .eq('id', requestId);
+
+      if (error) {
+        console.error('Error rejecting join request:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Reject join request error:', error);
+      return { success: false, error: error.message };
+    }
+  },
   // Obtener todos los equipos del usuario
   async getUserTeams(userId) {
     try {
@@ -185,7 +316,8 @@ export const teamsService = {
             name,
             description,
             department,
-            manager_id
+            manager_id,
+            team_code
           )
         `)
         .eq('user_id', userId);
@@ -201,6 +333,7 @@ export const teamsService = {
         description: item.teams.description,
         department: item.teams.department,
         managerId: item.teams.manager_id,
+        teamCode: item.teams.team_code,
         role: item.role,
       }));
     } catch (error) {

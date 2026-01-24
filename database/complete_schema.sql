@@ -5,6 +5,100 @@
 -- IMPORTANTE: Ejecuta primero el schema.sql principal, luego este archivo
 
 -- ============================================
+-- PRELUDE: Migración segura de IDs TEXT -> UUID
+-- ============================================
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables WHERE table_name = 'users'
+  ) THEN
+    IF EXISTS (
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_name = 'users'
+        AND column_name = 'id'
+        AND data_type IN ('text', 'character varying')
+    ) THEN
+      EXECUTE 'CREATE TABLE IF NOT EXISTS user_id_map (old_id text PRIMARY KEY, new_id uuid NOT NULL)';
+
+      EXECUTE $sql$
+        INSERT INTO user_id_map (old_id, new_id)
+        SELECT u.id::text, au.id
+        FROM users u
+        JOIN auth.users au ON au.id::text = u.id::text
+        ON CONFLICT (old_id) DO NOTHING
+      $sql$;
+
+      EXECUTE $sql$
+        INSERT INTO user_id_map (old_id, new_id)
+        SELECT u.id, gen_random_uuid()
+        FROM users u
+        LEFT JOIN user_id_map m ON m.old_id = u.id
+        WHERE m.old_id IS NULL
+      $sql$;
+
+      EXECUTE 'UPDATE users u SET id = m.new_id::text FROM user_id_map m WHERE u.id = m.old_id';
+
+      IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = ''orders'') THEN
+        EXECUTE 'ALTER TABLE orders DROP CONSTRAINT IF EXISTS "orders_userId_fkey"';
+        EXECUTE 'UPDATE orders o SET "userId" = m.new_id::text FROM user_id_map m WHERE o."userId" = m.old_id';
+        EXECUTE 'ALTER TABLE orders ALTER COLUMN "userId" TYPE uuid USING "userId"::uuid';
+        EXECUTE 'ALTER TABLE orders ADD CONSTRAINT "orders_userId_fkey" FOREIGN KEY ("userId") REFERENCES users(id)';
+      END IF;
+
+      IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = ''tasks'') THEN
+        EXECUTE 'ALTER TABLE tasks DROP CONSTRAINT IF EXISTS "tasks_user_id_fkey"';
+        EXECUTE 'UPDATE tasks t SET user_id = m.new_id::text FROM user_id_map m WHERE t.user_id::text = m.old_id';
+        EXECUTE 'ALTER TABLE tasks ALTER COLUMN user_id TYPE uuid USING user_id::uuid';
+      END IF;
+
+      IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = ''shifts'') THEN
+        EXECUTE 'ALTER TABLE shifts DROP CONSTRAINT IF EXISTS "shifts_user_id_fkey"';
+        EXECUTE 'UPDATE shifts s SET user_id = m.new_id::text FROM user_id_map m WHERE s.user_id::text = m.old_id';
+        EXECUTE 'ALTER TABLE shifts ALTER COLUMN user_id TYPE uuid USING user_id::uuid';
+      END IF;
+
+      IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = ''schedules'') THEN
+        EXECUTE 'ALTER TABLE schedules DROP CONSTRAINT IF EXISTS "schedules_user_id_fkey"';
+        EXECUTE 'UPDATE schedules sc SET user_id = m.new_id::text FROM user_id_map m WHERE sc.user_id::text = m.old_id';
+        EXECUTE 'ALTER TABLE schedules ALTER COLUMN user_id TYPE uuid USING user_id::uuid';
+      END IF;
+
+      IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = ''team_members'') THEN
+        EXECUTE 'ALTER TABLE team_members DROP CONSTRAINT IF EXISTS "team_members_user_id_fkey"';
+        EXECUTE 'UPDATE team_members tm SET user_id = m.new_id::text FROM user_id_map m WHERE tm.user_id::text = m.old_id';
+        EXECUTE 'ALTER TABLE team_members ALTER COLUMN user_id TYPE uuid USING user_id::uuid';
+      END IF;
+
+      IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = ''messages'') THEN
+        EXECUTE 'ALTER TABLE messages DROP CONSTRAINT IF EXISTS "messages_sender_id_fkey"';
+        EXECUTE 'ALTER TABLE messages DROP CONSTRAINT IF EXISTS "messages_recipient_id_fkey"';
+        EXECUTE 'UPDATE messages m SET sender_id = map.new_id::text FROM user_id_map map WHERE m.sender_id::text = map.old_id';
+        EXECUTE 'UPDATE messages m SET recipient_id = map.new_id::text FROM user_id_map map WHERE m.recipient_id::text = map.old_id';
+        EXECUTE 'ALTER TABLE messages ALTER COLUMN sender_id TYPE uuid USING sender_id::uuid';
+        EXECUTE 'ALTER TABLE messages ALTER COLUMN recipient_id TYPE uuid USING recipient_id::uuid';
+      END IF;
+
+      IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = ''updates'') THEN
+        EXECUTE 'ALTER TABLE updates DROP CONSTRAINT IF EXISTS "updates_author_id_fkey"';
+        EXECUTE 'UPDATE updates u SET author_id = map.new_id::text FROM user_id_map map WHERE u.author_id::text = map.old_id';
+        EXECUTE 'ALTER TABLE updates ALTER COLUMN author_id TYPE uuid USING author_id::uuid';
+      END IF;
+
+      IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = ''notifications'') THEN
+        EXECUTE 'ALTER TABLE notifications DROP CONSTRAINT IF EXISTS "notifications_user_id_fkey"';
+        EXECUTE 'UPDATE notifications n SET user_id = map.new_id::text FROM user_id_map map WHERE n.user_id::text = map.old_id';
+        EXECUTE 'ALTER TABLE notifications ALTER COLUMN user_id TYPE uuid USING user_id::uuid';
+      END IF;
+
+      EXECUTE 'ALTER TABLE users ALTER COLUMN id TYPE uuid USING id::uuid';
+    END IF;
+  END IF;
+END $$;
+
+-- ============================================
 -- PARTE 1: Esquema Base (ya deberías tenerlo)
 -- ============================================
 
@@ -25,6 +119,21 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Compatibilidad: asegurar tipo UUID si users.id existe como text
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'users'
+      AND column_name = 'id'
+      AND data_type IN ('text', 'character varying')
+  ) THEN
+    ALTER TABLE users
+      ALTER COLUMN id TYPE UUID USING id::uuid;
+  END IF;
+END $$;
 
 -- Tabla de tareas
 CREATE TABLE IF NOT EXISTS tasks (
@@ -75,6 +184,7 @@ CREATE TABLE IF NOT EXISTS teams (
   description TEXT,
   department TEXT,
   manager_id UUID REFERENCES users(id),
+  team_code TEXT UNIQUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -86,6 +196,16 @@ CREATE TABLE IF NOT EXISTS team_members (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   role TEXT DEFAULT 'member' CHECK (role IN ('member', 'lead', 'manager')),
   joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(team_id, user_id)
+);
+
+-- Tabla de solicitudes de ingreso
+CREATE TABLE IF NOT EXISTS team_join_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(team_id, user_id)
 );
 
@@ -142,6 +262,8 @@ CREATE INDEX IF NOT EXISTS idx_schedules_user_id ON schedules(user_id);
 CREATE INDEX IF NOT EXISTS idx_schedules_date ON schedules(date);
 CREATE INDEX IF NOT EXISTS idx_team_members_team_id ON team_members(team_id);
 CREATE INDEX IF NOT EXISTS idx_team_members_user_id ON team_members(user_id);
+CREATE INDEX IF NOT EXISTS idx_team_join_requests_team_id ON team_join_requests(team_id);
+CREATE INDEX IF NOT EXISTS idx_team_join_requests_user_id ON team_join_requests(user_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_team_id ON tasks(team_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_assigned_by ON tasks(assigned_by);
 CREATE INDEX IF NOT EXISTS idx_messages_team_id ON messages(team_id);
@@ -160,6 +282,7 @@ ALTER TABLE shifts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE schedules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_join_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE updates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
@@ -290,6 +413,30 @@ CREATE POLICY "Users can view team members" ON team_members
 -- Política adicional: Los usuarios pueden ver sus propios registros de membresía
 CREATE POLICY "Users can view own team membership" ON team_members
   FOR SELECT USING (user_id = auth.uid());
+
+-- Políticas para team_join_requests
+DROP POLICY IF EXISTS "Users can create join requests" ON team_join_requests;
+CREATE POLICY "Users can create join requests" ON team_join_requests
+  FOR INSERT WITH CHECK (
+    user_id = auth.uid()
+  );
+
+DROP POLICY IF EXISTS "Users can view their join requests" ON team_join_requests;
+CREATE POLICY "Users can view their join requests" ON team_join_requests
+  FOR SELECT USING (
+    user_id = auth.uid()
+    OR team_id IN (
+      SELECT team_id FROM get_user_teams(auth.uid())
+    )
+  );
+
+DROP POLICY IF EXISTS "Managers can update join requests" ON team_join_requests;
+CREATE POLICY "Managers can update join requests" ON team_join_requests
+  FOR UPDATE USING (
+    team_id IN (
+      SELECT team_id FROM get_user_teams(auth.uid())
+    )
+  );
 
 -- Políticas para messages
 DROP POLICY IF EXISTS "Users can view team messages" ON messages;

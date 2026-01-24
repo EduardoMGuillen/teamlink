@@ -19,6 +19,21 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Compatibilidad: asegurar tipo UUID si users.id existe como text
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'users'
+      AND column_name = 'id'
+      AND data_type IN ('text', 'character varying')
+  ) THEN
+    ALTER TABLE users
+      ALTER COLUMN id TYPE UUID USING id::uuid;
+  END IF;
+END $$;
+
 -- Tabla de tareas
 CREATE TABLE IF NOT EXISTS tasks (
   id BIGSERIAL PRIMARY KEY,

@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS teams (
   description TEXT,
   department TEXT,
   manager_id UUID REFERENCES users(id),
+  team_code TEXT UNIQUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -19,6 +20,16 @@ CREATE TABLE IF NOT EXISTS team_members (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   role TEXT DEFAULT 'member' CHECK (role IN ('member', 'lead', 'manager')),
   joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(team_id, user_id)
+);
+
+-- Tabla de solicitudes de ingreso
+CREATE TABLE IF NOT EXISTS team_join_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(team_id, user_id)
 );
 
@@ -67,6 +78,8 @@ CREATE TABLE IF NOT EXISTS notifications (
 -- Índices para mejorar el rendimiento
 CREATE INDEX IF NOT EXISTS idx_team_members_team_id ON team_members(team_id);
 CREATE INDEX IF NOT EXISTS idx_team_members_user_id ON team_members(user_id);
+CREATE INDEX IF NOT EXISTS idx_team_join_requests_team_id ON team_join_requests(team_id);
+CREATE INDEX IF NOT EXISTS idx_team_join_requests_user_id ON team_join_requests(user_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_team_id ON tasks(team_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_assigned_by ON tasks(assigned_by);
 CREATE INDEX IF NOT EXISTS idx_messages_team_id ON messages(team_id);
@@ -79,16 +92,28 @@ CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
 -- Row Level Security (RLS) Policies
 ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_join_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE updates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+-- Función auxiliar para evitar recursión en policies
+CREATE OR REPLACE FUNCTION get_user_teams(user_uuid UUID)
+RETURNS TABLE(team_id UUID) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT tm.team_id
+  FROM team_members tm
+  WHERE tm.user_id = user_uuid;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Políticas para teams: los usuarios pueden ver equipos de los que son miembros
 DROP POLICY IF EXISTS "Users can view their teams" ON teams;
 CREATE POLICY "Users can view their teams" ON teams
   FOR SELECT USING (
     id IN (
-      SELECT team_id FROM team_members WHERE user_id = auth.uid()
+      SELECT team_id FROM get_user_teams(auth.uid())
     )
     OR manager_id = auth.uid()
   );
@@ -106,7 +131,37 @@ DROP POLICY IF EXISTS "Users can view team members" ON team_members;
 CREATE POLICY "Users can view team members" ON team_members
   FOR SELECT USING (
     team_id IN (
-      SELECT team_id FROM team_members WHERE user_id = auth.uid()
+      SELECT team_id FROM get_user_teams(auth.uid())
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can view own team membership" ON team_members;
+CREATE POLICY "Users can view own team membership" ON team_members
+  FOR SELECT USING (user_id = auth.uid());
+
+-- Políticas para team_join_requests
+DROP POLICY IF EXISTS "Users can create join requests" ON team_join_requests;
+CREATE POLICY "Users can create join requests" ON team_join_requests
+  FOR INSERT WITH CHECK (
+    user_id = auth.uid()
+  );
+
+DROP POLICY IF EXISTS "Users can view their join requests" ON team_join_requests;
+CREATE POLICY "Users can view their join requests" ON team_join_requests
+  FOR SELECT USING (
+    user_id = auth.uid()
+    OR team_id IN (
+      SELECT team_id FROM team_members
+      WHERE user_id = auth.uid() AND role IN ('manager', 'lead')
+    )
+  );
+
+DROP POLICY IF EXISTS "Managers can update join requests" ON team_join_requests;
+CREATE POLICY "Managers can update join requests" ON team_join_requests
+  FOR UPDATE USING (
+    team_id IN (
+      SELECT team_id FROM team_members
+      WHERE user_id = auth.uid() AND role IN ('manager', 'lead')
     )
   );
 
@@ -115,7 +170,7 @@ DROP POLICY IF EXISTS "Users can view team messages" ON messages;
 CREATE POLICY "Users can view team messages" ON messages
   FOR SELECT USING (
     (team_id IS NOT NULL AND team_id IN (
-      SELECT team_id FROM team_members WHERE user_id = auth.uid()
+      SELECT team_id FROM get_user_teams(auth.uid())
     ))
     OR sender_id = auth.uid()
     OR recipient_id = auth.uid()
@@ -130,7 +185,7 @@ DROP POLICY IF EXISTS "Users can view team updates" ON updates;
 CREATE POLICY "Users can view team updates" ON updates
   FOR SELECT USING (
     team_id IS NULL OR team_id IN (
-      SELECT team_id FROM team_members WHERE user_id = auth.uid()
+      SELECT team_id FROM get_user_teams(auth.uid())
     )
   );
 
@@ -150,7 +205,7 @@ CREATE POLICY "Users can view team tasks" ON tasks
     user_id = auth.uid()
     OR assigned_by = auth.uid()
     OR (team_id IS NOT NULL AND team_id IN (
-      SELECT team_id FROM team_members WHERE user_id = auth.uid()
+      SELECT team_id FROM get_user_teams(auth.uid())
     ))
   );
 

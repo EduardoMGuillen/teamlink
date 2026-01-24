@@ -28,6 +28,7 @@ export default function TeamsScreen() {
   const [selectedTeamId, setSelectedTeamId] = useState(null);
   const [teamMembers, setTeamMembers] = useState([]);
   const [teamUpdates, setTeamUpdates] = useState([]);
+  const [joinRequests, setJoinRequests] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -35,8 +36,8 @@ export default function TeamsScreen() {
   const [teamName, setTeamName] = useState('');
   const [teamDescription, setTeamDescription] = useState('');
   const [teamDepartment, setTeamDepartment] = useState('');
-  const [joinQuery, setJoinQuery] = useState('');
-  const [joinResults, setJoinResults] = useState([]);
+  const [joinCode, setJoinCode] = useState('');
+  const [joinStatus, setJoinStatus] = useState('');
   const [inviteQuery, setInviteQuery] = useState('');
   const [inviteResults, setInviteResults] = useState([]);
   const [memberRole, setMemberRole] = useState('member');
@@ -51,10 +52,6 @@ export default function TeamsScreen() {
       loadTeamDetails(selectedTeamId);
     }
   }, [selectedTeamId]);
-
-  useEffect(() => {
-    searchTeams();
-  }, [joinQuery]);
 
   useEffect(() => {
     searchUsers();
@@ -95,6 +92,13 @@ export default function TeamsScreen() {
       setTeamMembers(members);
       const updates = await updatesService.getTeamUpdates(teamId, 3);
       setTeamUpdates(updates);
+      const activeTeam = teams.find(team => team.id === teamId);
+      if (activeTeam?.role === 'manager' || activeTeam?.role === 'lead') {
+        const pending = await teamsService.getJoinRequests(teamId);
+        setJoinRequests(pending);
+      } else {
+        setJoinRequests([]);
+      }
     } catch (error) {
       console.error('Error loading team details:', error);
     }
@@ -130,15 +134,6 @@ export default function TeamsScreen() {
     }
   };
 
-  const searchTeams = async () => {
-    if (!joinQuery.trim()) {
-      setJoinResults([]);
-      return;
-    }
-    const results = await teamsService.searchTeams(joinQuery);
-    setJoinResults(results);
-  };
-
   const searchUsers = async () => {
     if (!inviteQuery.trim()) {
       setInviteResults([]);
@@ -150,20 +145,46 @@ export default function TeamsScreen() {
     setInviteResults(filtered);
   };
 
-  const handleJoinTeam = async (teamId) => {
-    if (!currentUser?.id || !teamId) return;
+  const handleJoinByCode = async () => {
+    if (!currentUser?.id || !joinCode.trim()) return;
     setIsWorking(true);
     try {
-      const result = await teamsService.addMember(teamId, currentUser.id, 'member');
+      const result = await teamsService.requestJoinByCode(joinCode, currentUser.id);
       if (result.success) {
-        setShowJoinModal(false);
-        setJoinQuery('');
-        setJoinResults([]);
-        await loadTeams();
-        setSelectedTeamId(teamId);
+        setJoinStatus(t('joinRequestSent') || 'Request sent. Waiting for approval.');
+        setJoinCode('');
       }
     } catch (error) {
       console.error('Error joining team:', error);
+    } finally {
+      setIsWorking(false);
+    }
+  };
+
+  const handleApproveRequest = async (request) => {
+    if (!selectedTeamId) return;
+    setIsWorking(true);
+    try {
+      const result = await teamsService.approveJoinRequest(request.id, selectedTeamId, request.userId);
+      if (result.success) {
+        await loadTeamDetails(selectedTeamId);
+      }
+    } catch (error) {
+      console.error('Error approving request:', error);
+    } finally {
+      setIsWorking(false);
+    }
+  };
+
+  const handleRejectRequest = async (requestId) => {
+    setIsWorking(true);
+    try {
+      const result = await teamsService.rejectJoinRequest(requestId);
+      if (result.success && selectedTeamId) {
+        await loadTeamDetails(selectedTeamId);
+      }
+    } catch (error) {
+      console.error('Error rejecting request:', error);
     } finally {
       setIsWorking(false);
     }
@@ -243,16 +264,6 @@ export default function TeamsScreen() {
         <View>
           <Text style={styles.title}>{t('teams')}</Text>
           <Text style={styles.subtitle}>{t('teamsOverview') || 'Build and manage your team workspace'}</Text>
-        </View>
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerButton} onPress={() => setShowJoinModal(true)}>
-            <Ionicons name="log-in-outline" size={18} color={colors.primary} />
-            <Text style={styles.headerButtonText}>{t('joinTeam')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.headerButton, styles.primaryHeaderButton]} onPress={() => setShowCreateModal(true)}>
-            <Ionicons name="add" size={18} color="#fff" />
-            <Text style={[styles.headerButtonText, styles.primaryHeaderButtonText]}>{t('createTeam')}</Text>
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -347,6 +358,12 @@ export default function TeamsScreen() {
                   <Text style={styles.dashboardSubtitle}>
                     {selectedTeam.description || t('teamDescriptionFallback') || 'Team workspace'}
                   </Text>
+                  {selectedTeam.teamCode && (
+                    <View style={styles.teamCodeRow}>
+                      <Text style={styles.teamCodeLabel}>{t('teamCode') || 'Team Code'}:</Text>
+                      <Text style={styles.teamCodeValue}>{selectedTeam.teamCode}</Text>
+                    </View>
+                  )}
                   <View style={styles.dashboardStats}>
                     <View style={styles.statPill}>
                       <Text style={styles.statValue}>{teamMembers.length}</Text>
@@ -398,6 +415,44 @@ export default function TeamsScreen() {
                 </View>
               </View>
 
+              {isManager && (
+                <View style={styles.section}>
+                  <View style={styles.sectionHeaderRow}>
+                    <Text style={styles.sectionTitle}>{t('joinRequests') || 'Join Requests'}</Text>
+                  </View>
+                  <View style={styles.requestsList}>
+                    {joinRequests.length === 0 ? (
+                      <View style={styles.emptyUpdates}>
+                        <Text style={styles.emptyUpdatesText}>{t('noJoinRequests') || 'No pending requests'}</Text>
+                      </View>
+                    ) : (
+                      joinRequests.map(request => (
+                        <View key={request.id} style={styles.requestCard}>
+                          <View>
+                            <Text style={styles.searchTitle}>{request.user?.name || 'User'}</Text>
+                            <Text style={styles.searchSubtitle}>{request.user?.email || ''}</Text>
+                          </View>
+                          <View style={styles.requestActions}>
+                            <TouchableOpacity
+                              style={[styles.requestButton, styles.requestApprove]}
+                              onPress={() => handleApproveRequest(request)}
+                            >
+                              <Text style={styles.requestButtonText}>{t('approve') || 'Approve'}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={[styles.requestButton, styles.requestReject]}
+                              onPress={() => handleRejectRequest(request.id)}
+                            >
+                              <Text style={styles.requestButtonText}>{t('reject') || 'Reject'}</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      ))
+                    )}
+                  </View>
+                </View>
+              )}
+
               <View style={styles.section}>
                 <View style={styles.sectionHeaderRow}>
                   <Text style={styles.sectionTitle}>{t('recentUpdates') || 'Recent Updates'}</Text>
@@ -437,18 +492,21 @@ export default function TeamsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{t('createTeam')}</Text>
+            <Text style={styles.inputLabel}>{t('teamName') || 'Team Name'}</Text>
             <TextInput
               style={styles.input}
               placeholder={t('teamName') || 'Team name'}
               value={teamName}
               onChangeText={setTeamName}
             />
+            <Text style={styles.inputLabel}>{t('teamDescription') || 'Team Description'}</Text>
             <TextInput
               style={styles.input}
               placeholder={t('teamDescription') || 'Description'}
               value={teamDescription}
               onChangeText={setTeamDescription}
             />
+            <Text style={styles.inputLabel}>{t('department') || 'Department'}</Text>
             <TextInput
               style={styles.input}
               placeholder={t('department') || 'Department'}
@@ -481,18 +539,21 @@ export default function TeamsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{t('editTeam') || 'Edit Team'}</Text>
+            <Text style={styles.inputLabel}>{t('teamName') || 'Team Name'}</Text>
             <TextInput
               style={styles.input}
               placeholder={t('teamName') || 'Team name'}
               value={teamName}
               onChangeText={setTeamName}
             />
+            <Text style={styles.inputLabel}>{t('teamDescription') || 'Team Description'}</Text>
             <TextInput
               style={styles.input}
               placeholder={t('teamDescription') || 'Description'}
               value={teamDescription}
               onChangeText={setTeamDescription}
             />
+            <Text style={styles.inputLabel}>{t('department') || 'Department'}</Text>
             <TextInput
               style={styles.input}
               placeholder={t('department') || 'Department'}
@@ -522,41 +583,32 @@ export default function TeamsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{t('joinTeam')}</Text>
+            <Text style={styles.inputLabel}>{t('teamCode') || 'Team Code'}</Text>
             <TextInput
               style={styles.input}
-              placeholder={t('searchTeam') || 'Search team by name'}
-              value={joinQuery}
-              onChangeText={setJoinQuery}
+              placeholder={t('enterTeamCode') || 'Enter team code'}
+              value={joinCode}
+              onChangeText={setJoinCode}
+              autoCapitalize="characters"
             />
-            <View style={styles.searchList}>
-              {joinResults.map(team => (
-                <View key={team.id} style={styles.searchItem}>
-                  <View>
-                    <Text style={styles.searchTitle}>{team.name}</Text>
-                    <Text style={styles.searchSubtitle}>{team.department || t('teamDescriptionFallback') || 'Team'}</Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.searchAction}
-                    onPress={() => handleJoinTeam(team.id)}
-                  >
-                    <Text style={styles.searchActionText}>{t('joinTeam')}</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
-              {joinQuery.trim() && joinResults.length === 0 && (
-                <Text style={styles.emptySearchText}>{t('noResults')}</Text>
-              )}
-            </View>
+            {!!joinStatus && <Text style={styles.joinStatus}>{joinStatus}</Text>}
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalCancel]}
                 onPress={() => {
                   setShowJoinModal(false);
-                  setJoinQuery('');
-                  setJoinResults([]);
+                  setJoinCode('');
+                  setJoinStatus('');
                 }}
               >
                 <Text style={styles.modalCancelText}>{t('cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalSave]}
+                onPress={handleJoinByCode}
+                disabled={isWorking}
+              >
+                <Text style={styles.modalSaveText}>{t('requestToJoin') || 'Request to Join'}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -654,31 +706,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textMuted,
     maxWidth: 220,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  headerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: colors.surface,
-    borderRadius: 999,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    ...shadows.soft,
-  },
-  headerButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  primaryHeaderButton: {
-    backgroundColor: colors.primary,
-  },
-  primaryHeaderButtonText: {
-    color: '#fff',
   },
   scroll: {
     flex: 1,
@@ -789,6 +816,23 @@ const styles = StyleSheet.create({
     marginTop: 8,
     color: colors.textMuted,
   },
+  teamCodeRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  teamCodeLabel: {
+    fontSize: 12,
+    color: colors.textMuted,
+    fontWeight: '600',
+  },
+  teamCodeValue: {
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
   dashboardStats: {
     flexDirection: 'row',
     gap: 10,
@@ -873,6 +917,38 @@ const styles = StyleSheet.create({
   updateContent: {
     marginTop: 6,
     color: colors.textMuted,
+  },
+  requestsList: {
+    gap: 12,
+  },
+  requestCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    padding: 12,
+    ...shadows.soft,
+  },
+  requestActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  requestButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  requestApprove: {
+    backgroundColor: colors.primary,
+  },
+  requestReject: {
+    backgroundColor: colors.danger,
+  },
+  requestButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
   emptyUpdates: {
     padding: 16,
@@ -966,6 +1042,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: colors.text,
   },
+  inputLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textMuted,
+    marginBottom: 6,
+  },
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -1026,6 +1108,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: 12,
     color: colors.textMuted,
+  },
+  joinStatus: {
+    marginTop: 6,
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '600',
   },
   roleRow: {
     flexDirection: 'row',
