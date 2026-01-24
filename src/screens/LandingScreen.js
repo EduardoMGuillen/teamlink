@@ -31,7 +31,7 @@ export default function LandingScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={[styles.header, isMobile && styles.headerMobile]}>
+      <View style={[styles.header, isMobile && styles.headerMobile, isWeb && styles.headerWeb]}>
         <View style={styles.brandRow}>
           <Image 
             source={require('../../logo.png')} 
@@ -373,9 +373,17 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    ...(isWeb && {
+      height: '100%',
+      overflowY: 'auto',
+      overflowX: 'hidden',
+    }),
   },
   scrollContent: {
     paddingBottom: 48,
+    ...(isWeb && {
+      paddingTop: 80, // Space for fixed header
+    }),
   },
   heroSection: {
     flexDirection: 'row',
