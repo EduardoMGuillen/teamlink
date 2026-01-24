@@ -99,9 +99,13 @@ export const AppStateProvider = ({ children }) => {
   };
 
   const changeBackground = async (backgroundId) => {
+    console.log('[AppStateContext] Changing background to:', backgroundId);
     const result = await backgroundService.saveSelectedBackground(backgroundId);
     if (result.success) {
+      console.log('[AppStateContext] Background saved successfully, updating state');
       setSelectedBackground(backgroundId);
+    } else {
+      console.error('[AppStateContext] Failed to save background:', result.error);
     }
     return result;
   };
