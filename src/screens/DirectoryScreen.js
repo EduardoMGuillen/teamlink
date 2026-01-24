@@ -18,7 +18,9 @@ import { useNavigation } from '@react-navigation/native';
 
 export default function DirectoryScreen() {
   const { t } = useTranslation();
-  const { currentUser } = useAppState();
+  const { currentUser, selectedBackground } = useAppState();
+  const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
+  const isWeb = Platform.OS === 'web';
   const navigation = useNavigation();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
@@ -90,9 +92,15 @@ export default function DirectoryScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
+    <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['bottom']}>
+      <ScrollView
+        style={[styles.scrollView, hasCustomBackground && styles.scrollViewTransparent]}
+        contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
+          {/* Search Bar */}
+          <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color="#8E8E93" style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
@@ -136,8 +144,8 @@ export default function DirectoryScreen() {
         ))}
       </ScrollView>
 
-      {/* Users List */}
-      <ScrollView style={styles.list}>
+          {/* Users List */}
+          <View style={styles.list}>
         {filteredUsers.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Ionicons name="people-outline" size={64} color="#C7C7CC" />
@@ -173,6 +181,8 @@ export default function DirectoryScreen() {
             </TouchableOpacity>
           ))
         )}
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

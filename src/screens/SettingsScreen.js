@@ -18,6 +18,7 @@ export default function SettingsScreen() {
   const { t, language, changeLanguage, availableLanguages } = useTranslation();
   const navigation = useNavigation();
   const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
+  const isWeb = Platform.OS === 'web';
 
   const handleLanguageChange = async (lang) => {
     await changeLanguage(lang);

@@ -17,7 +17,9 @@ import { useNavigation } from '@react-navigation/native';
 
 export default function NotificationsScreen() {
   const { t } = useTranslation();
-  const { currentUser } = useAppState();
+  const { currentUser, selectedBackground } = useAppState();
+  const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
+  const isWeb = Platform.OS === 'web';
   const navigation = useNavigation();
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -133,21 +135,22 @@ export default function NotificationsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      {unreadCount > 0 && (
-        <View style={styles.markAllReadContainer}>
-          <TouchableOpacity onPress={markAllAsRead} style={styles.markAllReadButton}>
-            <Text style={styles.markAllRead}>{t('markAllRead') || 'Mark all read'}</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
+    <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['bottom']}>
       <ScrollView
-        style={styles.list}
+        style={[styles.scrollView, hasCustomBackground && styles.scrollViewTransparent]}
+        contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
+          {unreadCount > 0 && (
+            <View style={styles.markAllReadContainer}>
+              <TouchableOpacity onPress={markAllAsRead} style={styles.markAllReadButton}>
+                <Text style={styles.markAllRead}>{t('markAllRead') || 'Mark all read'}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         {notifications.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Ionicons name="notifications-outline" size={64} color="#C7C7CC" />
@@ -184,6 +187,7 @@ export default function NotificationsScreen() {
             </TouchableOpacity>
           ))
         )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

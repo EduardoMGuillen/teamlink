@@ -109,8 +109,9 @@ export default function LandingScreen() {
         scrollEnabled={true}
         bounces={false}
       >
-        {/* Hero Section */}
-        <View style={[styles.heroSection, isMobile && styles.heroSectionMobile]}>
+        <View style={[styles.content, isWeb && styles.contentWeb]}>
+          {/* Hero Section */}
+          <View style={[styles.heroSection, isMobile && styles.heroSectionMobile]}>
           <View style={styles.heroContent}>
             <View style={styles.badge}>
               <Ionicons name="sparkles" size={14} color={colors.primary} />

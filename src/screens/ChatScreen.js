@@ -23,6 +23,7 @@ export default function ChatScreen() {
   const { t } = useTranslation();
   const { currentUser, selectedBackground } = useAppState();
   const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
+  const isWeb = Platform.OS === 'web';
   const route = useRoute();
   const navigation = useNavigation();
   const { userId, teamId } = route.params || {};
@@ -366,46 +367,49 @@ export default function ChatScreen() {
   // Mostrar lista de conversaciones
   if (!showConversation) {
     return (
-      <SafeAreaView style={[styles.container, hasCustomBackground && { backgroundColor: 'transparent' }]} edges={['top', 'bottom']}>
-        <FlatList
-          data={conversations}
-          renderItem={renderConversation}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.conversationsList}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="chatbubbles-outline" size={64} color="#C7C7CC" />
-              <Text style={styles.emptyText}>{t('noMessages')}</Text>
-            </View>
-          }
-        />
+      <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['top', 'bottom']}>
+        <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
+          <FlatList
+            data={conversations}
+            renderItem={renderConversation}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={[styles.conversationsList, isWeb && styles.conversationsListWeb]}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Ionicons name="chatbubbles-outline" size={64} color="#C7C7CC" />
+                <Text style={styles.emptyText}>{t('noMessages')}</Text>
+              </View>
+            }
+          />
+        </View>
       </SafeAreaView>
     );
   }
 
   // Mostrar conversación individual
   return (
-    <SafeAreaView style={[styles.container, hasCustomBackground && { backgroundColor: 'transparent' }]} edges={['bottom']}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
-        {/* Messages List */}
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.messagesList}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="chatbubbles-outline" size={64} color="#C7C7CC" />
-              <Text style={styles.emptyText}>{t('noMessages')}</Text>
-            </View>
-          }
-        />
+    <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['bottom']}>
+      <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        >
+          {/* Messages List */}
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            renderItem={renderMessage}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={[styles.messagesList, isWeb && styles.messagesListWeb]}
+            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Ionicons name="chatbubbles-outline" size={64} color="#C7C7CC" />
+                <Text style={styles.emptyText}>{t('noMessages')}</Text>
+              </View>
+            }
+          />
 
         {/* Input */}
         <View style={styles.inputContainer}>
@@ -430,7 +434,8 @@ export default function ChatScreen() {
             )}
           </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -439,6 +444,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  containerTransparent: {
+    backgroundColor: 'transparent',
+  },
+  content: {
+    flex: 1,
+    width: '100%',
+  },
+  contentWeb: {
+    maxWidth: 1200,
+    alignSelf: 'center',
+    paddingHorizontal: 24,
+  },
+  contentTransparent: {
+    backgroundColor: 'transparent',
   },
   keyboardView: {
     flex: 1,
@@ -540,6 +560,12 @@ const styles = StyleSheet.create({
   },
   conversationsList: {
     paddingVertical: 8,
+  },
+  conversationsListWeb: {
+    paddingHorizontal: 0,
+  },
+  messagesListWeb: {
+    paddingHorizontal: 0,
   },
   conversationItem: {
     flexDirection: 'row',

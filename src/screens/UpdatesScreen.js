@@ -16,7 +16,9 @@ import { updatesService } from '../services/updatesService';
 
 export default function UpdatesScreen() {
   const { t } = useTranslation();
-  const { currentUser } = useAppState();
+  const { currentUser, selectedBackground } = useAppState();
+  const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
+  const isWeb = Platform.OS === 'web';
   const [updates, setUpdates] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -88,13 +90,15 @@ export default function UpdatesScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['bottom']}>
       <ScrollView
-        style={styles.list}
+        style={[styles.scrollView, hasCustomBackground && styles.scrollViewTransparent]}
+        contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
         {updates.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Ionicons name="megaphone-outline" size={64} color="#C7C7CC" />
@@ -135,6 +139,7 @@ export default function UpdatesScreen() {
             </TouchableOpacity>
           ))
         )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

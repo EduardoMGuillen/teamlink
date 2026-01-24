@@ -18,6 +18,7 @@ export default function MoreScreen() {
   const navigation = useNavigation();
   const { t } = useTranslation();
   const hasCustomBackground = selectedBackground && selectedBackground !== 'default';
+  const isWeb = Platform.OS === 'web';
 
   const menuSections = [
     {
@@ -38,8 +39,13 @@ export default function MoreScreen() {
   ];
 
   return (
-    <SafeAreaView style={[styles.container, hasCustomBackground && { backgroundColor: 'transparent' }]} edges={['top']}>
-      <ScrollView>
+    <SafeAreaView style={[styles.container, hasCustomBackground && styles.containerTransparent]} edges={['top']}>
+      <ScrollView
+        style={[styles.scrollView, hasCustomBackground && styles.scrollViewTransparent]}
+        contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.content, isWeb && styles.contentWeb, hasCustomBackground && styles.contentTransparent]}>
         {/* Profile Section */}
         <View style={styles.profileSection}>
           <View style={styles.avatar}>
