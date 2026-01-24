@@ -775,6 +775,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    ...(Platform.OS === 'web' && {
+      paddingHorizontal: 0,
+    }),
   },
   title: {
     fontSize: 32,
@@ -793,6 +796,9 @@ const styles = StyleSheet.create({
   section: {
     paddingHorizontal: 20,
     paddingBottom: 18,
+    ...(Platform.OS === 'web' && {
+      paddingHorizontal: 0,
+    }),
   },
   sectionTitle: {
     fontSize: 16,
@@ -1040,10 +1046,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    width: '100%',
   },
   emptyState: {
     alignItems: 'center',
