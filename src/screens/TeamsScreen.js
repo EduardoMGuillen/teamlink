@@ -17,6 +17,7 @@ import { useAppState } from '../context/AppStateContext';
 import { radii, shadows } from '../utils/theme';
 import { teamsService } from '../services/teamsService';
 import { updatesService } from '../services/updatesService';
+import { tasksService } from '../services/tasksService';
 import { useNavigation } from '@react-navigation/native';
 
 export default function TeamsScreen() {
@@ -46,6 +47,9 @@ export default function TeamsScreen() {
   const [inviteStatus, setInviteStatus] = useState('');
   const [memberRole, setMemberRole] = useState('member');
   const [isWorking, setIsWorking] = useState(false);
+  
+  // Team Tasks states (for summary only)
+  const [teamStats, setTeamStats] = useState({ pending: 0, inProgress: 0, completed: 0, unassigned: 0 });
 
   useEffect(() => {
     loadTeams();
@@ -54,6 +58,7 @@ export default function TeamsScreen() {
   useEffect(() => {
     if (selectedTeamId) {
       loadTeamDetails(selectedTeamId);
+      loadTeamStats(selectedTeamId);
     }
   }, [selectedTeamId]);
 
@@ -107,6 +112,17 @@ export default function TeamsScreen() {
       console.error('Error loading team details:', error);
     }
   };
+
+  const loadTeamStats = async (teamId) => {
+    if (!teamId) return;
+    try {
+      const stats = await tasksService.getTeamStats(teamId);
+      setTeamStats(stats);
+    } catch (error) {
+      console.error('Error loading team stats:', error);
+    }
+  };
+
 
   const loadInvites = async () => {
     if (!currentUser?.email || !currentUser?.id) return;
@@ -211,66 +227,6 @@ export default function TeamsScreen() {
     }
   };
 
-  const handleApproveRequest = async (request) => {
-    if (!selectedTeamId) return;
-    setIsWorking(true);
-    try {
-      const result = await teamsService.approveJoinRequest(request.id, selectedTeamId, request.userId);
-      if (result.success) {
-        await loadTeamDetails(selectedTeamId);
-      }
-    } catch (error) {
-      console.error('Error approving request:', error);
-    } finally {
-      setIsWorking(false);
-    }
-  };
-
-  const handleRejectRequest = async (requestId) => {
-    setIsWorking(true);
-    try {
-      const result = await teamsService.rejectJoinRequest(requestId);
-      if (result.success && selectedTeamId) {
-        await loadTeamDetails(selectedTeamId);
-      }
-    } catch (error) {
-      console.error('Error rejecting request:', error);
-    } finally {
-      setIsWorking(false);
-    }
-  };
-
-  const handleInviteMember = async (userId) => {
-    if (!currentUser?.id || !selectedTeamId || !userId) return;
-    setIsWorking(true);
-    try {
-      const result = await teamsService.addMember(selectedTeamId, userId, memberRole);
-      if (result.success) {
-        await loadTeamDetails(selectedTeamId);
-        setInviteQuery('');
-        setInviteResults([]);
-      }
-    } catch (error) {
-      console.error('Error inviting member:', error);
-    } finally {
-      setIsWorking(false);
-    }
-  };
-
-  const handleRemoveMember = async (userId) => {
-    if (!selectedTeamId || !userId) return;
-    setIsWorking(true);
-    try {
-      const result = await teamsService.removeMember(selectedTeamId, userId);
-      if (result.success) {
-        await loadTeamDetails(selectedTeamId);
-      }
-    } catch (error) {
-      console.error('Error removing member:', error);
-    } finally {
-      setIsWorking(false);
-    }
-  };
 
   const handleUpdateTeam = async () => {
     if (!selectedTeamId || !teamName.trim()) return;
@@ -307,6 +263,7 @@ export default function TeamsScreen() {
       day: 'numeric',
     });
   };
+
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -468,76 +425,104 @@ export default function TeamsScreen() {
                 </View>
               </View>
 
-              <View style={styles.section}>
-                <View style={styles.sectionHeaderRow}>
-                  <Text style={styles.sectionTitle}>{t('teamMembers') || 'Team Members'}</Text>
-                  {canManageMembers && (
-                    <TouchableOpacity style={styles.linkButton} onPress={() => setShowInviteModal(true)}>
-                      <Ionicons name="person-add" size={16} color={colors.primary} />
-                      <Text style={styles.linkButtonText}>{t('inviteMembers') || 'Invite'}</Text>
-                    </TouchableOpacity>
-                  )}
+              {/* Team Members Summary */}
+              <TouchableOpacity
+                style={styles.summaryCard}
+                onPress={() => navigation.navigate('TeamMembers', { 
+                  teamId: selectedTeam.id,
+                  teamName: selectedTeam.name,
+                  userRole: selectedTeam.role 
+                })}
+              >
+                <View style={styles.summaryHeader}>
+                  <View style={styles.summaryHeaderLeft}>
+                    <Ionicons name="people" size={24} color={colors.primary} />
+                    <Text style={styles.summaryTitle}>{t('teamMembers') || 'Team Members'}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
                 </View>
-                <View style={styles.membersList}>
-                  {teamMembers.map(member => (
-                    <View key={member.userId} style={styles.memberRow}>
-                      <View style={styles.memberAvatar}>
-                        <Text style={styles.memberAvatarText}>
-                          {member.user.name?.charAt(0).toUpperCase() || 'U'}
-                        </Text>
-                      </View>
-                      <View style={styles.memberInfo}>
-                        <Text style={styles.memberName}>{member.user.name}</Text>
-                        <Text style={styles.memberMeta}>
-                          {member.user.email} • {member.role}
-                        </Text>
-                      </View>
-                      {canManageMembers && member.userId !== currentUser?.id && (
-                        <TouchableOpacity onPress={() => handleRemoveMember(member.userId)}>
-                          <Ionicons name="remove-circle-outline" size={22} color={colors.danger} />
-                        </TouchableOpacity>
+                <View style={styles.summaryContent}>
+                  <Text style={styles.summaryText}>
+                    {teamMembers.length} {t('members') || 'members'}
+                  </Text>
+                  {teamMembers.length > 0 && (
+                    <View style={styles.summaryMembersPreview}>
+                      {teamMembers.slice(0, 3).map(member => (
+                        <View key={member.userId} style={styles.summaryMemberAvatar}>
+                          <Text style={styles.summaryMemberAvatarText}>
+                            {member.user.name?.charAt(0).toUpperCase() || 'U'}
+                          </Text>
+                        </View>
+                      ))}
+                      {teamMembers.length > 3 && (
+                        <Text style={styles.summaryMoreText}>+{teamMembers.length - 3}</Text>
                       )}
                     </View>
-                  ))}
+                  )}
                 </View>
-              </View>
+              </TouchableOpacity>
 
-              {isManager && (
-                <View style={styles.section}>
-                  <View style={styles.sectionHeaderRow}>
-                    <Text style={styles.sectionTitle}>{t('joinRequests') || 'Join Requests'}</Text>
+              {/* Team Tasks Summary */}
+              <TouchableOpacity
+                style={styles.summaryCard}
+                onPress={() => navigation.navigate('TeamTasks', { 
+                  teamId: selectedTeam.id,
+                  teamName: selectedTeam.name 
+                })}
+              >
+                <View style={styles.summaryHeader}>
+                  <View style={styles.summaryHeaderLeft}>
+                    <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
+                    <Text style={styles.summaryTitle}>{t('teamTasks') || 'Team Tasks'}</Text>
                   </View>
-                  <View style={styles.requestsList}>
-                    {joinRequests.length === 0 ? (
-                      <View style={styles.emptyUpdates}>
-                        <Text style={styles.emptyUpdatesText}>{t('noJoinRequests') || 'No pending requests'}</Text>
-                      </View>
-                    ) : (
-                      joinRequests.map(request => (
-                        <View key={request.id} style={styles.requestCard}>
-                          <View>
-                            <Text style={styles.searchTitle}>{request.user?.name || 'User'}</Text>
-                            <Text style={styles.searchSubtitle}>{request.user?.email || ''}</Text>
-                          </View>
-                          <View style={styles.requestActions}>
-                            <TouchableOpacity
-                              style={[styles.requestButton, styles.requestApprove]}
-                              onPress={() => handleApproveRequest(request)}
-                            >
-                              <Text style={styles.requestButtonText}>{t('approve') || 'Approve'}</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                              style={[styles.requestButton, styles.requestReject]}
-                              onPress={() => handleRejectRequest(request.id)}
-                            >
-                              <Text style={styles.requestButtonText}>{t('reject') || 'Reject'}</Text>
-                            </TouchableOpacity>
-                          </View>
-                        </View>
-                      ))
-                    )}
+                  <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                </View>
+                <View style={styles.summaryStats}>
+                  <View style={styles.summaryStat}>
+                    <Text style={styles.summaryStatValue}>{teamStats.pending + teamStats.inProgress}</Text>
+                    <Text style={styles.summaryStatLabel}>{t('active') || 'Active'}</Text>
+                  </View>
+                  <View style={styles.summaryStat}>
+                    <Text style={styles.summaryStatValue}>{teamStats.unassigned}</Text>
+                    <Text style={styles.summaryStatLabel}>{t('unassigned') || 'Unassigned'}</Text>
+                  </View>
+                  <View style={styles.summaryStat}>
+                    <Text style={styles.summaryStatValue}>{teamStats.completed}</Text>
+                    <Text style={styles.summaryStatLabel}>{t('completed') || 'Completed'}</Text>
                   </View>
                 </View>
+              </TouchableOpacity>
+
+              {/* Join Requests Summary */}
+              {isManager && (
+                <TouchableOpacity
+                  style={styles.summaryCard}
+                  onPress={() => navigation.navigate('TeamJoinRequests', { 
+                    teamId: selectedTeam.id,
+                    teamName: selectedTeam.name 
+                  })}
+                >
+                  <View style={styles.summaryHeader}>
+                    <View style={styles.summaryHeaderLeft}>
+                      <Ionicons name="person-add" size={24} color={colors.primary} />
+                      <Text style={styles.summaryTitle}>{t('joinRequests') || 'Join Requests'}</Text>
+                    </View>
+                    <View style={styles.summaryBadge}>
+                      {joinRequests.length > 0 && (
+                        <View style={styles.badge}>
+                          <Text style={styles.badgeText}>{joinRequests.length}</Text>
+                        </View>
+                      )}
+                      <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                    </View>
+                  </View>
+                  <Text style={styles.summaryText}>
+                    {joinRequests.length === 0 
+                      ? t('noJoinRequests') || 'No pending requests'
+                      : `${joinRequests.length} ${t('pendingRequests') || 'pending requests'}`
+                    }
+                  </Text>
+                </TouchableOpacity>
               )}
 
               <View style={styles.section}>
@@ -761,6 +746,7 @@ export default function TeamsScreen() {
           </View>
         </View>
       </Modal>
+
     </SafeAreaView>
   );
 }
@@ -1247,5 +1233,99 @@ const createStyles = (colors) => StyleSheet.create({
   roleChipTextActive: {
     color: colors.primary,
     fontWeight: '600',
+  },
+  // Summary Cards
+  summaryCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    padding: 16,
+    marginBottom: 12,
+    ...shadows.soft,
+  },
+  summaryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  summaryHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  summaryTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  summaryStats: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  summaryStat: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  summaryStatValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.primary,
+    marginBottom: 4,
+  },
+  summaryStatLabel: {
+    fontSize: 12,
+    color: colors.textMuted,
+    fontWeight: '500',
+  },
+  summaryContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  summaryText: {
+    fontSize: 14,
+    color: colors.textMuted,
+  },
+  summaryMembersPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  summaryMemberAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  summaryMemberAvatarText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  summaryMoreText: {
+    fontSize: 12,
+    color: colors.textMuted,
+    fontWeight: '600',
+  },
+  summaryBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  badge: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#fff',
   },
 });

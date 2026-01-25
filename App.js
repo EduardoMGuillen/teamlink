@@ -28,6 +28,9 @@ import UpdatesScreen from './src/screens/UpdatesScreen';
 import NotificationsScreen from './src/screens/NotificationsScreen';
 import ConnectionTestScreen from './src/screens/ConnectionTestScreen';
 import MotivationSettingsScreen from './src/screens/MotivationSettingsScreen';
+import TeamTasksScreen from './src/screens/TeamTasksScreen';
+import TeamMembersScreen from './src/screens/TeamMembersScreen';
+import TeamJoinRequestsScreen from './src/screens/TeamJoinRequestsScreen';
 
 const Tab = createBottomTabNavigator();
 // Usar Stack Navigator nativo para móvil, Stack Navigator regular para web
@@ -270,6 +273,27 @@ function AppNavigator() {
             <Stack.Screen 
               name="MotivationSettings" 
               component={MotivationSettingsScreen}
+              options={{ 
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen 
+              name="TeamTasks" 
+              component={TeamTasksScreen}
+              options={{ 
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen 
+              name="TeamMembers" 
+              component={TeamMembersScreen}
+              options={{ 
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen 
+              name="TeamJoinRequests" 
+              component={TeamJoinRequestsScreen}
               options={{ 
                 headerShown: false,
               }}
