@@ -448,26 +448,36 @@ export default function TasksScreen() {
                   <Text style={styles.taskDescription}>{task.description}</Text>
                 ) : null}
                 <View style={styles.taskMeta}>
-                  <View
-                    style={[
-                      styles.priorityBadge,
-                      { backgroundColor: getPriorityColor(task.priority) + '20' },
-                    ]}
-                  >
+                  <View style={styles.badgesRow}>
                     <View
                       style={[
-                        styles.priorityDot,
-                        { backgroundColor: getPriorityColor(task.priority) },
-                      ]}
-                    />
-                    <Text
-                      style={[
-                        styles.priorityText,
-                        { color: getPriorityColor(task.priority) },
+                        styles.priorityBadge,
+                        { backgroundColor: getPriorityColor(task.priority) + '20' },
                       ]}
                     >
-                      {getPriorityLabel(task.priority).toUpperCase()}
-                    </Text>
+                      <View
+                        style={[
+                          styles.priorityDot,
+                          { backgroundColor: getPriorityColor(task.priority) },
+                        ]}
+                      />
+                      <Text
+                        style={[
+                          styles.priorityText,
+                          { color: getPriorityColor(task.priority) },
+                        ]}
+                      >
+                        {getPriorityLabel(task.priority).toUpperCase()}
+                      </Text>
+                    </View>
+                    {task.isTeamTask && (
+                      <View style={styles.teamBadge}>
+                        <Ionicons name="people" size={12} color="#007AFF" />
+                        <Text style={styles.teamBadgeText}>
+                          {t('team') || 'TEAM'}
+                        </Text>
+                      </View>
+                    )}
                   </View>
                   <Text style={styles.dueDateText}>
                     {task.dueDate.toLocaleDateString()}
@@ -1009,8 +1019,15 @@ const createStyles = (colors) => StyleSheet.create({
   taskMeta: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginTop: 8,
     gap: 12,
+  },
+  badgesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
   },
   priorityBadge: {
     flexDirection: 'row',
@@ -1018,6 +1035,20 @@ const createStyles = (colors) => StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
+  },
+  teamBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: '#007AFF20',
+    gap: 4,
+  },
+  teamBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#007AFF',
   },
   priorityDot: {
     width: 6,

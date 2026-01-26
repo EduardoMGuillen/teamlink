@@ -40,20 +40,42 @@ export const tasksService = {
         return [];
       }
 
-      // Obtener tareas asignadas al usuario O tareas de equipo donde el usuario es miembro
-      // Por ahora, solo obtenemos las asignadas directamente (RLS manejará el resto)
-      const { data, error } = await supabase
+      // Obtener tareas individuales del usuario
+      const { data: individualTasks, error: individualError } = await supabase
         .from('tasks')
         .select('*')
         .eq('user_id', userId)
+        .or('is_team_task.is.null,is_team_task.eq.false')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching tasks:', error);
-        return [];
+      if (individualError) {
+        console.error('Error fetching individual tasks:', individualError);
       }
 
-      return data.map(task => ({
+      // Obtener team tasks asignadas al usuario
+      const { data: teamTasks, error: teamError } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_team_task', true)
+        .order('created_at', { ascending: false });
+
+      if (teamError) {
+        console.error('Error fetching team tasks:', teamError);
+      }
+
+      // Combinar ambas listas
+      const allTasks = [
+        ...(individualTasks || []),
+        ...(teamTasks || [])
+      ];
+
+      // Eliminar duplicados por ID (por si acaso)
+      const uniqueTasks = Array.from(
+        new Map(allTasks.map(task => [task.id, task])).values()
+      );
+
+      return uniqueTasks.map(task => ({
         id: task.id.toString(),
         title: task.title,
         description: task.description,
@@ -62,7 +84,7 @@ export const tasksService = {
         priority: task.priority,
         assignedBy: task.assigned_by,
         teamId: task.team_id,
-        isTeamTask: task.is_team_task,
+        isTeamTask: task.is_team_task || false,
         created_at: task.created_at,
       }));
     } catch (error) {
