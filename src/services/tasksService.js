@@ -197,6 +197,73 @@ export const tasksService = {
     }
   },
 
+  // Actualizar asignación de tarea de equipo
+  async updateTeamTaskAssignment(taskId, assignedToUserId, assignedByUserId) {
+    try {
+      const updateData = {};
+      
+      if (assignedToUserId === null) {
+        // Pasar a unassigned: limpiar assigned_by pero mantener user_id del creador
+        // Primero obtener la tarea para saber quién es el creador original
+        const { data: task, error: fetchError } = await supabase
+          .from('tasks')
+          .select('user_id')
+          .eq('id', taskId)
+          .single();
+        
+        if (fetchError || !task) {
+          return { success: false, error: 'Task not found' };
+        }
+        
+        // Mantener el user_id del creador original, pero limpiar assigned_by
+        updateData.assigned_by = null;
+        // No cambiamos user_id, lo mantenemos como está (del creador original)
+      } else {
+        // Asignar a un usuario específico
+        updateData.user_id = assignedToUserId;
+        updateData.assigned_by = assignedByUserId;
+      }
+
+      const { data, error } = await supabase
+        .from('tasks')
+        .update(updateData)
+        .eq('id', taskId)
+        .select(`
+          *,
+          assigned_user:users!tasks_user_id_fkey(id, name, email),
+          assigned_by_user:users!tasks_assigned_by_fkey(id, name, email)
+        `)
+        .single();
+
+      if (error) {
+        console.error('Error updating team task assignment:', error);
+        return { success: false, error: error.message };
+      }
+
+      return {
+        success: true,
+        task: {
+          id: data.id.toString(),
+          title: data.title,
+          description: data.description,
+          dueDate: new Date(data.due_date),
+          status: data.status,
+          priority: data.priority,
+          assignedBy: data.assigned_by,
+          assignedByUser: data.assigned_by_user,
+          assignedTo: data.user_id,
+          assignedUser: data.assigned_user,
+          teamId: data.team_id,
+          isTeamTask: data.is_team_task,
+          isUnassigned: !data.assigned_by,
+        },
+      };
+    } catch (error) {
+      console.error('Update team task assignment error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
   // Eliminar tarea
   async deleteTask(taskId) {
     try {

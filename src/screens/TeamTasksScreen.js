@@ -51,10 +51,8 @@ export default function TeamTasksScreen() {
   const teamName = route.params?.teamName || 'Team';
   
   const [teamTasks, setTeamTasks] = useState([]);
-  const [individualTasks, setIndividualTasks] = useState([]);
   const [teamStats, setTeamStats] = useState({ pending: 0, inProgress: 0, completed: 0, unassigned: 0 });
   const [teamLeaderboard, setTeamLeaderboard] = useState([]);
-  const [taskTypeFilter, setTaskTypeFilter] = useState('global'); // 'global', 'individual', 'teams'
   const [taskFilter, setTaskFilter] = useState('all');
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
@@ -75,10 +73,7 @@ export default function TeamTasksScreen() {
       loadTeamLeaderboard();
       loadTeamMembers();
     }
-    if (currentUser?.id) {
-      loadIndividualTasks();
-    }
-  }, [teamId, currentUser]);
+  }, [teamId]);
 
   const loadTeamTasks = async () => {
     if (!teamId) return;
@@ -124,17 +119,6 @@ export default function TeamTasksScreen() {
     }
   };
 
-  const loadIndividualTasks = async () => {
-    if (!currentUser?.id) return;
-    try {
-      const tasks = await tasksService.getTasks(currentUser.id);
-      // Solo tareas individuales (no team tasks)
-      const individual = tasks.filter(task => !task.isTeamTask);
-      setIndividualTasks(individual);
-    } catch (error) {
-      console.error('Error loading individual tasks:', error);
-    }
-  };
 
   const handleCreateTeamTask = async () => {
     if (!teamId || !currentUser?.id || !taskTitle.trim()) return;
@@ -143,13 +127,32 @@ export default function TeamTasksScreen() {
     try {
       if (editingTask) {
         // Update existing task
-        const result = await tasksService.updateTask(editingTask.id, {
+        const updateData = {
           title: taskTitle.trim(),
           description: taskDescription.trim(),
           priority: taskPriority,
           dueDate: taskDueDate,
-          assignedTo: taskAssignedTo,
-        });
+        };
+        
+        // Actualizar campos básicos primero
+        const result = await tasksService.updateTask(editingTask.id, updateData);
+        
+        // Luego actualizar la asignación si cambió
+        if (result.success) {
+          if (taskAssignedTo === null) {
+            // Pasar a unassigned: limpiar assigned_by pero mantener user_id del creador original
+            const unassignResult = await tasksService.updateTeamTaskAssignment(editingTask.id, null);
+            if (!unassignResult.success) {
+              console.error('Error unassigning task:', unassignResult.error);
+            }
+          } else if (taskAssignedTo !== editingTask.assignedTo) {
+            // Asignar a un usuario específico
+            const assignResult = await tasksService.updateTeamTaskAssignment(editingTask.id, taskAssignedTo, currentUser.id);
+            if (!assignResult.success) {
+              console.error('Error assigning task:', assignResult.error);
+            }
+          }
+        }
 
         if (result.success) {
           setShowCreateTaskModal(false);
@@ -232,31 +235,16 @@ export default function TeamTasksScreen() {
   const getFilteredTasks = () => {
     if (!currentUser?.id) return teamTasks;
     
-    // Primero filtrar por tipo (Global, Individual, Teams)
-    let tasksByType = [];
-    switch (taskTypeFilter) {
-      case 'individual':
-        tasksByType = individualTasks;
-        break;
-      case 'teams':
-        tasksByType = teamTasks;
-        break;
-      case 'global':
-      default:
-        tasksByType = [...individualTasks, ...teamTasks];
-        break;
-    }
-    
-    // Luego filtrar por estado (all, unassigned, my, completed)
+    // Solo filtrar por estado (all, unassigned, my, completed)
     switch (taskFilter) {
       case 'unassigned':
-        return tasksByType.filter(task => task.isUnassigned);
+        return teamTasks.filter(task => task.isUnassigned);
       case 'my':
-        return tasksByType.filter(task => task.assignedTo === currentUser.id);
+        return teamTasks.filter(task => task.assignedTo === currentUser.id);
       case 'completed':
-        return tasksByType.filter(task => task.status === 'completed');
+        return teamTasks.filter(task => task.status === 'completed');
       default:
-        return tasksByType;
+        return teamTasks;
     }
   };
 
@@ -325,31 +313,6 @@ export default function TeamTasksScreen() {
               <Text style={styles.taskStatValue}>{teamStats.completed}</Text>
               <Text style={styles.taskStatLabel}>{t('completed') || 'Completed'}</Text>
             </View>
-          </View>
-
-          {/* Task Type Filters (Global, Individual, Teams) */}
-          <View style={styles.taskTypeFiltersRow}>
-            {['global', 'individual', 'teams'].map(typeFilter => (
-              <TouchableOpacity
-                key={typeFilter}
-                style={[
-                  styles.taskTypeFilterButton,
-                  taskTypeFilter === typeFilter && styles.taskTypeFilterButtonActive,
-                ]}
-                onPress={() => setTaskTypeFilter(typeFilter)}
-              >
-                <Text
-                  style={[
-                    styles.taskTypeFilterText,
-                    taskTypeFilter === typeFilter && styles.taskTypeFilterTextActive,
-                  ]}
-                >
-                  {t(`taskType${typeFilter.charAt(0).toUpperCase() + typeFilter.slice(1)}`) || 
-                    (typeFilter === 'global' ? 'Global' : 
-                     typeFilter === 'individual' ? 'Individual' : 'Teams')}
-                </Text>
-              </TouchableOpacity>
-            ))}
           </View>
 
           {/* Task Status Filters */}
@@ -763,33 +726,6 @@ const createStyles = (colors) => StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
     fontWeight: '500',
-  },
-  taskTypeFiltersRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12,
-    flexWrap: 'wrap',
-  },
-  taskTypeFilterButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: radii.md,
-    backgroundColor: colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  taskTypeFilterButtonActive: {
-    backgroundColor: `${colors.primary}15`,
-    borderColor: colors.primary,
-  },
-  taskTypeFilterText: {
-    fontSize: 13,
-    color: colors.textMuted,
-    fontWeight: '500',
-  },
-  taskTypeFilterTextActive: {
-    color: colors.primary,
-    fontWeight: '600',
   },
   taskFiltersRow: {
     flexDirection: 'row',

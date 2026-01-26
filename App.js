@@ -72,8 +72,11 @@ function MainTabs() {
           height: 64,
           paddingBottom: 8,
           paddingTop: 6,
+          display: 'flex',
+          position: 'relative',
           ...(Platform.OS !== 'web' ? shadows.soft : {}),
         },
+        tabBarHideOnKeyboard: false,
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',

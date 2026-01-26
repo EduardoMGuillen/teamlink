@@ -37,7 +37,11 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Profile Section */}
         <View style={styles.profileSection}>
           <View style={styles.avatar}>
@@ -195,6 +199,31 @@ const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    ...(Platform.OS === 'web' && {
+      height: '100vh',
+      position: 'relative',
+      display: 'flex',
+      flexDirection: 'column',
+    }),
+  },
+  scrollView: {
+    flex: 1,
+    ...(Platform.OS === 'web' && {
+      flex: 1,
+      overflowY: 'scroll',
+      overflowX: 'hidden',
+      WebkitOverflowScrolling: 'touch',
+      height: '100%',
+      maxHeight: '100vh',
+      scrollbarWidth: 'thin',
+    }),
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 24,
+  },
+  scrollContentWeb: {
+    flexGrow: 1,
   },
   profileSection: {
     flexDirection: 'row',
