@@ -51,8 +51,6 @@ function MainTabs() {
 
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'TimeClock') {
-            iconName = focused ? 'time' : 'time-outline';
           } else if (route.name === 'Schedule') {
             iconName = focused ? 'calendar' : 'calendar-outline';
             // Tab name will be set in screenOptions
@@ -89,11 +87,6 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Home" component={DashboardScreen} />
-      <Tab.Screen 
-        name="TimeClock" 
-        component={TimeClockScreen}
-        options={{ tabBarLabel: t('timeClock') || 'Time Clock' }}
-      />
       <Tab.Screen 
         name="Schedule" 
         component={ScheduleScreen}
@@ -337,6 +330,27 @@ function AppNavigator() {
               component={TeamJoinRequestsScreen}
               options={{ 
                 headerShown: false,
+              }}
+            />
+            <Stack.Screen 
+              name="TimeClock" 
+              component={TimeClockScreen}
+              options={{ 
+                headerShown: true,
+                title: 'Time Clock',
+                headerBackTitleVisible: false,
+                ...(Platform.OS === 'web' && {
+                  headerStyle: {
+                    backgroundColor: '#fff',
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#E5E5EA',
+                  },
+                  headerTintColor: '#007AFF',
+                  headerTitleStyle: {
+                    fontWeight: '600',
+                    fontSize: 18,
+                  },
+                }),
               }}
             />
           </>

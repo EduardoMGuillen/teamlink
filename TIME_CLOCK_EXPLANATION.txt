@@ -12,24 +12,39 @@ VERSIÓN: V1.1 - Fase 1 Completada
 
 El Time Clock está compuesto por:
 
-1. PANTALLA: TimeClockScreen.js
-   - Interfaz de usuario
+1. PANTALLA PRINCIPAL: TimeClockScreen.js
+   - Interfaz de usuario completa
    - Manejo de estado local
    - Interacción con el usuario
+   - Accesible desde Teams → Time Clock
 
-2. SERVICIO: shiftsService.js
+2. RESUMEN EN TEAMS: TeamsScreen.js
+   - Sección de resumen del Time Clock
+   - Muestra estado actual (Clocked In/Out)
+   - Muestra horas de hoy y esta semana
+   - Badge "IN" cuando está clocked in
+   - Navegación a pantalla completa
+
+3. SERVICIO: shiftsService.js
    - Lógica de negocio
    - Comunicación con Supabase
    - Subida de fotos a Storage
 
-3. BASE DE DATOS: Tabla "shifts"
+4. BASE DE DATOS: Tabla "shifts"
    - Almacena registros de clock in/out
    - Campos: clock_in, clock_out, location, duration
    - NUEVOS: latitude, longitude, photo_url
 
-4. STORAGE: Supabase Storage bucket "team-files"
+5. STORAGE: Supabase Storage bucket "team-files"
    - Almacena fotos capturadas
    - Estructura: shift-photos/{userId}/{timestamp}.{ext}
+
+NOTA DE DISEÑO:
+El Time Clock está integrado dentro de Teams porque:
+- Es más relevante en contexto de equipo/empresa
+- No todos los usuarios individuales necesitan Time Clock
+- Libera espacio en la navegación principal
+- Mantiene consistencia con otras features de equipo
 
 ================================================================================
 2. FLUJO DE CLOCK IN (CHECK-IN)

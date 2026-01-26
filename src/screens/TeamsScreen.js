@@ -18,6 +18,7 @@ import { radii, shadows } from '../utils/theme';
 import { teamsService } from '../services/teamsService';
 import { updatesService } from '../services/updatesService';
 import { tasksService } from '../services/tasksService';
+import { shiftsService } from '../services/shiftsService';
 import { useNavigation } from '@react-navigation/native';
 
 export default function TeamsScreen() {
@@ -50,6 +51,12 @@ export default function TeamsScreen() {
   
   // Team Tasks states (for summary only)
   const [teamStats, setTeamStats] = useState({ pending: 0, inProgress: 0, completed: 0, unassigned: 0 });
+  
+  // Time Clock states
+  const [isClockedIn, setIsClockedIn] = useState(false);
+  const [activeShift, setActiveShift] = useState(null);
+  const [todayHours, setTodayHours] = useState(0);
+  const [weeklyHours, setWeeklyHours] = useState(0);
 
   useEffect(() => {
     loadTeams();
@@ -59,8 +66,9 @@ export default function TeamsScreen() {
     if (selectedTeamId) {
       loadTeamDetails(selectedTeamId);
       loadTeamStats(selectedTeamId);
+      loadTimeClockStatus();
     }
-  }, [selectedTeamId]);
+  }, [selectedTeamId, currentUser]);
 
   useEffect(() => {
     loadInvites();
@@ -123,6 +131,39 @@ export default function TeamsScreen() {
     }
   };
 
+  const loadTimeClockStatus = async () => {
+    if (!currentUser?.id) return;
+    try {
+      // Verificar turno activo
+      const activeShift = await shiftsService.getActiveShift(currentUser.id);
+      if (activeShift) {
+        setIsClockedIn(true);
+        setActiveShift(activeShift);
+      } else {
+        setIsClockedIn(false);
+        setActiveShift(null);
+      }
+
+      // Calcular horas de hoy
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const shifts = await shiftsService.getShifts(currentUser.id);
+      const todayShifts = shifts.filter(shift => {
+        const shiftDate = new Date(shift.clockIn);
+        return shiftDate >= today && shift.clockOut;
+      });
+      const todayTotal = todayShifts.reduce((sum, shift) => {
+        return sum + (parseFloat(shift.duration) || 0);
+      }, 0);
+      setTodayHours(todayTotal);
+
+      // Calcular horas semanales
+      const weekly = await shiftsService.getWeeklyHours(currentUser.id);
+      setWeeklyHours(weekly);
+    } catch (error) {
+      console.error('Error loading time clock status:', error);
+    }
+  };
 
   const loadInvites = async () => {
     if (!currentUser?.email || !currentUser?.id) return;
@@ -489,6 +530,45 @@ export default function TeamsScreen() {
                   <View style={styles.summaryStat}>
                     <Text style={styles.summaryStatValue}>{teamStats.completed}</Text>
                     <Text style={styles.summaryStatLabel}>{t('completed') || 'Completed'}</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+
+              {/* Time Clock Summary */}
+              <TouchableOpacity
+                style={styles.summaryCard}
+                onPress={() => navigation.navigate('TimeClock')}
+              >
+                <View style={styles.summaryHeader}>
+                  <View style={styles.summaryHeaderLeft}>
+                    <Ionicons name="time" size={24} color={colors.primary} />
+                    <Text style={styles.summaryTitle}>{t('timeClock') || 'Time Clock'}</Text>
+                  </View>
+                  <View style={styles.summaryBadge}>
+                    {isClockedIn && (
+                      <View style={[styles.badge, { backgroundColor: '#34C759' }]}>
+                        <Text style={styles.badgeText}>IN</Text>
+                      </View>
+                    )}
+                    <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                  </View>
+                </View>
+                <View style={styles.summaryStats}>
+                  <View style={styles.summaryStat}>
+                    <Text style={styles.summaryStatValue}>
+                      {isClockedIn ? '●' : '○'}
+                    </Text>
+                    <Text style={styles.summaryStatLabel}>
+                      {isClockedIn ? t('clockedIn') || 'Clocked In' : t('clockedOut') || 'Clocked Out'}
+                    </Text>
+                  </View>
+                  <View style={styles.summaryStat}>
+                    <Text style={styles.summaryStatValue}>{todayHours.toFixed(1)}</Text>
+                    <Text style={styles.summaryStatLabel}>{t('today') || 'Today'}</Text>
+                  </View>
+                  <View style={styles.summaryStat}>
+                    <Text style={styles.summaryStatValue}>{weeklyHours.toFixed(1)}</Text>
+                    <Text style={styles.summaryStatLabel}>{t('thisWeek') || 'This Week'}</Text>
                   </View>
                 </View>
               </TouchableOpacity>

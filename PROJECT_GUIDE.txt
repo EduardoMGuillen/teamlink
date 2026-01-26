@@ -162,12 +162,15 @@ UI/UX:
 
 ✅ TIME CLOCK
    - ✅ ACTIVADO y visible en la app
+   - ✅ Integrado como sección dentro de Teams (no en tabs principales)
    - ✅ Funcionalidad básica: clock in/out
    - ✅ Historial de shifts
    - ✅ Geolocalización al check-in (GPS coordinates)
    - ✅ Captura de foto al check-in (múltiples formatos: JPEG, PNG, HEIC, HEIF)
    - ✅ Subida de fotos a Supabase Storage
    - ✅ UI mejorada con sistema de temas
+   - ✅ Resumen en TeamsScreen (estado, horas hoy/semana)
+   - ✅ Navegación a pantalla completa desde Teams
    - ⚠️ Pendiente: Configurar bucket de Storage en Supabase
    - ⚠️ Pendiente: Testing completo en dispositivos reales
 
