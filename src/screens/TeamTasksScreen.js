@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Platform,
   KeyboardAvoidingView,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -61,6 +62,7 @@ export default function TeamTasksScreen() {
   const [taskPriority, setTaskPriority] = useState('medium');
   const [taskDueDate, setTaskDueDate] = useState(new Date());
   const [taskAssignedTo, setTaskAssignedTo] = useState(null);
+  const [taskStatus, setTaskStatus] = useState('pending');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isWorking, setIsWorking] = useState(false);
   const [teamMembers, setTeamMembers] = useState([]);
@@ -132,24 +134,35 @@ export default function TeamTasksScreen() {
           description: taskDescription.trim(),
           priority: taskPriority,
           dueDate: taskDueDate,
+          status: taskStatus, // Include status in update
         };
         
-        // Actualizar campos básicos primero
+        // Actualizar campos básicos primero (incluyendo status)
         const result = await tasksService.updateTask(editingTask.id, updateData);
         
         // Luego actualizar la asignación si cambió
         if (result.success) {
-          if (taskAssignedTo === null) {
-            // Pasar a unassigned: limpiar assigned_by pero mantener user_id del creador original
+          // Check if assignment changed
+          const currentAssignedTo = editingTask.assignedTo || null;
+          const newAssignedTo = taskAssignedTo;
+          
+          if (newAssignedTo === null && currentAssignedTo !== null) {
+            // Pasar a unassigned: necesitamos obtener el creador original
+            // Si la tarea tiene assigned_by, el creador original está en el user_id original
+            // Pero cuando está asignada, user_id es el asignado. Necesitamos el creador.
+            // Para tareas de equipo, podemos usar el user_id cuando assigned_by es null
+            // O necesitamos obtener el creador de otra manera
             const unassignResult = await tasksService.updateTeamTaskAssignment(editingTask.id, null);
             if (!unassignResult.success) {
               console.error('Error unassigning task:', unassignResult.error);
+              Alert.alert('Error', unassignResult.error || 'Failed to unassign task');
             }
-          } else if (taskAssignedTo !== editingTask.assignedTo) {
+          } else if (newAssignedTo !== null && newAssignedTo !== currentAssignedTo) {
             // Asignar a un usuario específico
-            const assignResult = await tasksService.updateTeamTaskAssignment(editingTask.id, taskAssignedTo, currentUser.id);
+            const assignResult = await tasksService.updateTeamTaskAssignment(editingTask.id, newAssignedTo, currentUser.id);
             if (!assignResult.success) {
               console.error('Error assigning task:', assignResult.error);
+              Alert.alert('Error', assignResult.error || 'Failed to assign task');
             }
           }
         }
@@ -161,6 +174,8 @@ export default function TeamTasksScreen() {
           await loadTeamTasks();
           await loadTeamStats();
           await loadTeamLeaderboard();
+        } else {
+          Alert.alert('Error', result.error || 'Failed to update task');
         }
       } else {
         // Create new task
@@ -192,6 +207,7 @@ export default function TeamTasksScreen() {
     setTaskTitle(task.title);
     setTaskDescription(task.description || '');
     setTaskPriority(task.priority);
+    setTaskStatus(task.status || 'pending');
     const dueDate = new Date(task.dueDate);
     setTaskDueDate(dueDate);
     setTaskAssignedTo(task.assignedTo || null);
@@ -253,6 +269,7 @@ export default function TeamTasksScreen() {
     setTaskTitle('');
     setTaskDescription('');
     setTaskPriority('medium');
+    setTaskStatus('pending');
     setTaskDueDate(new Date());
     setTaskAssignedTo(null);
   };
@@ -515,6 +532,35 @@ export default function TeamTasksScreen() {
                 </TouchableOpacity>
               ))}
             </View>
+
+            {editingTask && (
+              <>
+                <Text style={styles.inputLabel}>{t('status') || 'Status'}</Text>
+                <View style={styles.priorityRow}>
+                  {['pending', 'inProgress', 'completed'].map(status => (
+                    <TouchableOpacity
+                      key={status}
+                      style={[
+                        styles.priorityChip,
+                        taskStatus === status && styles.priorityChipActive,
+                      ]}
+                      onPress={() => setTaskStatus(status)}
+                    >
+                      <Text
+                        style={[
+                          styles.priorityChipText,
+                          taskStatus === status && styles.priorityChipTextActive,
+                        ]}
+                      >
+                        {status === 'inProgress' ? t('inProgress') || 'In Progress' : 
+                         status === 'completed' ? t('completed') || 'Completed' : 
+                         t('pending') || 'Pending'}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            )}
 
             <Text style={styles.inputLabel}>{t('dueDate') || 'Due Date'}</Text>
             {Platform.OS === 'web' ? (

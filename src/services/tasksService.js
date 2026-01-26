@@ -203,11 +203,11 @@ export const tasksService = {
       const updateData = {};
       
       if (assignedToUserId === null) {
-        // Pasar a unassigned: limpiar assigned_by pero mantener user_id del creador
-        // Primero obtener la tarea para saber quién es el creador original
+        // Pasar a unassigned: necesitamos obtener el creador original
+        // Primero obtener la tarea completa
         const { data: task, error: fetchError } = await supabase
           .from('tasks')
-          .select('user_id')
+          .select('user_id, assigned_by')
           .eq('id', taskId)
           .single();
         
@@ -215,9 +215,24 @@ export const tasksService = {
           return { success: false, error: 'Task not found' };
         }
         
-        // Mantener el user_id del creador original, pero limpiar assigned_by
-        updateData.assigned_by = null;
-        // No cambiamos user_id, lo mantenemos como está (del creador original)
+        // Lógica para obtener el creador original:
+        // - Si assigned_by existe, significa que la tarea fue asignada
+        //   En claimTask, cuando se toma una tarea sin asignar:
+        //   user_id = quien la toma, assigned_by = creador original (user_id anterior)
+        //   Por lo tanto, cuando queremos unassign, el creador original está en assigned_by
+        // - Si assigned_by es null, significa que nunca fue asignada
+        //   y user_id ya es el creador original
+        
+        if (task.assigned_by) {
+          // La tarea fue asignada, el creador original está en assigned_by
+          // (según la lógica de claimTask donde assigned_by = creador original)
+          updateData.user_id = task.assigned_by; // Restaurar al creador original
+          updateData.assigned_by = null; // Limpiar asignación
+        } else {
+          // La tarea nunca fue asignada, user_id ya es el creador
+          // Solo aseguramos que assigned_by sea null
+          updateData.assigned_by = null;
+        }
       } else {
         // Asignar a un usuario específico
         updateData.user_id = assignedToUserId;
