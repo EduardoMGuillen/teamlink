@@ -358,10 +358,12 @@ export default function TimeClockScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
+        showsVerticalScrollIndicator={true}
+        nestedScrollEnabled={true}
       >
         <View style={[styles.content, isWeb && styles.contentWeb]}>
           <View style={styles.clockContainer}>
@@ -413,8 +415,8 @@ export default function TimeClockScreen() {
                 color="#fff"
               />
               <Text style={styles.clockButtonText}>
-                {isGettingLocation ? 'Getting location...' : 
-                 isCapturingPhoto ? 'Capturing photo...' :
+                {isGettingLocation ? t('gettingLocation') || 'Getting location...' : 
+                 isCapturingPhoto ? t('capturingPhoto') || 'Capturing photo...' :
                  isClockedIn ? t('clockOut') : t('clockIn')}
               </Text>
             </>
@@ -498,14 +500,14 @@ const createStyles = (colors) => StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 24,
+    paddingBottom: 100,
   },
   scrollContentWeb: {
     flexGrow: 1,
   },
   content: {
     width: '100%',
-    padding: 20,
+    padding: Platform.OS === 'web' ? 20 : 16,
     justifyContent: 'center',
   },
   contentWeb: {
@@ -515,14 +517,15 @@ const createStyles = (colors) => StyleSheet.create({
   },
   clockContainer: {
     alignItems: 'center',
-    marginBottom: 40,
-    paddingVertical: 20,
+    marginBottom: Platform.OS === 'web' ? 40 : 32,
+    paddingVertical: Platform.OS === 'web' ? 20 : 16,
   },
   timeText: {
-    fontSize: 64,
+    fontSize: Platform.OS === 'web' ? 64 : 56,
     fontWeight: '300',
     color: colors.text,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'monospace',
+    letterSpacing: 2,
   },
   clockInText: {
     fontSize: 16,
@@ -536,7 +539,7 @@ const createStyles = (colors) => StyleSheet.create({
     marginTop: 8,
   },
   locationContainer: {
-    marginBottom: 30,
+    marginBottom: Platform.OS === 'web' ? 30 : 24,
   },
   locationLabel: {
     fontSize: 18,
@@ -550,23 +553,25 @@ const createStyles = (colors) => StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.soft,
   },
   picker: {
     height: 50,
     color: colors.text,
   },
   clockButton: {
-    backgroundColor: '#34C759',
+    backgroundColor: colors.secondary,
     borderRadius: radii.xl,
     padding: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
+    gap: 8,
     ...shadows.soft,
   },
   clockOutButton: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: colors.danger,
   },
   clockButtonText: {
     color: '#fff',
@@ -631,17 +636,17 @@ const createStyles = (colors) => StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
-    padding: 16,
+    padding: Platform.OS === 'web' ? 16 : 14,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: colors.border,
     ...shadows.soft,
+    gap: 12,
   },
   shiftPhoto: {
-    width: 60,
-    height: 60,
+    width: Platform.OS === 'web' ? 60 : 56,
+    height: Platform.OS === 'web' ? 60 : 56,
     borderRadius: radii.md,
-    marginRight: 12,
     backgroundColor: colors.surfaceAlt,
   },
   shiftInfo: {

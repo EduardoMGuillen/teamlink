@@ -42,6 +42,7 @@ const translations = {
     
     // Time Clock
     timeClock: 'Time Clock',
+    clockIn: 'Clock In',
     clockOut: 'Clock Out',
     clockedInAt: 'Clocked in at',
     duration: 'Duration',
@@ -184,6 +185,8 @@ const translations = {
     alreadyClockedIn: 'You are already clocked in',
     mustClockOut: 'Please clock out first',
     noShiftsFound: 'No shifts found',
+    gettingLocation: 'Getting location...',
+    capturingPhoto: 'Capturing photo...',
     changeStatus: 'Change Status',
     selectNewStatus: 'Select new status:',
     
@@ -342,6 +345,7 @@ const translations = {
     
     // Time Clock
     timeClock: 'Reloj de Tiempo',
+    clockIn: 'Marcar Entrada',
     clockOut: 'Marcar Salida',
     clockedInAt: 'Entrada a las',
     duration: 'Duración',
@@ -483,6 +487,8 @@ const translations = {
     alreadyClockedIn: 'Ya has marcado entrada',
     mustClockOut: 'Por favor marca salida primero',
     noShiftsFound: 'No se encontraron turnos',
+    gettingLocation: 'Obteniendo ubicación...',
+    capturingPhoto: 'Capturando foto...',
     changeStatus: 'Cambiar Estado',
     selectNewStatus: 'Selecciona el nuevo estado:',
     
@@ -637,6 +643,7 @@ const translations = {
     
     // Time Clock
     timeClock: 'Horloge',
+    clockIn: "Pointer l'entrée",
     clockOut: "Pointer la sortie",
     clockedInAt: 'Entrée à',
     duration: 'Durée',
@@ -778,6 +785,8 @@ const translations = {
     alreadyClockedIn: 'Vous avez déjà pointé l\'entrée',
     mustClockOut: 'Veuillez pointer la sortie d\'abord',
     noShiftsFound: 'Aucun shift trouvé',
+    gettingLocation: 'Obtention de l\'emplacement...',
+    capturingPhoto: 'Capture de la photo...',
     changeStatus: 'Changer le Statut',
     selectNewStatus: 'Sélectionnez le nouveau statut:',
     

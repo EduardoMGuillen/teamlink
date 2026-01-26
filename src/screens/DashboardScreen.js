@@ -17,6 +17,7 @@ import { tasksService } from '../services/tasksService';
 // import { shiftsService } from '../services/shiftsService'; // Temporarily hidden
 import { notificationsService } from '../services/notificationsService';
 import { calendarScheduleService } from '../services/calendarScheduleService';
+import { teamsService } from '../services/teamsService';
 import DailyMotivation from '../components/DailyMotivation';
 
 const toLocalDateString = (date) => {
@@ -35,16 +36,20 @@ export default function DashboardScreen() {
   const [recentActivity, setRecentActivity] = useState([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [todayActivities, setTodayActivities] = useState([]);
+  const [userTeams, setUserTeams] = useState([]);
+  const [hasTeams, setHasTeams] = useState(false);
 
   useEffect(() => {
     if (currentUser?.id) {
       loadDashboardData();
       loadUnreadNotifications();
       loadTodayActivities();
+      loadUserTeams();
       const interval = setInterval(() => {
         loadDashboardData();
         loadUnreadNotifications();
         loadTodayActivities();
+        loadUserTeams();
       }, 30000); // Refresh every 30 seconds
       return () => clearInterval(interval);
     }
@@ -68,6 +73,18 @@ export default function DashboardScreen() {
       setTodayActivities(activities);
     } catch (error) {
       console.error('Error loading today activities:', error);
+    }
+  };
+
+  const loadUserTeams = async () => {
+    if (!currentUser?.id) return;
+    try {
+      const teams = await teamsService.getUserTeams(currentUser.id);
+      setUserTeams(teams);
+      setHasTeams(teams.length > 0);
+    } catch (error) {
+      console.error('Error loading user teams:', error);
+      setHasTeams(false);
     }
   };
 
@@ -137,13 +154,29 @@ export default function DashboardScreen() {
     return `${diffDays} days ago`;
   };
 
-  const quickActions = [
-    // { id: '1', icon: 'time', title: t('clockIn'), color: '#34C759', screen: 'Time' }, // Temporarily hidden
-    { id: '2', icon: 'calendar', title: t('viewSchedule'), color: colors.primary, bg: '#EEF2FF', screen: 'Schedule' },
-    { id: '3', icon: 'checkmark-circle', title: t('myTasks'), color: colors.accent, bg: '#FFF7ED', screen: 'Tasks' },
-    { id: '4', icon: 'chatbubble', title: t('messages'), color: '#A855F7', bg: '#F5F3FF', screen: 'Chat' },
-    { id: '5', icon: 'bulb', title: 'Spark', color: colors.accent, bg: '#FFF9E6', screen: 'MotivationSettings' },
-  ];
+  const quickActions = useMemo(() => {
+    const actions = [
+      { id: '2', icon: 'calendar', title: t('viewSchedule'), color: colors.primary, bg: '#EEF2FF', screen: 'Schedule' },
+      { id: '3', icon: 'checkmark-circle', title: t('myTasks'), color: colors.accent, bg: '#FFF7ED', screen: 'Tasks' },
+      { id: '4', icon: 'chatbubble', title: t('messages'), color: '#A855F7', bg: '#F5F3FF', screen: 'Chat' },
+      { id: '6', icon: 'people', title: t('teams'), color: '#10B981', bg: '#ECFDF5', screen: 'Teams' },
+      { id: '5', icon: 'bulb', title: 'Spark', color: colors.accent, bg: '#FFF9E6', screen: 'MotivationSettings' },
+    ];
+    
+    // Add Time Clock only if user is in at least one team
+    if (hasTeams) {
+      actions.splice(3, 0, { 
+        id: '1', 
+        icon: 'time', 
+        title: t('timeClock'), 
+        color: colors.secondary, 
+        bg: '#ECFDF5', 
+        screen: 'TimeClock' 
+      });
+    }
+    
+    return actions;
+  }, [hasTeams, colors, t]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -198,6 +231,10 @@ export default function DashboardScreen() {
                     navigation.navigate('MainTabs', { screen: 'Schedule' });
                   } else if (action.screen === 'Chat') {
                     navigation.navigate('Chat');
+                  } else if (action.screen === 'Teams') {
+                    navigation.navigate('MainTabs', { screen: 'Teams' });
+                  } else if (action.screen === 'TimeClock') {
+                    navigation.navigate('TimeClock');
                   } else if (action.screen === 'MotivationSettings') {
                     navigation.navigate('MotivationSettings');
                   }

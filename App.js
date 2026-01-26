@@ -319,6 +319,7 @@ function AppNavigator() {
               component={TeamTasksScreen}
               options={{ 
                 headerShown: false,
+                presentation: 'card',
               }}
             />
             <Stack.Screen 
@@ -326,6 +327,7 @@ function AppNavigator() {
               component={TeamMembersScreen}
               options={{ 
                 headerShown: false,
+                presentation: 'card',
               }}
             />
             <Stack.Screen 
@@ -333,27 +335,15 @@ function AppNavigator() {
               component={TeamJoinRequestsScreen}
               options={{ 
                 headerShown: false,
+                presentation: 'card',
               }}
             />
             <Stack.Screen 
               name="TimeClock" 
               component={TimeClockScreen}
               options={{ 
-                headerShown: true,
-                title: 'Time Clock',
-                headerBackTitleVisible: false,
-                ...(Platform.OS === 'web' && {
-                  headerStyle: {
-                    backgroundColor: '#fff',
-                    borderBottomWidth: 1,
-                    borderBottomColor: '#E5E5EA',
-                  },
-                  headerTintColor: '#007AFF',
-                  headerTitleStyle: {
-                    fontWeight: '600',
-                    fontSize: 18,
-                  },
-                }),
+                headerShown: false,
+                presentation: 'card',
               }}
             />
           </>

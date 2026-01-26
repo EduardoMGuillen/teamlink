@@ -71,6 +71,8 @@ NAVEGACIÓN:
 ✅ URLs específicas en web (/login, /signup, /home, etc.)
 ✅ Deep linking preparado
 ✅ Navegación por tabs y stack
+✅ SafeAreaView configurado en pantallas para visibilidad de navegación inferior
+✅ Scroll corregido en todas las pantallas con paddingBottom adecuado
 
 UI/UX:
 ✅ Sistema de temas (Light, Dark, Pastel Sky, Pastel Rose, Pastel Mint)
@@ -171,6 +173,11 @@ UI/UX:
    - ✅ UI mejorada con sistema de temas
    - ✅ Resumen en TeamsScreen (estado, horas hoy/semana)
    - ✅ Navegación a pantalla completa desde Teams
+   - ✅ Traducciones Clock In/Out en todos los idiomas (EN, ES, FR)
+   - ✅ UI optimizada para móvil (tamaños responsivos, padding ajustado)
+   - ✅ Scroll vertical corregido (nestedScrollEnabled, paddingBottom aumentado)
+   - ✅ Botones con colores del tema (secondary para clock in, danger para clock out)
+   - ✅ SafeAreaView configurado para mejor visibilidad de navegación inferior
    - ⚠️ Pendiente: Configurar bucket de Storage en Supabase
    - ⚠️ Pendiente: Testing completo en dispositivos reales
 
