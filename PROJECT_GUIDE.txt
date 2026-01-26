@@ -1,0 +1,765 @@
+================================================================================
+                    TEAMLINK - GUÍA DEL PROYECTO
+                    Documento de Planificación y Roadmap
+                    Última actualización: Enero 2025
+================================================================================
+
+ÍNDICE
+------
+1. VISIÓN DEL PROYECTO
+2. ESTADO ACTUAL DE LA APLICACIÓN
+3. FEATURES IMPLEMENTADAS
+4. ARQUITECTURA TÉCNICA
+5. TAREAS NECESARIAS PARA LAUNCH (V1.1)
+6. MODELO DE MONETIZACIÓN
+7. ROADMAP FUTURO
+8. ESTRATEGIA DE LANZAMIENTO
+9. DEFINICIONES Y ESPECIFICACIONES
+
+================================================================================
+1. VISIÓN DEL PROYECTO
+================================================================================
+
+TeamLink es una aplicación multiplataforma (Web, iOS, Android) diseñada para:
+- Usuarios individuales: Gestión personal de tareas y calendarios
+- Equipos pequeños y medianos: Colaboración, gestión de tiempo, comunicación
+
+OBJETIVO PRINCIPAL:
+Crear una solución completa de productividad y gestión de equipos que compita
+con herramientas como Asana, Slack, y Monday.com, pero con un enfoque en
+accesibilidad y facilidad de uso.
+
+MERCADO OBJETIVO:
+- Usuarios individuales que buscan productividad personal
+- Equipos pequeños (3-10 miembros)
+- Empresas medianas (10-50 empleados)
+- Sectores: Retail, Hospitality, Field Services, Oficinas pequeñas
+
+DIFERENCIADORES:
+- Time Clock integrado (geolocalización, fotos)
+- Motivación diaria única
+- Multi-idioma desde el inicio (EN, ES, FR)
+- UI moderna y rápida
+- Precio competitivo
+- Funciona como app personal Y de equipo
+
+================================================================================
+2. ESTADO ACTUAL DE LA APLICACIÓN
+================================================================================
+
+VERSIÓN ACTUAL: V1.0 (Pre-Launch)
+ESTADO: Desarrollo activo, fase de testing y refinamiento
+
+PLATAFORMAS:
+✅ Web (React Native Web) - Funcional
+✅ iOS (React Native) - Funcional
+✅ Android (React Native) - Funcional
+
+BACKEND:
+✅ Supabase (PostgreSQL + Auth + RLS)
+✅ Row Level Security implementado
+✅ Real-time subscriptions configuradas
+
+AUTENTICACIÓN:
+✅ Login/Registro funcional
+✅ Gestión de sesiones
+✅ Multi-idioma en auth (EN, ES, FR)
+✅ Perfiles de usuario completos
+
+NAVEGACIÓN:
+✅ React Navigation configurado
+✅ URLs específicas en web (/login, /signup, /home, etc.)
+✅ Deep linking preparado
+✅ Navegación por tabs y stack
+
+UI/UX:
+✅ Sistema de temas (Light, Dark, Pastel Sky, Pastel Rose, Pastel Mint)
+✅ Multi-idioma completo
+✅ Diseño responsive (móvil y desktop)
+✅ Scroll funcional en web
+✅ Landing page profesional
+
+================================================================================
+3. FEATURES IMPLEMENTADAS
+================================================================================
+
+3.1 FEATURES CORE (IMPLEMENTADAS Y FUNCIONALES)
+------------------------------------------------
+
+✅ DASHBOARD
+   - Vista general con estadísticas
+   - Actividades recientes
+   - Calendario del día
+   - Accesos rápidos
+   - Métricas básicas (pendiente: métricas reales de reportes)
+
+✅ CALENDARIO Y SCHEDULE
+   - Calendario visual con fechas marcadas
+   - Eventos individuales
+   - Horarios recurrentes (días de la semana)
+   - Detección de conflictos
+   - Vista mensual/semanal
+   - Resumen de actividades del día en dashboard
+
+✅ TASKS (TAREAS)
+   - Crear, editar, eliminar tareas
+   - Asignar tareas a miembros del equipo
+   - Prioridades (low, medium, high)
+   - Estados (pending, in-progress, completed)
+   - Fechas de vencimiento
+   - Búsqueda y filtros
+   - Tareas personales y de equipo
+   - Vista de tareas del equipo
+
+✅ TEAMS (EQUIPOS)
+   - Crear equipos
+   - Invitar miembros
+   - Gestión de miembros
+   - Solicitudes de unión
+   - Roles básicos (pendiente: roles avanzados)
+   - Tareas de equipo
+   - Chat de equipo
+
+✅ CHAT
+   - Mensajería de equipo
+   - Mensajería directa (1-1)
+   - Historial de mensajes
+   - Notificaciones de nuevos mensajes
+   - Pendiente: archivos adjuntos, reacciones
+
+✅ UPDATES (ANUNCIOS)
+   - Anuncios de empresa/equipo
+   - Crear y editar updates
+   - Vista de updates recientes
+   - Notificaciones de nuevos updates
+
+✅ DIRECTORY (DIRECTORIO)
+   - Lista de empleados/usuarios
+   - Búsqueda de usuarios
+   - Filtros por departamento
+   - Perfiles de usuario
+
+✅ NOTIFICATIONS
+   - Sistema de notificaciones en-app
+   - Contador de notificaciones
+   - Notificaciones en tiempo real
+   - Pendiente: Push notifications (web y móvil)
+
+✅ SETTINGS
+   - Configuración de perfil
+   - Cambio de idioma
+   - Cambio de tema
+   - Gestión de cuenta
+   - Configuración de motivación diaria
+
+✅ MOTIVACIÓN DIARIA
+   - Mensajes motivacionales diarios
+   - Configuración personalizada
+   - Feature única y diferenciadora
+
+3.2 FEATURES PARCIALMENTE IMPLEMENTADAS
+----------------------------------------
+
+⚠️ TIME CLOCK
+   - Código implementado pero OCULTO en la app
+   - Funcionalidad básica: clock in/out
+   - Historial de shifts
+   - Pendiente: activar, geolocalización, foto al check-in, reportes
+
+⚠️ REPORTES Y ANALYTICS
+   - Dashboard muestra métricas básicas (hardcoded)
+   - Pendiente: reportes reales de horas trabajadas
+   - Pendiente: productividad de tareas
+   - Pendiente: reportes de asistencia
+   - Pendiente: exportar reportes (PDF, CSV)
+
+3.3 FEATURES NO IMPLEMENTADAS (CRÍTICAS PARA V1.1)
+---------------------------------------------------
+
+❌ GESTIÓN DE ARCHIVOS/DOCUMENTOS
+   - Subir archivos
+   - Descargar archivos
+   - Compartir por equipo
+   - Versionado básico
+   - Almacenamiento en Supabase Storage
+
+❌ NOTIFICACIONES PUSH
+   - Web Push Notifications
+   - Push Notifications nativas (iOS/Android)
+   - Configuración de preferencias
+
+❌ ROLES Y PERMISOS AVANZADOS
+   - Admin, Manager, Employee
+   - Control granular de acceso
+   - Permisos por feature
+
+3.4 FEATURES FUTURAS (POST V1.1)
+---------------------------------
+
+🔮 INTEGRACIONES
+   - Google Calendar
+   - Outlook Calendar
+   - Slack
+   - Email notifications
+
+🔮 BÚSQUEDA GLOBAL
+   - Buscar en tasks, mensajes, updates, usuarios
+
+🔮 MEJORAS DE CHAT
+   - Archivos adjuntos
+   - Reacciones
+   - Editar/eliminar mensajes
+   - Mensajes con formato
+
+🔮 VIDEO CALLS
+   - Integración con Zoom/Meet
+
+🔮 API PÚBLICA
+   - Para integraciones de terceros
+
+🔮 PAYROLL BÁSICO
+   - Cálculo de horas
+   - Exportar para payroll
+
+================================================================================
+4. ARQUITECTURA TÉCNICA
+================================================================================
+
+STACK TECNOLÓGICO:
+------------------
+- React Native 0.81.5
+- Expo SDK 54
+- React 19.1.0
+- React Navigation 6.x
+- Supabase (PostgreSQL + Auth + Storage)
+- AsyncStorage (persistencia local)
+
+ESTRUCTURA DEL PROYECTO:
+------------------------
+TeamLink/
+├── src/
+│   ├── screens/              # Componentes de pantallas
+│   │   ├── DashboardScreen.js
+│   │   ├── TasksScreen.js
+│   │   ├── TimeClockScreen.js (oculto)
+│   │   ├── ScheduleScreen.js
+│   │   ├── ChatScreen.js
+│   │   ├── DirectoryScreen.js
+│   │   ├── UpdatesScreen.js
+│   │   ├── NotificationsScreen.js
+│   │   ├── SettingsScreen.js
+│   │   ├── TeamsScreen.js
+│   │   ├── TeamTasksScreen.js
+│   │   ├── TeamMembersScreen.js
+│   │   ├── TeamJoinRequestsScreen.js
+│   │   ├── MotivationSettingsScreen.js
+│   │   ├── LoginScreen.js
+│   │   ├── SignUpScreen.js
+│   │   ├── LandingScreen.js
+│   │   └── ConnectionTestScreen.js
+│   ├── services/            # Servicios API
+│   │   ├── authService.js
+│   │   ├── tasksService.js
+│   │   ├── shiftsService.js
+│   │   ├── teamsService.js
+│   │   ├── messagesService.js
+│   │   ├── updatesService.js
+│   │   ├── notificationsService.js
+│   │   ├── schedulesService.js
+│   │   ├── calendarScheduleService.js
+│   │   └── motivationService.js
+│   ├── context/             # Estado global
+│   │   └── AppStateContext.js
+│   ├── components/          # Componentes reutilizables
+│   │   └── DailyMotivation.js
+│   ├── config/              # Configuración
+│   │   └── supabase.js
+│   └── utils/               # Utilidades
+│       ├── i18n.js          # Internacionalización
+│       ├── useTranslation.js
+│       ├── theme.js          # Sistema de temas
+│       └── timezones.js      # Datos de timezones
+├── database/                # Scripts SQL
+│   ├── complete_schema.sql
+│   ├── calendar_schedule_schema.sql
+│   ├── fix_user_insert_policy.sql
+│   ├── fix_team_members_rls.sql
+│   ├── fix_tasks_insert_policy.sql
+│   └── fix_shifts_rls.sql
+├── App.js                   # Punto de entrada
+├── app.json                 # Configuración Expo
+├── eas.json                 # Configuración EAS Build
+├── vercel.json              # Configuración Vercel
+└── package.json             # Dependencias
+
+BASE DE DATOS (Supabase):
+-------------------------
+TABLAS PRINCIPALES:
+- users: Perfiles de usuario
+- tasks: Tareas (personales y de equipo)
+- shifts: Registros de Time Clock
+- teams: Equipos
+- team_members: Membresía de equipos
+- messages: Mensajes (chat)
+- updates: Anuncios
+- notifications: Notificaciones
+- recurring_schedules: Horarios recurrentes
+- calendar_events: Eventos de calendario
+
+SEGURIDAD:
+- Row Level Security (RLS) en todas las tablas
+- Políticas de acceso configuradas
+- Autenticación con Supabase Auth
+
+INTERNACIONALIZACIÓN:
+- Idiomas soportados: English, Spanish, French
+- Sistema de traducción completo
+- Cambio de idioma en tiempo real
+
+TEMAS:
+- Light (default)
+- Dark
+- Pastel Sky
+- Pastel Rose
+- Pastel Mint
+
+================================================================================
+5. TAREAS NECESARIAS PARA LAUNCH (V1.1)
+================================================================================
+
+PRIORIDAD CRÍTICA - BLOQUEANTES PARA LAUNCH:
+--------------------------------------------
+
+5.1 TIME CLOCK ACTIVO Y FUNCIONAL
+   Estado: Código implementado pero OCULTO
+   Tareas:
+   [ ] Activar TimeClockScreen en App.js (descomentar)
+   [ ] Agregar Time Clock a la navegación de tabs
+   [ ] Verificar funcionalidad básica (clock in/out)
+   [ ] Implementar geolocalización al check-in
+   [ ] Implementar captura de foto al check-in
+   [ ] Agregar validación de ubicación (opcional: radio permitido)
+   [ ] Mejorar UI del Time Clock
+   [ ] Testing en iOS y Android
+   [ ] Testing en Web (con geolocalización del navegador)
+
+5.2 REPORTES Y ANALYTICS BÁSICOS
+   Estado: Dashboard muestra métricas hardcoded
+   Tareas:
+   [ ] Crear servicio de reportes (reportsService.js)
+   [ ] Implementar cálculo de horas trabajadas por usuario
+   [ ] Implementar cálculo de horas por período (semana, mes)
+   [ ] Implementar reporte de productividad de tareas
+      - Tareas completadas vs pendientes
+      - Tareas por prioridad
+      - Tareas por asignado
+   [ ] Implementar reporte de asistencia
+      - Días trabajados
+      - Horas totales
+      - Promedio diario
+   [ ] Crear pantalla de Reportes/Analytics
+   [ ] Agregar gráficos básicos (charts)
+   [ ] Conectar dashboard con datos reales
+   [ ] Implementar exportar reportes (PDF básico)
+   [ ] Implementar exportar reportes (CSV)
+
+5.3 NOTIFICACIONES PUSH
+   Estado: Notificaciones in-app funcionan, falta push
+   Tareas:
+   [ ] Configurar Web Push Notifications
+      - Service Worker
+      - Solicitud de permisos
+      - Integración con Supabase
+   [ ] Configurar Push Notifications iOS
+      - Certificados APNs
+      - Configuración en Expo
+      - Testing en dispositivo real
+   [ ] Configurar Push Notifications Android
+      - Firebase Cloud Messaging (FCM)
+      - Configuración en Expo
+      - Testing en dispositivo real
+   [ ] Crear sistema de preferencias de notificaciones
+   [ ] Implementar notificaciones para:
+      - Nuevos mensajes
+      - Tareas asignadas
+      - Updates importantes
+      - Recordatorios de Time Clock
+   [ ] Testing completo de notificaciones
+
+5.4 GESTIÓN DE ARCHIVOS/DOCUMENTOS
+   Estado: No implementado
+   Tareas:
+   [ ] Configurar Supabase Storage
+   [ ] Crear servicio de archivos (filesService.js)
+   [ ] Implementar subida de archivos
+      - Selección de archivo (expo-document-picker)
+      - Preview de archivo
+      - Progreso de subida
+   [ ] Implementar descarga de archivos
+   [ ] Implementar compartir archivos por equipo
+   [ ] Implementar permisos de archivos (quién puede ver/editar)
+   [ ] Implementar versionado básico (guardar versiones)
+   [ ] Crear pantalla de gestión de archivos
+   [ ] Agregar archivos a chat (adjuntar)
+   [ ] Agregar archivos a tasks (adjuntar)
+   [ ] Límites de tamaño de archivo
+   [ ] Límites de almacenamiento por plan
+
+PRIORIDAD ALTA - MEJORAS IMPORTANTES:
+--------------------------------------
+
+5.5 MEJORAS DE UI/UX
+   [ ] Pulir animaciones y transiciones
+   [ ] Mejorar feedback visual (loading states)
+   [ ] Agregar empty states atractivos
+   [ ] Mejorar manejo de errores (mensajes claros)
+   [ ] Optimizar rendimiento (lazy loading)
+   [ ] Testing de accesibilidad básico
+
+5.6 TESTING Y CALIDAD
+   [ ] Testing manual completo en todas las plataformas
+   [ ] Testing de casos edge
+   [ ] Testing de carga (múltiples usuarios)
+   [ ] Fix de bugs conocidos
+   [ ] Optimización de queries de base de datos
+
+5.7 DOCUMENTACIÓN
+   [ ] Actualizar README con nuevas features
+   [ ] Crear guía de usuario básica
+   [ ] Documentar API interna
+   [ ] Crear changelog
+
+PRIORIDAD MEDIA - POST LAUNCH:
+-------------------------------
+
+5.8 ROLES Y PERMISOS AVANZADOS
+   [ ] Implementar sistema de roles (Admin, Manager, Employee)
+   [ ] Crear tabla de permisos en BD
+   [ ] Implementar control de acceso granular
+   [ ] UI para gestión de roles
+
+5.9 BÚSQUEDA GLOBAL
+   [ ] Implementar búsqueda unificada
+   [ ] Buscar en tasks, mensajes, updates, usuarios
+   [ ] Filtros avanzados
+   [ ] Resultados destacados
+
+================================================================================
+6. MODELO DE MONETIZACIÓN
+================================================================================
+
+ESTRATEGIA: FREEMIUM CON LIMITACIONES DE FEATURES + ANUNCIOS
+
+6.1 PLAN PERSONAL FREE
+   Características:
+   - ✅ Usuario individual
+   - ✅ Tasks personales ilimitadas
+   - ✅ Calendario personal
+   - ✅ Motivación diaria
+   - ✅ Temas y personalización
+   - ✅ Crear teams de hasta 3 personas
+   - ✅ 1GB almacenamiento
+   - ⚠️ Anuncios pequeños y disimulados
+   - ❌ Sin Time Clock
+   - ❌ Sin reportes
+   - ❌ Sin integraciones
+   - ❌ Sin soporte prioritario
+
+   Límites:
+   - Máximo 3 miembros por team
+   - 1GB almacenamiento total
+   - Anuncios en la app
+
+6.2 PLAN PERSONAL PRO
+   Precio: $4.99/mes o $49/año (ahorro 18%)
+   
+   Características:
+   - ✅ Todo del Plan Free
+   - ✅ 0 Anuncios
+   - ✅ Teams de hasta 7 miembros
+   - ✅ Tasks avanzadas (subtareas, checklists)
+   - ✅ Calendario con recordatorios avanzados
+   - ✅ Integraciones (Google Calendar, Outlook)
+   - ✅ 10GB almacenamiento
+   - ✅ Exportar datos (PDF, CSV)
+   - ✅ Soporte prioritario por email
+   - ❌ Sin Time Clock (feature de teams)
+   - ❌ Sin reportes avanzados
+
+   Límites:
+   - Máximo 7 miembros por team
+   - 10GB almacenamiento
+
+6.3 PLAN ENTERPRISE
+   Precio: $29/mes o $290/año (ahorro 17%)
+   
+   Características:
+   - ✅ Todo del Plan Pro
+   - ✅ Miembros ilimitados en teams
+   - ✅ Time Clock completo
+      - Geolocalización
+      - Foto al check-in
+      - Reportes de horas
+   - ✅ Reportes avanzados y analytics
+   - ✅ Roles y permisos avanzados
+   - ✅ Gestión de archivos avanzada
+   - ✅ API access
+   - ✅ 100GB almacenamiento
+   - ✅ Soporte prioritario
+   - ✅ Custom branding (futuro)
+   - ✅ SSO (futuro)
+
+   Límites:
+   - Miembros ilimitados
+   - 100GB almacenamiento
+
+6.4 ESTRATEGIA DE CONVERSIÓN
+   Para usuarios individuales:
+   1. Hook: Gestión personal gratis
+   2. Trigger: "Necesito más features" → Personal Pro
+   3. Upsell: "¿Trabajas en equipo?" → Enterprise
+
+   Para equipos:
+   1. Hook: Colaboración básica gratis (3 miembros)
+   2. Trigger: "Necesitamos más miembros" → Personal Pro (7 miembros)
+   3. Trigger: "Necesitamos Time Clock/reportes" → Enterprise
+
+6.5 IMPLEMENTACIÓN TÉCNICA
+   Tareas pendientes:
+   [ ] Crear tabla de suscripciones en BD
+   [ ] Implementar sistema de planes
+   [ ] Implementar verificación de límites
+   [ ] Integrar sistema de pagos (Stripe recomendado)
+   [ ] Implementar gestión de suscripciones
+   [ ] Crear pantalla de Pricing
+   [ ] Implementar sistema de anuncios (para Free)
+   [ ] Crear middleware de verificación de features
+   [ ] Implementar upgrade/downgrade de planes
+   [ ] Testing de límites y restricciones
+
+6.6 ANUNCIOS (PLAN FREE)
+   Especificaciones:
+   - Anuncios pequeños y disimulados
+   - No intrusivos
+   - Ubicaciones sugeridas:
+     * Banner pequeño en dashboard (solo Free)
+     * Banner pequeño en algunas pantallas
+     * No en pantallas críticas (Time Clock, Chat activo)
+   - Opción: Anuncios nativos de Google AdSense
+   - Opción: Anuncios de partners/sponsors
+
+================================================================================
+7. ROADMAP FUTURO
+================================================================================
+
+V1.1 - LAUNCH (Q1 2025)
+-----------------------
+- Time Clock activo y funcional
+- Reportes y analytics básicos
+- Notificaciones push
+- Gestión de archivos
+- Modelo de monetización implementado
+- Lanzamiento público beta
+
+V1.2 - POST LAUNCH (Q2 2025)
+----------------------------
+- Roles y permisos avanzados
+- Búsqueda global
+- Mejoras de chat (archivos, reacciones)
+- Integraciones básicas (Google Calendar, Outlook)
+- Optimizaciones de rendimiento
+- Feedback de usuarios implementado
+
+V1.3 - CRECIMIENTO (Q3 2025)
+----------------------------
+- Apps móviles en App Store y Play Store
+- Push notifications mejoradas
+- Reportes avanzados
+- Exportar reportes mejorado
+- API pública básica
+- Marketing y crecimiento
+
+V2.0 - ESCALAMIENTO (Q4 2025)
+-----------------------------
+- SSO (Single Sign-On)
+- Custom branding
+- White-label
+- Integraciones avanzadas (Slack, etc.)
+- Video calls (integración)
+- Payroll básico
+- Enterprise features
+
+V2.1+ - FUTURO
+--------------
+- Marketplace de integraciones
+- Formularios personalizados
+- Workflows automatizados
+- AI/ML features (sugerencias inteligentes)
+- Mobile apps nativas mejoradas
+- Internacionalización expandida
+
+================================================================================
+8. ESTRATEGIA DE LANZAMIENTO
+================================================================================
+
+FASE 1: PRE-LAUNCH (Actual - 2 meses)
+-------------------------------------
+- Completar tareas críticas de V1.1
+- Testing interno exhaustivo
+- Preparar landing page mejorada
+- Preparar documentación
+- Preparar materiales de marketing
+- Beta testing con 2-3 empresas/usuarios
+
+FASE 2: BETA PÚBLICA (Mes 3)
+----------------------------
+- Lanzamiento público beta
+- Feedback loop activo
+- Correcciones rápidas
+- Marketing orgánico inicial
+- Onboarding guiado
+- Pricing page activa
+
+FASE 3: LANZAMIENTO OFICIAL (Mes 4)
+------------------------------------
+- Lanzamiento oficial V1.1
+- Marketing activo
+- Contenido (blog, casos de uso)
+- Soporte activo
+- Iteración rápida basada en feedback
+
+FASE 4: CRECIMIENTO (Mes 5+)
+-----------------------------
+- Apps móviles en stores
+- Marketing pagado (opcional)
+- Partnerships
+- Contenido SEO
+- Comunidad
+- Escalamiento
+
+PLATAFORMA DE LANZAMIENTO INICIAL:
+- Web primero (más rápido, menos fricción)
+- Apps móviles después (cuando haya tracción)
+
+RAZÓN:
+- Web es más fácil de iterar
+- No requiere aprobación de stores
+- Mejor para onboarding empresarial
+- Menor costo inicial
+
+================================================================================
+9. DEFINICIONES Y ESPECIFICACIONES
+================================================================================
+
+9.1 LÍMITES POR PLAN
+--------------------
+PERSONAL FREE:
+- Usuarios: 1 (individual)
+- Miembros por team: 3 máximo
+- Almacenamiento: 1GB
+- Teams: Ilimitados (pero 3 miembros c/u)
+- Anuncios: Sí (pequeños y disimulados)
+
+PERSONAL PRO:
+- Usuarios: 1 (individual)
+- Miembros por team: 7 máximo
+- Almacenamiento: 10GB
+- Teams: Ilimitados (pero 7 miembros c/u)
+- Anuncios: No
+
+ENTERPRISE:
+- Usuarios: Ilimitados
+- Miembros por team: Ilimitados
+- Almacenamiento: 100GB
+- Teams: Ilimitados
+- Anuncios: No
+
+9.2 FEATURES POR PLAN
+---------------------
+TIME CLOCK:
+- Free: ❌ No disponible
+- Pro: ❌ No disponible
+- Enterprise: ✅ Completo (geolocalización, foto, reportes)
+
+REPORTES:
+- Free: ❌ No disponible
+- Pro: ❌ No disponible
+- Enterprise: ✅ Básicos y avanzados
+
+INTEGRACIONES:
+- Free: ❌ No disponible
+- Pro: ✅ Básicas (Google Calendar, Outlook)
+- Enterprise: ✅ Todas
+
+API ACCESS:
+- Free: ❌ No disponible
+- Pro: ❌ No disponible
+- Enterprise: ✅ Disponible
+
+9.3 ESPECIFICACIONES TÉCNICAS
+------------------------------
+ALMACENAMIENTO:
+- Supabase Storage para archivos
+- Límites por plan (1GB, 10GB, 100GB)
+- Compresión de imágenes automática
+- Versionado básico de archivos
+
+NOTIFICACIONES:
+- In-app: Todos los planes
+- Push web: Todos los planes
+- Push móvil: Todos los planes
+- Email: Enterprise (futuro)
+
+SEGURIDAD:
+- Row Level Security (RLS) en todas las tablas
+- Encriptación de datos sensibles
+- Autenticación segura (Supabase Auth)
+- HTTPS obligatorio
+
+RENDIMIENTO:
+- Lazy loading de imágenes
+- Paginación en listas grandes
+- Caché local (AsyncStorage)
+- Optimización de queries
+
+9.4 MÉTRICAS DE ÉXITO
+---------------------
+KPIs PRINCIPALES:
+- Usuarios activos mensuales (MAU)
+- Tasa de conversión Free → Pro/Enterprise
+- Retención de usuarios (D1, D7, D30)
+- Revenue mensual recurrente (MRR)
+- Net Promoter Score (NPS)
+- Tiempo promedio en app
+- Features más usadas
+
+OBJETIVOS V1.1 (6 meses):
+- 1,000 usuarios activos
+- 5% tasa de conversión
+- $500 MRR
+- 40% retención D30
+
+OBJETIVOS V1.2 (12 meses):
+- 5,000 usuarios activos
+- 8% tasa de conversión
+- $3,000 MRR
+- 50% retención D30
+
+================================================================================
+NOTAS Y OBSERVACIONES
+================================================================================
+
+- Este documento debe actualizarse regularmente
+- Las prioridades pueden cambiar basadas en feedback
+- El roadmap es flexible y puede ajustarse
+- Todas las decisiones deben alinearse con la visión del proyecto
+
+PRÓXIMOS PASOS INMEDIATOS:
+1. Completar tareas críticas de V1.1
+2. Implementar sistema de monetización
+3. Testing exhaustivo
+4. Preparar lanzamiento beta
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================

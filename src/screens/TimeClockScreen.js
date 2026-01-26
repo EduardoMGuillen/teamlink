@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,20 +6,27 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Platform,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+import * as ImagePicker from 'expo-image-picker';
 import { useTranslation } from '../utils/useTranslation';
 import { useAppState } from '../context/AppStateContext';
 import { shiftsService } from '../services/shiftsService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { radii, shadows } from '../utils/theme';
 
 const CLOCK_STATE_KEY = '@teamlink_clock_state';
 
 export default function TimeClockScreen() {
   const { t } = useTranslation();
-  const { currentUser } = useAppState();
+  const { currentUser, theme } = useAppState();
+  const { colors } = theme;
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [clockInTime, setClockInTime] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -27,6 +34,8 @@ export default function TimeClockScreen() {
   const [shifts, setShifts] = useState([]);
   const [activeShiftId, setActiveShiftId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [isCapturingPhoto, setIsCapturingPhoto] = useState(false);
 
   useEffect(() => {
     if (currentUser?.id) {
@@ -177,6 +186,86 @@ export default function TimeClockScreen() {
     }
   };
 
+  // Obtener ubicación GPS
+  const getCurrentLocation = async () => {
+    try {
+      // Solicitar permisos
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Denied',
+          'Location permission is required for clock in. You can still clock in without location.',
+          [{ text: 'OK' }]
+        );
+        return { latitude: null, longitude: null };
+      }
+
+      setIsGettingLocation(true);
+      
+      // Obtener ubicación
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      return {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      };
+    } catch (error) {
+      console.error('Error getting location:', error);
+      Alert.alert('Error', 'Could not get location. Clocking in without location.');
+      return { latitude: null, longitude: null };
+    } finally {
+      setIsGettingLocation(false);
+    }
+  };
+
+  // Capturar foto
+  const capturePhoto = async () => {
+    try {
+      // Solicitar permisos
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Denied',
+          'Camera permission is required for photo. You can skip the photo.',
+          [{ text: 'OK' }]
+        );
+        return null;
+      }
+
+      setIsCapturingPhoto(true);
+
+      // Capturar foto
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (result.canceled) {
+        return null;
+      }
+
+      // En web, la URI puede ser diferente
+      const photoAsset = result.assets[0];
+      const photoUri = photoAsset.uri;
+      const mimeType = photoAsset.mimeType || photoAsset.type || null;
+      
+      // Subir foto a Supabase Storage (pasar el tipo MIME si está disponible)
+      const photoUrl = await shiftsService.uploadPhoto(photoUri, currentUser.id, mimeType);
+      
+      return photoUrl;
+    } catch (error) {
+      console.error('Error capturing photo:', error);
+      Alert.alert('Error', 'Could not capture photo. Clocking in without photo.');
+      return null;
+    } finally {
+      setIsCapturingPhoto(false);
+    }
+  };
+
   const handleClockInOut = async () => {
     if (!currentUser?.id) {
       Alert.alert('Error', 'User not authenticated');
@@ -214,7 +303,25 @@ export default function TimeClockScreen() {
           return;
         }
 
-        const result = await shiftsService.clockIn(currentUser.id, location);
+        // Obtener ubicación
+        const { latitude, longitude } = await getCurrentLocation();
+        
+        // Capturar foto (opcional - solo en móvil)
+        let photoUrl = null;
+        if (Platform.OS !== 'web') {
+          // En móvil, intentar capturar foto (el usuario puede cancelar)
+          photoUrl = await capturePhoto();
+        }
+        
+        // Hacer clock in con los datos obtenidos
+        const result = await shiftsService.clockIn(
+          currentUser.id,
+          location,
+          latitude,
+          longitude,
+          photoUrl
+        );
+        
         if (result.success) {
           setIsClockedIn(true);
           setClockInTime(result.shift.clockIn);
@@ -233,6 +340,7 @@ export default function TimeClockScreen() {
     }
   };
 
+
   const getLocationLabel = (loc) => {
     switch (loc) {
       case 'Main Office':
@@ -245,6 +353,8 @@ export default function TimeClockScreen() {
         return loc;
     }
   };
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -284,18 +394,26 @@ export default function TimeClockScreen() {
         )}
 
         <TouchableOpacity
-          style={[styles.clockButton, isClockedIn && styles.clockOutButton, isLoading && styles.clockButtonDisabled]}
+          style={[styles.clockButton, isClockedIn && styles.clockOutButton, (isLoading || isGettingLocation || isCapturingPhoto) && styles.clockButtonDisabled]}
           onPress={handleClockInOut}
-          disabled={isLoading}
+          disabled={isLoading || isGettingLocation || isCapturingPhoto}
         >
-          <Ionicons
-            name={isClockedIn ? 'time' : 'time-outline'}
-            size={24}
-            color="#fff"
-          />
-          <Text style={styles.clockButtonText}>
-            {isClockedIn ? t('clockOut') : t('clockIn')}
-          </Text>
+          {(isLoading || isGettingLocation || isCapturingPhoto) ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <Ionicons
+                name={isClockedIn ? 'time' : 'time-outline'}
+                size={24}
+                color="#fff"
+              />
+              <Text style={styles.clockButtonText}>
+                {isGettingLocation ? 'Getting location...' : 
+                 isCapturingPhoto ? 'Capturing photo...' :
+                 isClockedIn ? t('clockOut') : t('clockIn')}
+              </Text>
+            </>
+          )}
         </TouchableOpacity>
 
         {/* Weekly Summary */}
@@ -303,7 +421,7 @@ export default function TimeClockScreen() {
           <View style={styles.summaryContainer}>
             <Text style={styles.sectionTitle}>{t('weeklySummary') || 'Weekly Summary'}</Text>
             <View style={styles.summaryCard}>
-              <Ionicons name="time" size={24} color="#007AFF" />
+              <Ionicons name="time" size={24} color={colors.primary} />
               <View style={styles.summaryContent}>
                 <Text style={styles.summaryLabel}>{t('totalHours') || 'Total Hours'}</Text>
                 <Text style={styles.summaryValue}>{weeklyHours.toFixed(1)} {t('hours') || 'hrs'}</Text>
@@ -321,14 +439,29 @@ export default function TimeClockScreen() {
               .slice(0, 5)
               .map((shift) => (
                 <View key={shift.id} style={styles.shiftCard}>
+                  {shift.photoUrl && (
+                    <Image 
+                      source={{ uri: shift.photoUrl }} 
+                      style={styles.shiftPhoto}
+                      resizeMode="cover"
+                    />
+                  )}
                   <View style={styles.shiftInfo}>
                     <Text style={styles.shiftDate}>{formatDate(shift.clockIn)}</Text>
                     <Text style={styles.shiftTime}>
                       {formatTime(shift.clockIn)} - {formatTime(shift.clockOut)}
                     </Text>
-                    <Text style={styles.shiftLocation}>
-                      {getLocationLabel(shift.location)}
-                    </Text>
+                    <View style={styles.shiftLocationRow}>
+                      <Ionicons name="location" size={14} color={colors.textMuted} />
+                      <Text style={styles.shiftLocation}>
+                        {getLocationLabel(shift.location)}
+                      </Text>
+                    </View>
+                    {shift.latitude && shift.longitude && (
+                      <Text style={styles.shiftCoordinates}>
+                        📍 {shift.latitude.toFixed(4)}, {shift.longitude.toFixed(4)}
+                      </Text>
+                    )}
                   </View>
                   <Text style={styles.shiftDuration}>
                     {calculateDuration(shift.clockIn, shift.clockOut)} hrs
@@ -338,7 +471,7 @@ export default function TimeClockScreen() {
           </View>
         ) : (
           <View style={styles.emptyShifts}>
-            <Ionicons name="time-outline" size={50} color="#8E8E93" />
+            <Ionicons name="time-outline" size={50} color={colors.textMuted} />
             <Text style={styles.emptyShiftsText}>
               {t('noShiftsFound') || 'No shifts found'}
             </Text>
@@ -349,10 +482,10 @@ export default function TimeClockScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: colors.background,
   },
   content: {
     flexGrow: 1,
@@ -362,22 +495,23 @@ const styles = StyleSheet.create({
   clockContainer: {
     alignItems: 'center',
     marginBottom: 40,
+    paddingVertical: 20,
   },
   timeText: {
     fontSize: 64,
     fontWeight: '300',
-    color: '#000',
-    fontFamily: 'System',
+    color: colors.text,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'monospace',
   },
   clockInText: {
     fontSize: 16,
-    color: '#8E8E93',
+    color: colors.textMuted,
     marginTop: 16,
   },
   durationText: {
     fontSize: 20,
     fontWeight: '500',
-    color: '#007AFF',
+    color: colors.primary,
     marginTop: 8,
   },
   locationContainer: {
@@ -386,25 +520,29 @@ const styles = StyleSheet.create({
   locationLabel: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
+    color: colors.text,
     marginBottom: 8,
   },
   pickerContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   picker: {
     height: 50,
+    color: colors.text,
   },
   clockButton: {
     backgroundColor: '#34C759',
-    borderRadius: 16,
+    borderRadius: radii.xl,
     padding: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
+    ...shadows.soft,
   },
   clockOutButton: {
     backgroundColor: '#FF3B30',
@@ -425,23 +563,26 @@ const styles = StyleSheet.create({
   summaryCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
     padding: 16,
     gap: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.soft,
   },
   summaryContent: {
     flex: 1,
   },
   summaryLabel: {
     fontSize: 14,
-    color: '#8E8E93',
+    color: colors.textMuted,
     marginBottom: 4,
   },
   summaryValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#000',
+    color: colors.text,
   },
   recentShiftsContainer: {
     marginTop: 20,
@@ -454,45 +595,68 @@ const styles = StyleSheet.create({
   },
   emptyShiftsText: {
     fontSize: 16,
-    color: '#8E8E93',
+    color: colors.textMuted,
     marginTop: 12,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#000',
+    color: colors.text,
     marginBottom: 12,
   },
   shiftCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
     padding: 16,
-    marginBottom: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.soft,
+  },
+  shiftPhoto: {
+    width: 60,
+    height: 60,
+    borderRadius: radii.md,
+    marginRight: 12,
+    backgroundColor: colors.surfaceAlt,
   },
   shiftInfo: {
     flex: 1,
   },
   shiftDate: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#000',
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
   },
   shiftTime: {
     fontSize: 14,
-    color: '#8E8E93',
-    marginTop: 4,
+    color: colors.textMuted,
+    marginBottom: 4,
+  },
+  shiftLocationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+    gap: 4,
   },
   shiftLocation: {
     fontSize: 12,
-    color: '#8E8E93',
+    color: colors.textMuted,
+  },
+  shiftCoordinates: {
+    fontSize: 10,
+    color: colors.textMuted,
     marginTop: 2,
+    fontStyle: 'italic',
   },
   shiftDuration: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#007AFF',
+    color: colors.primary,
+    marginLeft: 8,
   },
 });

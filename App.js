@@ -16,7 +16,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import SignUpScreen from './src/screens/SignUpScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import LandingScreen from './src/screens/LandingScreen';
-// import TimeClockScreen from './src/screens/TimeClockScreen'; // Temporarily hidden
+import TimeClockScreen from './src/screens/TimeClockScreen';
 import ScheduleScreen from './src/screens/ScheduleScreen';
 import TasksScreen from './src/screens/TasksScreen';
 import TeamsScreen from './src/screens/TeamsScreen';
@@ -51,6 +51,8 @@ function MainTabs() {
 
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'TimeClock') {
+            iconName = focused ? 'time' : 'time-outline';
           } else if (route.name === 'Schedule') {
             iconName = focused ? 'calendar' : 'calendar-outline';
             // Tab name will be set in screenOptions
@@ -87,7 +89,11 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Home" component={DashboardScreen} />
-      {/* <Tab.Screen name="Time" component={TimeClockScreen} /> Temporarily hidden */}
+      <Tab.Screen 
+        name="TimeClock" 
+        component={TimeClockScreen}
+        options={{ tabBarLabel: t('timeClock') || 'Time Clock' }}
+      />
       <Tab.Screen 
         name="Schedule" 
         component={ScheduleScreen}

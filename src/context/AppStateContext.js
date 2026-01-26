@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef, useCallback } from 'react';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { i18n } from '../utils/i18n';
 import { authService } from '../services/authService';
@@ -37,6 +38,10 @@ export const AppStateProvider = ({ children }) => {
     initializeApp();
   }, []);
 
+  // Auto-logout por inactividad (desactivado por ahora)
+  // const inactivityTimerRef = useRef(null);
+  // const INACTIVITY_TIMEOUT = 60 * 60 * 1000; // 1 hora en milisegundos
+
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
@@ -58,6 +63,7 @@ export const AppStateProvider = ({ children }) => {
       data.subscription?.unsubscribe();
     };
   }, []);
+
 
   const initializeApp = async () => {
     try {
@@ -115,8 +121,13 @@ export const AppStateProvider = ({ children }) => {
     }
   };
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
+      // Limpiar timer de inactividad antes de hacer logout (si está activo)
+      // if (inactivityTimerRef.current) {
+      //   clearTimeout(inactivityTimerRef.current);
+      //   inactivityTimerRef.current = null;
+      // }
       await authService.logout();
       setCurrentUser(null);
       setIsAuthenticated(false);
@@ -128,7 +139,63 @@ export const AppStateProvider = ({ children }) => {
       setIsAuthenticated(false);
       await AsyncStorage.removeItem('@teamlink_user');
     }
-  };
+  }, []);
+
+  // Auto-logout por inactividad solo en web (DESACTIVADO - descomentar para activar)
+  // useEffect(() => {
+  //   if (Platform.OS !== 'web' || !isAuthenticated) {
+  //     // Limpiar timer si no es web o no está autenticado
+  //     if (inactivityTimerRef.current) {
+  //       clearTimeout(inactivityTimerRef.current);
+  //       inactivityTimerRef.current = null;
+  //     }
+  //     return;
+  //   }
+
+  //   // Función para resetear el timer de inactividad
+  //   const resetInactivityTimer = () => {
+  //     // Limpiar timer anterior
+  //     if (inactivityTimerRef.current) {
+  //       clearTimeout(inactivityTimerRef.current);
+  //     }
+
+  //     // Crear nuevo timer
+  //     inactivityTimerRef.current = setTimeout(() => {
+  //       console.log('Auto-logout por inactividad (1 hora)');
+  //       logout();
+  //     }, INACTIVITY_TIMEOUT);
+  //   };
+
+  //   // Eventos que indican actividad del usuario
+  //   const activityEvents = [
+  //     'mousedown',
+  //     'mousemove',
+  //     'keypress',
+  //     'scroll',
+  //     'touchstart',
+  //     'click',
+  //     'keydown',
+  //   ];
+
+  //   // Agregar listeners para eventos de actividad
+  //   activityEvents.forEach((event) => {
+  //     window.addEventListener(event, resetInactivityTimer, true);
+  //   });
+
+  //   // Iniciar el timer
+  //   resetInactivityTimer();
+
+  //   // Cleanup
+  //   return () => {
+  //     activityEvents.forEach((event) => {
+  //       window.removeEventListener(event, resetInactivityTimer, true);
+  //     });
+  //     if (inactivityTimerRef.current) {
+  //       clearTimeout(inactivityTimerRef.current);
+  //       inactivityTimerRef.current = null;
+  //     }
+  //   };
+  // }, [isAuthenticated, logout]);
 
   const changeLanguage = async (lang) => {
     await i18n.setLanguage(lang);

@@ -1,6 +1,88 @@
 import { supabase } from '../config/supabase';
 
+// Función helper para subir foto a Supabase Storage
+const uploadPhoto = async (photoUri, userId, mimeType = null) => {
+  try {
+    // Detectar tipo de imagen y extensión
+    let fileExtension = 'jpg';
+    let contentType = 'image/jpeg';
+    
+    // Detectar tipo MIME si se proporciona
+    if (mimeType) {
+      if (mimeType.includes('heic') || mimeType.includes('heif')) {
+        fileExtension = 'heic';
+        contentType = 'image/heic';
+      } else if (mimeType.includes('png')) {
+        fileExtension = 'png';
+        contentType = 'image/png';
+      } else if (mimeType.includes('jpeg') || mimeType.includes('jpg')) {
+        fileExtension = 'jpg';
+        contentType = 'image/jpeg';
+      }
+    } else {
+      // Intentar detectar desde la URI
+      if (photoUri.toLowerCase().includes('.heic') || photoUri.toLowerCase().includes('.heif')) {
+        fileExtension = 'heic';
+        contentType = 'image/heic';
+      } else if (photoUri.toLowerCase().includes('.png')) {
+        fileExtension = 'png';
+        contentType = 'image/png';
+      }
+    }
+    
+    // Obtener el nombre del archivo con la extensión correcta
+    const fileName = `shift-photos/${userId}/${Date.now()}.${fileExtension}`;
+    
+    let fileBody;
+    
+    // Manejar diferentes formatos de URI (web vs móvil)
+    if (photoUri.startsWith('http://') || photoUri.startsWith('https://')) {
+      // Web - descargar y convertir a blob
+      const response = await fetch(photoUri);
+      fileBody = await response.blob();
+    } else if (photoUri.startsWith('data:')) {
+      // Data URI - convertir a blob
+      const response = await fetch(photoUri);
+      fileBody = await response.blob();
+    } else {
+      // React Native - leer archivo como base64 y convertir
+      // Para React Native, necesitamos usar fetch con el URI local
+      const response = await fetch(photoUri);
+      fileBody = await response.blob();
+    }
+    
+    // Subir a Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('team-files')
+      .upload(fileName, fileBody, {
+        contentType: contentType,
+        upsert: false,
+      });
+
+    if (error) {
+      console.error('Error uploading photo:', error);
+      // Si el bucket no existe, retornar null silenciosamente
+      if (error.message?.includes('Bucket') || error.message?.includes('not found')) {
+        console.warn('Storage bucket "team-files" not configured. Please create it in Supabase Storage. Photo upload skipped.');
+      }
+      return null;
+    }
+
+    // Obtener URL pública
+    const { data: urlData } = supabase.storage
+      .from('team-files')
+      .getPublicUrl(fileName);
+
+    return urlData?.publicUrl || null;
+  } catch (error) {
+    console.error('Error in uploadPhoto:', error);
+    return null;
+  }
+};
+
 export const shiftsService = {
+  // Función para subir foto (exportada para uso en componentes)
+  uploadPhoto,
   // Obtener todos los turnos del usuario
   async getShifts(userId) {
     try {
@@ -32,6 +114,9 @@ export const shiftsService = {
         clockOut: shift.clock_out ? new Date(shift.clock_out) : null,
         location: shift.location,
         duration: shift.duration || null,
+        latitude: shift.latitude || null,
+        longitude: shift.longitude || null,
+        photoUrl: shift.photo_url || null,
       }));
     } catch (error) {
       console.error('Get shifts error:', error);
@@ -40,7 +125,7 @@ export const shiftsService = {
   },
 
   // Crear nuevo turno (clock in)
-  async clockIn(userId, location) {
+  async clockIn(userId, location, latitude = null, longitude = null, photoUrl = null) {
     try {
       // Validate UUID format
       if (!userId || typeof userId !== 'string') {
@@ -66,13 +151,26 @@ export const shiftsService = {
         return { success: false, error: 'User ID does not match authenticated user' };
       }
 
+      const shiftData = {
+        user_id: userId,
+        clock_in: new Date().toISOString(),
+        location: location,
+      };
+
+      // Agregar geolocalización si está disponible
+      if (latitude !== null && longitude !== null) {
+        shiftData.latitude = latitude;
+        shiftData.longitude = longitude;
+      }
+
+      // Agregar foto si está disponible
+      if (photoUrl) {
+        shiftData.photo_url = photoUrl;
+      }
+
       const { data, error } = await supabase
         .from('shifts')
-        .insert({
-          user_id: userId,
-          clock_in: new Date().toISOString(),
-          location: location,
-        })
+        .insert(shiftData)
         .select()
         .single();
 
@@ -87,6 +185,9 @@ export const shiftsService = {
           id: data.id.toString(),
           clockIn: new Date(data.clock_in),
           location: data.location,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          photoUrl: data.photo_url,
         },
       };
     } catch (error) {
@@ -181,6 +282,9 @@ export const shiftsService = {
         id: data.id.toString(),
         clockIn: new Date(data.clock_in),
         location: data.location,
+        latitude: data.latitude || null,
+        longitude: data.longitude || null,
+        photoUrl: data.photo_url || null,
       };
     } catch (error) {
       console.error('Get active shift error:', error);

@@ -1,0 +1,621 @@
+================================================================================
+                    TEAMLINK V1.1 - PLAN DE FEATURES PARA LAUNCH
+                    Documento de Planificación y Tareas
+                    Última actualización: Enero 2025
+================================================================================
+
+OBJETIVO:
+Completar las 4 features críticas necesarias para el lanzamiento público de V1.1:
+1. Time Clock activo y funcional
+2. Reportes y Analytics básicos
+3. Notificaciones Push
+4. Gestión de Archivos/Documentos
+
+ESTIMACIÓN TOTAL: 6-8 semanas de desarrollo
+
+================================================================================
+FASE 1: TIME CLOCK ACTIVO Y FUNCIONAL
+Prioridad: CRÍTICA
+Estimación: 1-2 semanas
+================================================================================
+
+ESTADO ACTUAL:
+✅ Código implementado pero OCULTO
+✅ Funcionalidad básica: clock in/out
+✅ Historial de shifts
+❌ Falta: geolocalización, foto, validación, mejoras UI
+
+TAREAS DETALLADAS:
+------------------
+
+[✅] TASK 1.1: Activar TimeClockScreen
+     - Descomentar import en App.js
+     - Agregar Time Clock a navegación de tabs
+     - Agregar icono en tab bar
+     - Verificar que aparece correctamente
+     Estado: COMPLETADO
+
+[ ] TASK 1.2: Verificar funcionalidad básica
+     - Probar clock in/out en web
+     - Probar clock in/out en iOS
+     - Probar clock in/out en Android
+     - Verificar que se guarda en BD correctamente
+     - Verificar historial de shifts
+     - Testing de casos edge (doble clock in, etc.)
+     Notas: Usar shiftsService existente
+
+[ ] TASK 1.3: Implementar geolocalización al check-in
+     Dependencias: expo-location (ya instalado según package.json)
+     Tareas:
+     - Solicitar permisos de ubicación
+     - Obtener coordenadas GPS al hacer clock in
+     - Guardar latitud/longitud en tabla shifts
+     - Agregar campos a BD si no existen (latitude, longitude)
+     - Mostrar ubicación en historial de shifts
+     - Manejar errores de permisos/ubicación
+     - Funcionar en web (geolocation API del navegador)
+     Archivos a modificar:
+     - src/services/shiftsService.js (agregar lat/lng)
+     - src/screens/TimeClockScreen.js (obtener ubicación)
+     - database/ (migration si es necesario)
+
+[ ] TASK 1.4: Implementar captura de foto al check-in
+     Dependencias: expo-image-picker (ya instalado)
+     Tareas:
+     - Solicitar permisos de cámara
+     - Capturar foto al hacer clock in
+     - Subir foto a Supabase Storage
+     - Guardar URL de foto en tabla shifts
+     - Mostrar foto en historial de shifts
+     - Opción de saltar foto (opcional)
+     - Manejar errores de permisos/cámara
+     - Funcionar en web (usar input file o webcam API)
+     Archivos a modificar:
+     - src/services/shiftsService.js (subir foto)
+     - src/screens/TimeClockScreen.js (capturar foto)
+     - database/ (agregar campo photo_url si no existe)
+     - Configurar Supabase Storage bucket para fotos
+
+[ ] TASK 1.5: Agregar validación de ubicación (opcional)
+     Tareas:
+     - Permitir configurar ubicación permitida (coordenadas + radio)
+     - Validar que el usuario está en la ubicación permitida
+     - Mostrar advertencia si está fuera del radio
+     - Permitir override manual (para casos especiales)
+     - Configuración por equipo/empresa
+     Notas: Feature opcional, puede ser v1.2 si falta tiempo
+
+[ ] TASK 1.6: Mejorar UI del Time Clock
+     Tareas:
+     - Mejorar diseño visual
+     - Agregar animaciones al clock in/out
+     - Mejorar visualización de tiempo transcurrido
+     - Mejorar historial de shifts (cards más atractivas)
+     - Agregar estadísticas rápidas (horas esta semana, etc.)
+     - Mejorar feedback visual (loading states)
+     - Hacer responsive para web
+
+[ ] TASK 1.7: Testing completo
+     - Testing en iOS (dispositivo real)
+     - Testing en Android (dispositivo real)
+     - Testing en Web (diferentes navegadores)
+     - Testing de geolocalización en todas las plataformas
+     - Testing de captura de foto en todas las plataformas
+     - Testing de casos edge
+     - Performance testing
+
+CHECKLIST FINAL FASE 1:
+[ ] Time Clock visible y funcional
+[ ] Clock in/out funciona correctamente
+[ ] Geolocalización implementada y funcionando
+[ ] Foto al check-in implementada y funcionando
+[ ] UI mejorada y atractiva
+[ ] Testing completo en todas las plataformas
+[ ] Sin bugs críticos
+
+================================================================================
+FASE 2: REPORTES Y ANALYTICS BÁSICOS
+Prioridad: CRÍTICA
+Estimación: 1.5-2 semanas
+================================================================================
+
+ESTADO ACTUAL:
+⚠️ Dashboard muestra métricas hardcoded
+❌ No hay reportes reales
+❌ No hay cálculo de horas trabajadas
+❌ No hay reportes de productividad
+
+TAREAS DETALLADAS:
+------------------
+
+[ ] TASK 2.1: Crear servicio de reportes (reportsService.js)
+     Tareas:
+     - Crear archivo src/services/reportsService.js
+     - Implementar funciones base:
+       * getHoursWorked(userId, startDate, endDate)
+       * getTaskProductivity(userId, startDate, endDate)
+       * getAttendanceReport(userId, startDate, endDate)
+       * getTeamReport(teamId, startDate, endDate)
+     - Usar queries optimizadas a Supabase
+     - Manejar errores correctamente
+     - Agregar caching si es necesario
+
+[ ] TASK 2.2: Implementar cálculo de horas trabajadas
+     Tareas:
+     - Calcular horas por usuario en un período
+     - Calcular horas por día/semana/mes
+     - Calcular promedio de horas diarias
+     - Calcular horas totales del período
+     - Agregar filtros (por fecha, por usuario, por equipo)
+     - Optimizar queries (usar agregaciones de SQL)
+     - Manejar casos edge (shifts sin clock out, etc.)
+     Archivos:
+     - src/services/reportsService.js
+     - Queries SQL optimizadas
+
+[ ] TASK 2.3: Implementar reporte de productividad de tareas
+     Tareas:
+     - Tareas completadas vs pendientes
+     - Tareas por prioridad (low, medium, high)
+     - Tareas por asignado
+     - Tareas completadas en tiempo vs atrasadas
+     - Tasa de completación
+     - Tiempo promedio de completación
+     - Gráficos básicos (opcional: usar react-native-chart-kit o similar)
+     Archivos:
+     - src/services/reportsService.js
+     - Queries a tabla tasks
+
+[ ] TASK 2.4: Implementar reporte de asistencia
+     Tareas:
+     - Días trabajados en el período
+     - Horas totales trabajadas
+     - Promedio diario de horas
+     - Días con clock in/out
+     - Días sin clock out (incompletos)
+     - Porcentaje de asistencia
+     Archivos:
+     - src/services/reportsService.js
+     - Queries a tabla shifts
+
+[ ] TASK 2.5: Crear pantalla de Reportes/Analytics
+     Tareas:
+     - Crear src/screens/ReportsScreen.js
+     - Diseñar UI atractiva
+     - Agregar filtros de fecha (selector de período)
+     - Mostrar reportes de horas trabajadas
+     - Mostrar reportes de productividad
+     - Mostrar reportes de asistencia
+     - Agregar gráficos básicos (barras, líneas)
+     - Agregar exportar a PDF (opcional para v1.1)
+     - Agregar exportar a CSV (opcional para v1.1)
+     - Agregar a navegación (en More o como tab)
+     Archivos:
+     - src/screens/ReportsScreen.js (nuevo)
+     - Agregar a App.js navegación
+
+[ ] TASK 2.6: Conectar dashboard con datos reales
+     Tareas:
+     - Reemplazar métricas hardcoded con datos reales
+     - Mostrar horas trabajadas hoy/esta semana
+     - Mostrar tareas completadas hoy/esta semana
+     - Mostrar eventos del día
+     - Mostrar mensajes no leídos
+     - Agregar loading states
+     - Agregar error handling
+     Archivos:
+     - src/screens/DashboardScreen.js
+     - Usar reportsService para obtener datos
+
+[ ] TASK 2.7: Implementar exportar reportes (PDF/CSV)
+     Tareas:
+     - Investigar librerías para PDF (react-native-pdf, pdfkit)
+     - Implementar exportar a PDF
+     - Implementar exportar a CSV
+     - Agregar botones de exportar en ReportsScreen
+     - Probar en todas las plataformas
+     Notas: Puede ser opcional para v1.1 si falta tiempo
+
+CHECKLIST FINAL FASE 2:
+[ ] Servicio de reportes creado y funcional
+[ ] Cálculo de horas trabajadas implementado
+[ ] Reporte de productividad implementado
+[ ] Reporte de asistencia implementado
+[ ] Pantalla de Reportes creada
+[ ] Dashboard muestra datos reales
+[ ] Testing completo
+
+================================================================================
+FASE 3: NOTIFICACIONES PUSH
+Prioridad: CRÍTICA
+Estimación: 1-1.5 semanas
+================================================================================
+
+ESTADO ACTUAL:
+✅ Notificaciones in-app funcionan
+❌ No hay push notifications
+❌ No hay notificaciones web push
+❌ No hay notificaciones móviles push
+
+TAREAS DETALLADAS:
+------------------
+
+[ ] TASK 3.1: Configurar Web Push Notifications
+     Dependencias: Service Worker, Web Push API
+     Tareas:
+     - Crear Service Worker (public/sw.js o similar)
+     - Solicitar permisos de notificaciones en web
+     - Configurar VAPID keys (para web push)
+     - Integrar con Supabase (usar Supabase Realtime o configurar webhooks)
+     - Enviar notificaciones desde backend
+     - Mostrar notificaciones en web
+     - Manejar clicks en notificaciones
+     - Agregar icono de notificación
+     - Testing en diferentes navegadores
+     Archivos:
+     - public/sw.js (nuevo)
+     - src/utils/pushNotifications.js (nuevo)
+     - Configurar en vercel.json o similar
+
+[ ] TASK 3.2: Configurar Push Notifications iOS
+     Dependencias: expo-notifications, certificados APNs
+     Tareas:
+     - Configurar expo-notifications
+     - Obtener certificados APNs de Apple Developer
+     - Configurar en app.json/eas.json
+     - Solicitar permisos de notificaciones en iOS
+     - Registrar dispositivo para push
+     - Enviar notificaciones desde backend (usar Expo Push API)
+     - Recibir y mostrar notificaciones
+     - Manejar clicks en notificaciones
+     - Testing en dispositivo real iOS
+     Archivos:
+     - app.json (configuración)
+     - eas.json (configuración)
+     - src/utils/pushNotifications.js
+     - Backend: configurar Expo Push API
+
+[ ] TASK 3.3: Configurar Push Notifications Android
+     Dependencias: expo-notifications, Firebase Cloud Messaging
+     Tareas:
+     - Configurar Firebase Cloud Messaging (FCM)
+     - Obtener FCM server key
+     - Configurar en app.json/eas.json
+     - Solicitar permisos de notificaciones en Android
+     - Registrar dispositivo para push
+     - Enviar notificaciones desde backend (usar FCM API)
+     - Recibir y mostrar notificaciones
+     - Manejar clicks en notificaciones
+     - Testing en dispositivo real Android
+     Archivos:
+     - app.json (configuración)
+     - eas.json (configuración)
+     - src/utils/pushNotifications.js
+     - Backend: configurar FCM API
+
+[ ] TASK 3.4: Crear sistema de preferencias de notificaciones
+     Tareas:
+     - Crear tabla en BD para preferencias (notification_preferences)
+     - Crear pantalla de configuración de notificaciones
+     - Permitir activar/desactivar por tipo:
+       * Nuevos mensajes
+       * Tareas asignadas
+       * Updates importantes
+       * Recordatorios de Time Clock
+       * Reportes diarios/semanales
+     - Guardar preferencias en BD
+     - Respetar preferencias al enviar notificaciones
+     Archivos:
+     - database/ (migration para tabla)
+     - src/screens/NotificationSettingsScreen.js (nuevo o agregar a Settings)
+     - src/services/notificationsService.js (actualizar)
+
+[ ] TASK 3.5: Implementar notificaciones para eventos específicos
+     Tareas:
+     - Notificación cuando se asigna una tarea
+     - Notificación cuando llega un mensaje nuevo
+     - Notificación de updates importantes
+     - Recordatorio de clock out (si está clocked in por X horas)
+     - Notificación de reportes (diario/semanal opcional)
+     - Usar preferencias del usuario
+     Archivos:
+     - Backend: triggers en Supabase o funciones
+     - src/services/notificationsService.js
+
+[ ] TASK 3.6: Testing completo de notificaciones
+     - Testing web push en diferentes navegadores
+     - Testing iOS push en dispositivo real
+     - Testing Android push en dispositivo real
+     - Testing de diferentes tipos de notificaciones
+     - Testing de preferencias
+     - Testing de clicks en notificaciones
+     - Testing de casos edge (permisos denegados, etc.)
+
+CHECKLIST FINAL FASE 3:
+[ ] Web Push Notifications funcionando
+[ ] iOS Push Notifications funcionando
+[ ] Android Push Notifications funcionando
+[ ] Sistema de preferencias implementado
+[ ] Notificaciones para eventos específicos funcionando
+[ ] Testing completo en todas las plataformas
+
+================================================================================
+FASE 4: GESTIÓN DE ARCHIVOS/DOCUMENTOS
+Prioridad: CRÍTICA
+Estimación: 1.5-2 semanas
+================================================================================
+
+ESTADO ACTUAL:
+❌ No implementado
+❌ No hay Supabase Storage configurado
+❌ No hay servicio de archivos
+
+TAREAS DETALLADAS:
+------------------
+
+[ ] TASK 4.1: Configurar Supabase Storage
+     Tareas:
+     - Crear bucket en Supabase Storage (ej: "team-files")
+     - Configurar políticas de acceso (RLS)
+     - Configurar límites de tamaño de archivo
+     - Configurar tipos de archivo permitidos
+     - Probar subida manual desde Supabase dashboard
+     Archivos:
+     - Configuración en Supabase dashboard
+     - Posiblemente SQL para políticas
+
+[ ] TASK 4.2: Crear servicio de archivos (filesService.js)
+     Tareas:
+     - Crear src/services/filesService.js
+     - Implementar funciones:
+       * uploadFile(file, teamId, folder?)
+       * downloadFile(fileId)
+       * deleteFile(fileId)
+       * getFiles(teamId, folder?)
+       * shareFile(fileId, userIds)
+       * getFileVersions(fileId)
+     - Manejar progreso de subida
+     - Manejar errores
+     - Validar tipos de archivo
+     - Validar tamaño de archivo
+     Archivos:
+     - src/services/filesService.js (nuevo)
+
+[ ] TASK 4.3: Crear tabla de archivos en BD
+     Tareas:
+     - Crear tabla files con campos:
+       * id, name, url, size, type, team_id, uploaded_by, created_at, updated_at
+     - Agregar RLS policies
+     - Agregar índices para performance
+     - Crear relación con teams
+     Archivos:
+     - database/files_schema.sql (nuevo)
+
+[ ] TASK 4.4: Implementar subida de archivos
+     Dependencias: expo-document-picker (ya instalado)
+     Tareas:
+     - Seleccionar archivo (usar expo-document-picker)
+     - Mostrar preview del archivo seleccionado
+     - Mostrar progreso de subida
+     - Subir a Supabase Storage
+     - Guardar metadata en BD
+     - Mostrar mensaje de éxito/error
+     - Validar tamaño y tipo
+     - Manejar permisos
+     Archivos:
+     - src/screens/FilesScreen.js (nuevo)
+     - src/services/filesService.js
+     - Integrar en ChatScreen (adjuntar archivo)
+
+[ ] TASK 4.5: Implementar descarga de archivos
+     Tareas:
+     - Descargar archivo desde Supabase Storage
+     - Mostrar progreso de descarga
+     - Abrir archivo en dispositivo
+     - Guardar archivo localmente (opcional)
+     - Manejar errores
+     Archivos:
+     - src/services/filesService.js
+     - src/screens/FilesScreen.js
+
+[ ] TASK 4.6: Implementar compartir archivos por equipo
+     Tareas:
+     - Permitir compartir archivo con miembros del equipo
+     - Mostrar quién tiene acceso al archivo
+     - Permitir remover acceso
+     - Agregar permisos (view, edit, delete)
+     - Crear tabla file_shares si es necesario
+     Archivos:
+     - database/ (migration si es necesario)
+     - src/services/filesService.js
+     - src/screens/FilesScreen.js
+
+[ ] TASK 4.7: Implementar versionado básico
+     Tareas:
+     - Guardar versiones de archivos
+     - Mostrar historial de versiones
+     - Permitir descargar versión anterior
+     - Limitar número de versiones (ej: 10 últimas)
+     Archivos:
+     - database/ (agregar campo version o tabla versions)
+     - src/services/filesService.js
+     - src/screens/FilesScreen.js
+
+[ ] TASK 4.8: Crear pantalla de gestión de archivos
+     Tareas:
+     - Crear src/screens/FilesScreen.js
+     - Mostrar lista de archivos del equipo
+     - Agregar filtros (por tipo, por fecha, por usuario)
+     - Agregar búsqueda
+     - Mostrar información del archivo (tamaño, fecha, subido por)
+     - Botones: descargar, compartir, eliminar
+     - Agregar a navegación (en Teams o como pantalla separada)
+     Archivos:
+     - src/screens/FilesScreen.js (nuevo)
+     - Agregar a App.js navegación
+
+[ ] TASK 4.9: Integrar archivos en Chat
+     Tareas:
+     - Agregar botón de adjuntar archivo en ChatScreen
+     - Permitir seleccionar y subir archivo
+     - Mostrar archivo adjunto en mensaje
+     - Permitir descargar archivo desde mensaje
+     - Mostrar preview de imagen si es imagen
+     Archivos:
+     - src/screens/ChatScreen.js
+     - src/services/messagesService.js (agregar campo file_url)
+
+[ ] TASK 4.10: Integrar archivos en Tasks
+     Tareas:
+     - Agregar campo de archivos adjuntos en tasks
+     - Permitir adjuntar archivos al crear/editar task
+     - Mostrar archivos adjuntos en vista de task
+     - Permitir descargar archivos desde task
+     Archivos:
+     - database/ (agregar relación tasks-files)
+     - src/screens/TasksScreen.js
+     - src/services/tasksService.js
+
+[ ] TASK 4.11: Implementar límites por plan
+     Tareas:
+     - Límite de tamaño de archivo por plan
+     - Límite de almacenamiento por plan
+     - Mostrar uso de almacenamiento
+     - Mostrar advertencia cuando se acerca al límite
+     - Bloquear subida si excede límite
+     Archivos:
+     - src/services/filesService.js
+     - src/screens/FilesScreen.js
+     - Integrar con sistema de planes (cuando se implemente)
+
+[ ] TASK 4.12: Testing completo
+     - Testing de subida en todas las plataformas
+     - Testing de descarga en todas las plataformas
+     - Testing de compartir archivos
+     - Testing de versionado
+     - Testing de límites
+     - Testing de integración con Chat
+     - Testing de integración con Tasks
+     - Performance testing (archivos grandes)
+
+CHECKLIST FINAL FASE 4:
+[ ] Supabase Storage configurado
+[ ] Servicio de archivos creado y funcional
+[ ] Subida de archivos implementada
+[ ] Descarga de archivos implementada
+[ ] Compartir archivos por equipo implementado
+[ ] Versionado básico implementado
+[ ] Pantalla de gestión de archivos creada
+[ ] Archivos integrados en Chat
+[ ] Archivos integrados en Tasks
+[ ] Límites por plan implementados
+[ ] Testing completo
+
+================================================================================
+TESTING GENERAL Y PRE-LAUNCH
+Prioridad: CRÍTICA
+Estimación: 1 semana
+================================================================================
+
+[ ] TASK 5.1: Testing de integración
+     - Probar todas las features juntas
+     - Verificar que no hay conflictos
+     - Verificar performance general
+     - Verificar que no hay memory leaks
+
+[ ] TASK 5.2: Testing de regresión
+     - Verificar que features existentes siguen funcionando
+     - Probar en todas las plataformas
+     - Probar con diferentes usuarios/roles
+
+[ ] TASK 5.3: Testing de carga
+     - Probar con múltiples usuarios simultáneos
+     - Probar con muchos datos
+     - Verificar performance de queries
+     - Optimizar si es necesario
+
+[ ] TASK 5.4: Fix de bugs
+     - Listar todos los bugs encontrados
+     - Priorizar bugs críticos
+     - Fix de bugs críticos
+     - Fix de bugs importantes
+
+[ ] TASK 5.5: Optimización
+     - Optimizar queries de BD
+     - Optimizar imágenes
+     - Optimizar bundle size
+     - Optimizar carga inicial
+
+[ ] TASK 5.6: Documentación
+     - Actualizar README
+     - Documentar nuevas features
+     - Crear guía de usuario básica
+     - Actualizar PROJECT_GUIDE.txt
+
+================================================================================
+CRONOGRAMA SUGERIDO
+================================================================================
+
+SEMANA 1-2: Fase 1 (Time Clock)
+- Días 1-3: Activar y verificar funcionalidad básica
+- Días 4-6: Implementar geolocalización
+- Días 7-9: Implementar foto al check-in
+- Días 10-12: Mejoras de UI y testing
+
+SEMANA 3-4: Fase 2 (Reportes)
+- Días 1-3: Crear servicio de reportes
+- Días 4-6: Implementar cálculos de horas y productividad
+- Días 7-9: Crear pantalla de Reportes
+- Días 10-12: Conectar dashboard y testing
+
+SEMANA 5-6: Fase 3 (Push Notifications)
+- Días 1-3: Configurar Web Push
+- Días 4-6: Configurar iOS Push
+- Días 7-9: Configurar Android Push
+- Días 10-12: Preferencias y testing
+
+SEMANA 7-8: Fase 4 (Archivos)
+- Días 1-3: Configurar Storage y crear servicio
+- Días 4-6: Implementar subida/descarga
+- Días 7-9: Compartir y versionado
+- Días 10-12: Integración con Chat/Tasks y testing
+
+SEMANA 9: Testing General y Pre-Launch
+- Días 1-3: Testing de integración y regresión
+- Días 4-5: Fix de bugs críticos
+- Días 6-7: Optimización y documentación
+
+TOTAL: 9 semanas (2 meses aproximadamente)
+
+================================================================================
+NOTAS IMPORTANTES
+================================================================================
+
+- Este plan es flexible y puede ajustarse según prioridades
+- Algunas tareas pueden hacerse en paralelo
+- Testing debe hacerse continuamente, no solo al final
+- Documentar decisiones importantes durante el desarrollo
+- Hacer commits frecuentes y descriptivos
+- Actualizar este documento cuando se completen tareas
+
+DEPENDENCIAS EXTERNAS:
+- Certificados APNs (iOS) - requiere cuenta de Apple Developer
+- Firebase Cloud Messaging (Android) - requiere cuenta de Firebase
+- VAPID keys (Web Push) - se generan automáticamente
+- Supabase Storage - ya configurado en proyecto
+
+RIESGOS:
+- Permisos de ubicación/cámara pueden ser rechazados
+- Push notifications requieren configuración compleja
+- Supabase Storage puede tener límites
+- Performance con muchos archivos
+
+MITIGACIÓN:
+- Manejar errores de permisos gracefully
+- Documentar bien configuración de push
+- Implementar paginación para archivos
+- Optimizar queries y usar índices
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
