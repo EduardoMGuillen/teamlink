@@ -111,6 +111,38 @@ function AppNavigator() {
     initI18n();
   }, []);
 
+  // Configuración de linking para URLs en web
+  const linking = Platform.OS === 'web' ? {
+    enabled: true,
+    prefixes: [],
+    config: {
+      screens: {
+        Landing: '',
+        Login: 'login',
+        SignUp: 'signup',
+        MainTabs: {
+          screens: {
+            Home: 'home',
+            Schedule: 'schedule',
+            Tasks: 'tasks',
+            Teams: 'teams',
+            More: 'more',
+          },
+        },
+        Settings: 'settings',
+        Directory: 'directory',
+        Chat: 'chat',
+        Updates: 'updates',
+        Notifications: 'notifications',
+        MotivationSettings: 'motivation-settings',
+        TeamTasks: 'team-tasks',
+        TeamMembers: 'team-members',
+        TeamJoinRequests: 'team-join-requests',
+        ConnectionTest: 'connection-test',
+      },
+    },
+  } : undefined;
+
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -120,7 +152,10 @@ function AppNavigator() {
   }
 
   return (
-      <NavigationContainer key={isAuthenticated ? 'auth' : 'guest'}>
+      <NavigationContainer 
+        key={isAuthenticated ? 'auth' : 'guest'}
+        linking={linking}
+      >
         <StatusBar style="auto" />
         <Stack.Navigator
           key={isAuthenticated ? 'auth-stack' : 'guest-stack'}

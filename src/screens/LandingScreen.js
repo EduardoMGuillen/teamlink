@@ -278,9 +278,10 @@ const createStyles = (colors) => StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
     ...(isWeb && {
-      minHeight: '100vh',
+      height: '100vh',
       display: 'flex',
       flexDirection: 'column',
+      overflow: 'hidden',
     }),
   },
   header: {
@@ -434,11 +435,13 @@ const createStyles = (colors) => StyleSheet.create({
   scrollView: {
     flex: 1,
     ...(isWeb && {
+      height: '100%',
       overflowY: 'auto',
       overflowX: 'hidden',
       WebkitOverflowScrolling: 'touch',
       cursor: 'default',
       overscrollBehavior: 'contain',
+      flex: 1,
     }),
   },
   scrollContent: {

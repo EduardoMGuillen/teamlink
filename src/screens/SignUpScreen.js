@@ -220,26 +220,30 @@ export default function SignUpScreen() {
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>{t('dateOfBirth')}</Text>
                 {Platform.OS === 'web' ? (
-                  <input
-                    type="date"
-                    value={dateOfBirth.toISOString().split('T')[0]}
-                    max={new Date().toISOString().split('T')[0]}
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        setDateOfBirth(new Date(e.target.value));
-                      }
-                    }}
-                    style={{
-                      width: '100%',
-                      marginTop: 8,
-                      padding: 16,
-                      border: '1px solid #E5E5EA',
-                      borderRadius: 12,
-                      fontSize: 16,
-                      backgroundColor: '#fff',
-                      fontFamily: 'inherit',
-                    }}
-                  />
+                  <View style={styles.dateInputWrapper}>
+                    <input
+                      type="date"
+                      value={dateOfBirth.toISOString().split('T')[0]}
+                      max={new Date().toISOString().split('T')[0]}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setDateOfBirth(new Date(e.target.value));
+                        }
+                      }}
+                      style={{
+                        width: '100%',
+                        marginTop: 8,
+                        padding: '16px 40px 16px 16px',
+                        border: '1px solid #E5E5EA',
+                        borderRadius: 12,
+                        fontSize: 16,
+                        backgroundColor: '#fff',
+                        fontFamily: 'inherit',
+                        boxSizing: 'border-box',
+                        outline: 'none',
+                      }}
+                    />
+                  </View>
                 ) : (
                   <>
                     <TouchableOpacity
@@ -608,13 +612,19 @@ const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    ...(Platform.OS === 'web' && {
+      height: '100vh',
+      overflow: 'hidden',
+    }),
   },
   scrollView: {
     flex: 1,
     ...(Platform.OS === 'web' && {
+      height: '100vh',
       overflowY: 'auto',
       overflowX: 'hidden',
       WebkitOverflowScrolling: 'touch',
+      flex: 1,
     }),
   },
   scrollContent: {
@@ -632,6 +642,12 @@ const createStyles = (colors) => StyleSheet.create({
     ...shadows.card,
     maxWidth: 520,
     alignSelf: 'center',
+    ...(Platform.OS === 'web' && {
+      boxSizing: 'border-box',
+      overflow: 'hidden',
+      marginTop: 20,
+      marginBottom: 20,
+    }),
   },
   logoContainer: {
     alignItems: 'center',
@@ -662,6 +678,18 @@ const createStyles = (colors) => StyleSheet.create({
   },
   inputContainer: {
     marginBottom: Platform.OS === 'web' ? 14 : 16,
+    ...(Platform.OS === 'web' && {
+      position: 'relative',
+      overflow: 'visible',
+    }),
+  },
+  dateInputWrapper: {
+    position: 'relative',
+    width: '100%',
+    ...(Platform.OS === 'web' && {
+      overflow: 'hidden',
+      boxSizing: 'border-box',
+    }),
   },
   label: {
     fontSize: 13,
