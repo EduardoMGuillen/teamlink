@@ -27,6 +27,7 @@ export default function TimeClockScreen() {
   const { t } = useTranslation();
   const { currentUser, theme } = useAppState();
   const { colors } = theme;
+  const isWeb = Platform.OS === 'web';
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [clockInTime, setClockInTime] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -358,8 +359,12 @@ export default function TimeClockScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.clockContainer}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
+      >
+        <View style={[styles.content, isWeb && styles.contentWeb]}>
+          <View style={styles.clockContainer}>
           <Text style={styles.timeText}>{formatTime(currentTime)}</Text>
           {isClockedIn && clockInTime && (
             <>
@@ -477,6 +482,7 @@ export default function TimeClockScreen() {
             </Text>
           </View>
         )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -487,10 +493,25 @@ const createStyles = (colors) => StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  content: {
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
     flexGrow: 1,
+    paddingBottom: 24,
+  },
+  scrollContentWeb: {
+    flexGrow: 1,
+  },
+  content: {
+    width: '100%',
     padding: 20,
     justifyContent: 'center',
+  },
+  contentWeb: {
+    maxWidth: 1200,
+    alignSelf: 'center',
+    paddingHorizontal: 24,
   },
   clockContainer: {
     alignItems: 'center',
