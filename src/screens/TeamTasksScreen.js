@@ -30,6 +30,23 @@ export default function TeamTasksScreen() {
   const isWeb = Platform.OS === 'web';
   const styles = useMemo(() => createStyles(colors), [colors]);
   
+  // Date helper functions to avoid timezone issues
+  const normalizeDateInput = (dateInput) => {
+    if (dateInput instanceof Date) return dateInput;
+    return new Date(dateInput);
+  };
+
+  const toLocalDateString = (date) => {
+    const safeDate = normalizeDateInput(date);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${safeDate.getFullYear()}-${pad(safeDate.getMonth() + 1)}-${pad(safeDate.getDate())}`;
+  };
+
+  const parseLocalDateString = (dateString) => {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+  
   const teamId = route.params?.teamId;
   const teamName = route.params?.teamName || 'Team';
   
@@ -38,6 +55,7 @@ export default function TeamTasksScreen() {
   const [teamLeaderboard, setTeamLeaderboard] = useState([]);
   const [taskFilter, setTaskFilter] = useState('all');
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
   const [taskPriority, setTaskPriority] = useState('medium');
@@ -106,26 +124,58 @@ export default function TeamTasksScreen() {
     
     setIsWorking(true);
     try {
-      const result = await tasksService.createTeamTask(teamId, currentUser.id, {
-        title: taskTitle,
-        description: taskDescription,
-        priority: taskPriority,
-        dueDate: taskDueDate,
-        assignedTo: taskAssignedTo,
-      });
+      if (editingTask) {
+        // Update existing task
+        const result = await tasksService.updateTask(editingTask.id, {
+          title: taskTitle.trim(),
+          description: taskDescription.trim(),
+          priority: taskPriority,
+          dueDate: taskDueDate,
+          assignedTo: taskAssignedTo,
+        });
 
-      if (result.success) {
-        setShowCreateTaskModal(false);
-        resetTaskForm();
-        await loadTeamTasks();
-        await loadTeamStats();
-        await loadTeamLeaderboard();
+        if (result.success) {
+          setShowCreateTaskModal(false);
+          setEditingTask(null);
+          resetTaskForm();
+          await loadTeamTasks();
+          await loadTeamStats();
+          await loadTeamLeaderboard();
+        }
+      } else {
+        // Create new task
+        const result = await tasksService.createTeamTask(teamId, currentUser.id, {
+          title: taskTitle.trim(),
+          description: taskDescription.trim(),
+          priority: taskPriority,
+          dueDate: taskDueDate,
+          assignedTo: taskAssignedTo,
+        });
+
+        if (result.success) {
+          setShowCreateTaskModal(false);
+          resetTaskForm();
+          await loadTeamTasks();
+          await loadTeamStats();
+          await loadTeamLeaderboard();
+        }
       }
     } catch (error) {
-      console.error('Error creating team task:', error);
+      console.error('Error saving team task:', error);
     } finally {
       setIsWorking(false);
     }
+  };
+
+  const openEditModal = (task) => {
+    setEditingTask(task);
+    setTaskTitle(task.title);
+    setTaskDescription(task.description || '');
+    setTaskPriority(task.priority);
+    const dueDate = new Date(task.dueDate);
+    setTaskDueDate(dueDate);
+    setTaskAssignedTo(task.assignedTo || null);
+    setShowCreateTaskModal(true);
   };
 
   const handleClaimTask = async (taskId) => {
@@ -178,6 +228,7 @@ export default function TeamTasksScreen() {
   };
 
   const resetTaskForm = () => {
+    setEditingTask(null);
     setTaskTitle('');
     setTaskDescription('');
     setTaskPriority('medium');
@@ -325,6 +376,12 @@ export default function TeamTasksScreen() {
                         {t('dueDate') || 'Due'}: {formatDate(task.dueDate)}
                       </Text>
                       <View style={styles.taskActions}>
+                        <TouchableOpacity
+                          style={styles.editButton}
+                          onPress={() => openEditModal(task)}
+                        >
+                          <Ionicons name="create-outline" size={16} color={colors.textMuted} />
+                        </TouchableOpacity>
                         {canClaim && (
                           <TouchableOpacity
                             style={styles.claimButton}
@@ -393,7 +450,9 @@ export default function TeamTasksScreen() {
           style={styles.modalOverlay}
         >
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{t('createTeamTask') || 'Create Team Task'}</Text>
+            <Text style={styles.modalTitle}>
+              {editingTask ? (t('editTeamTask') || 'Edit Team Task') : (t('createTeamTask') || 'Create Team Task')}
+            </Text>
             
             <Text style={styles.inputLabel}>{t('title') || 'Title'}</Text>
             <TextInput
@@ -466,11 +525,13 @@ export default function TeamTasksScreen() {
                   <View style={styles.calendarModalContent}>
                     <Calendar
                       onDayPress={(day) => {
-                        setTaskDueDate(new Date(day.dateString));
+                        const selectedDate = parseLocalDateString(day.dateString);
+                        setTaskDueDate(selectedDate);
                         setShowDatePicker(false);
                       }}
+                      current={toLocalDateString(taskDueDate)}
                       markedDates={{
-                        [taskDueDate.toISOString().split('T')[0]]: { selected: true },
+                        [toLocalDateString(taskDueDate)]: { selected: true },
                       }}
                       theme={{
                         backgroundColor: colors.surface,
@@ -558,7 +619,9 @@ export default function TeamTasksScreen() {
                 {isWorking ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                  <Text style={styles.modalSaveText}>{t('create') || 'Create'}</Text>
+                  <Text style={styles.modalSaveText}>
+                    {editingTask ? (t('save') || 'Save') : (t('create') || 'Create')}
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -767,6 +830,11 @@ const createStyles = (colors) => StyleSheet.create({
   taskActions: {
     flexDirection: 'row',
     gap: 8,
+  },
+  editButton: {
+    padding: 6,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceAlt,
   },
   claimButton: {
     flexDirection: 'row',
