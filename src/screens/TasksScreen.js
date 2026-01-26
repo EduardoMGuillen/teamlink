@@ -59,9 +59,6 @@ export default function TasksScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('date'); // 'date', 'priority', 'status'
   const [isLoading, setIsLoading] = useState(false);
-  const [assignedTo, setAssignedTo] = useState(null); // null = self, userId = assign to other
-  const [availableUsers, setAvailableUsers] = useState([]);
-  const [showUserPicker, setShowUserPicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   React.useEffect(() => {
@@ -138,7 +135,6 @@ export default function TasksScreen() {
     const today = new Date();
     setTaskDueDate(today);
     setTempDate(today); // Initialize tempDate
-    setAssignedTo(null); // Reset assignment
     setShowModal(true);
   };
 
@@ -193,7 +189,7 @@ export default function TasksScreen() {
           dueDate: taskDueDate,
           status: 'pending',
           priority: taskPriority,
-          assignedTo: assignedTo || currentUser.id, // Assign to selected user or self
+          assignedTo: currentUser.id, // Individual tasks always assigned to creator
         });
         if (result.success) {
           await loadTasks();
@@ -634,39 +630,6 @@ export default function TasksScreen() {
                 )}
               </View>
 
-              {!editingTask && (
-                <>
-                  <Text style={styles.label}>{t('assignTo') || 'Assign To'}</Text>
-                  {Platform.OS === 'ios' ? (
-                    <TouchableOpacity
-                      style={styles.pickerButton}
-                      onPress={() => setShowUserPicker(true)}
-                    >
-                      <Text style={styles.pickerButtonText}>
-                        {assignedTo
-                          ? availableUsers.find(u => u.id === assignedTo)?.name || 'Select User'
-                          : currentUser.name + ' (Me)'}
-                      </Text>
-                      <Ionicons name="chevron-down" size={20} color="#007AFF" />
-                    </TouchableOpacity>
-                  ) : (
-                    <View style={styles.pickerContainer}>
-                      <Picker
-                        selectedValue={assignedTo || currentUser.id}
-                        onValueChange={(value) => setAssignedTo(value === currentUser.id ? null : value)}
-                        style={styles.picker}
-                      >
-                        <Picker.Item label={`${currentUser.name} (Me)`} value={currentUser.id} />
-                        {availableUsers
-                          .filter(u => u.id !== currentUser.id)
-                          .map((user) => (
-                            <Picker.Item key={user.id} label={user.name} value={user.id} />
-                          ))}
-                      </Picker>
-                    </View>
-                  )}
-                </>
-              )}
 
               <Text style={styles.label}>{t('priority')}</Text>
               <View style={styles.priorityButtons}>
@@ -819,41 +782,6 @@ export default function TasksScreen() {
         </Modal>
       )}
 
-      {/* User Picker Modal for iOS */}
-      {Platform.OS === 'ios' && (
-        <Modal
-          visible={showUserPicker}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setShowUserPicker(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <TouchableOpacity onPress={() => setShowUserPicker(false)}>
-                  <Text style={styles.modalCancel}>{t('cancel')}</Text>
-                </TouchableOpacity>
-                <Text style={styles.modalTitle}>{t('assignTo') || 'Assign To'}</Text>
-                <TouchableOpacity onPress={() => setShowUserPicker(false)}>
-                  <Text style={styles.modalDone}>{t('save')}</Text>
-                </TouchableOpacity>
-              </View>
-              <Picker
-                selectedValue={assignedTo || currentUser.id}
-                onValueChange={(value) => setAssignedTo(value === currentUser.id ? null : value)}
-                style={styles.modalPicker}
-              >
-                <Picker.Item label={`${currentUser.name} (Me)`} value={currentUser.id} />
-                {availableUsers
-                  .filter(u => u.id !== currentUser.id)
-                  .map((user) => (
-                    <Picker.Item key={user.id} label={user.name} value={user.id} />
-                  ))}
-              </Picker>
-            </View>
-          </View>
-        </Modal>
-      )}
     </SafeAreaView>
   );
 }
