@@ -1,0 +1,442 @@
+================================================================================
+                    EXPLICACIÓN: CÓMO FUNCIONA EL TIME CLOCK
+                    Con Geolocalización y Captura de Foto
+================================================================================
+
+FECHA: Enero 2025
+VERSIÓN: V1.1 - Fase 1 Completada
+
+================================================================================
+1. ARQUITECTURA GENERAL
+================================================================================
+
+El Time Clock está compuesto por:
+
+1. PANTALLA: TimeClockScreen.js
+   - Interfaz de usuario
+   - Manejo de estado local
+   - Interacción con el usuario
+
+2. SERVICIO: shiftsService.js
+   - Lógica de negocio
+   - Comunicación con Supabase
+   - Subida de fotos a Storage
+
+3. BASE DE DATOS: Tabla "shifts"
+   - Almacena registros de clock in/out
+   - Campos: clock_in, clock_out, location, duration
+   - NUEVOS: latitude, longitude, photo_url
+
+4. STORAGE: Supabase Storage bucket "team-files"
+   - Almacena fotos capturadas
+   - Estructura: shift-photos/{userId}/{timestamp}.{ext}
+
+================================================================================
+2. FLUJO DE CLOCK IN (CHECK-IN)
+================================================================================
+
+PASO 1: Usuario presiona botón "Clock In"
+   └─> Se deshabilita el botón
+   └─> Se muestra loading state
+
+PASO 2: Obtener Ubicación GPS
+   └─> Solicitar permisos de ubicación (expo-location)
+   └─> Si permisos denegados: continuar sin ubicación (no bloquea)
+   └─> Obtener coordenadas: latitude, longitude
+   └─> Manejar errores gracefully
+
+PASO 3: Capturar Foto (solo en móvil)
+   └─> Solicitar permisos de cámara (expo-image-picker)
+   └─> Si permisos denegados: continuar sin foto (no bloquea)
+   └─> Abrir cámara nativa
+   └─> Usuario puede cancelar (retorna null)
+   └─> Si captura: obtener URI de la foto
+   └─> Detectar tipo MIME (JPEG, PNG, HEIC, HEIF)
+
+PASO 4: Subir Foto a Storage (si se capturó)
+   └─> Detectar formato de imagen desde MIME type o URI
+   └─> Crear nombre de archivo: shift-photos/{userId}/{timestamp}.{ext}
+   └─> Convertir URI a Blob
+   └─> Subir a Supabase Storage bucket "team-files"
+   └─> Obtener URL pública de la foto
+   └─> Si falla: continuar sin foto (no bloquea clock in)
+
+PASO 5: Crear Registro en Base de Datos
+   └─> Validar usuario autenticado
+   └─> Verificar que no haya turno activo
+   └─> Insertar en tabla "shifts":
+      * user_id
+      * clock_in (timestamp actual)
+      * location (seleccionada por usuario)
+      * latitude (si se obtuvo)
+      * longitude (si se obtuvo)
+      * photo_url (si se subió foto)
+   └─> Retornar shift creado
+
+PASO 6: Actualizar UI
+   └─> Mostrar estado "Clocked In"
+   └─> Mostrar tiempo de check-in
+   └─> Iniciar contador de tiempo transcurrido
+   └─> Guardar estado en AsyncStorage (backup local)
+   └─> Recargar historial de shifts
+
+================================================================================
+3. FLUJO DE CLOCK OUT (CHECK-OUT)
+================================================================================
+
+PASO 1: Usuario presiona botón "Clock Out"
+   └─> Validar que hay turno activo
+   └─> Se deshabilita el botón
+   └─> Se muestra loading state
+
+PASO 2: Calcular Duración
+   └─> Obtener turno activo de BD
+   └─> Calcular diferencia: clock_out - clock_in
+   └─> Convertir a horas decimales (ej: 8.5 horas)
+
+PASO 3: Actualizar Registro en BD
+   └─> Actualizar turno con:
+      * clock_out (timestamp actual)
+      * duration (horas calculadas)
+   └─> Retornar shift actualizado
+
+PASO 4: Actualizar UI
+   └─> Mostrar estado "Clocked Out"
+   └─> Limpiar contador de tiempo
+   └─> Limpiar AsyncStorage
+   └─> Recargar historial de shifts
+   └─> Actualizar resumen semanal de horas
+
+================================================================================
+4. DETALLES TÉCNICOS
+================================================================================
+
+4.1 GEOLOCALIZACIÓN
+-------------------
+Librería: expo-location
+
+Web:
+- Usa Geolocation API del navegador
+- Solicita permisos automáticamente
+- Precisión: Balanced (balance entre precisión y batería)
+
+Móvil (iOS/Android):
+- Usa GPS nativo del dispositivo
+- Precisión: Balanced
+- Maneja permisos con requestForegroundPermissionsAsync()
+
+Manejo de Errores:
+- Si permisos denegados: retorna null, null (no bloquea)
+- Si GPS no disponible: retorna null, null (no bloquea)
+- Muestra alerta informativa pero permite continuar
+
+4.2 CAPTURA DE FOTO
+-------------------
+Librería: expo-image-picker
+
+Móvil (iOS/Android):
+- Abre cámara nativa del dispositivo
+- Permite editar/recortar antes de confirmar
+- Aspect ratio: 4:3
+- Calidad: 0.8 (80% - balance calidad/tamaño)
+
+Formatos Soportados:
+- JPEG (Android, Web)
+- PNG (todos)
+- HEIC/HEIF (iOS nativo - más eficiente)
+
+Detección de Formato:
+1. Intenta obtener mimeType del asset
+2. Si no está disponible, detecta desde URI
+3. Usa el tipo correcto al subir a Storage
+
+Web:
+- Actualmente no implementado (solo móvil)
+- Puede agregarse con webcam API o input file
+
+4.3 SUBIDA DE FOTOS
+--------------------
+Proceso:
+1. Detectar formato (JPEG, PNG, HEIC, HEIF)
+2. Crear nombre único: shift-photos/{userId}/{timestamp}.{ext}
+3. Convertir URI a Blob:
+   - Web: fetch(URI) -> blob
+   - Móvil: fetch(URI local) -> blob
+4. Subir a Supabase Storage:
+   - Bucket: "team-files"
+   - Content-Type según formato detectado
+5. Obtener URL pública
+6. Guardar URL en campo photo_url de shifts
+
+Manejo de Errores:
+- Si bucket no existe: retorna null (no bloquea)
+- Si falla subida: retorna null (no bloquea)
+- Logs de error para debugging
+
+4.4 BASE DE DATOS
+-----------------
+Tabla: shifts
+
+Campos Originales:
+- id (BIGSERIAL)
+- user_id (UUID)
+- clock_in (TIMESTAMP)
+- clock_out (TIMESTAMP, nullable)
+- location (TEXT)
+- duration (DECIMAL)
+
+Campos Nuevos (migration):
+- latitude (DECIMAL(10, 8), nullable)
+- longitude (DECIMAL(11, 8), nullable)
+- photo_url (TEXT, nullable)
+
+Políticas RLS:
+- Usuarios solo pueden ver/crear sus propios shifts
+- Verificación de autenticación en cada operación
+
+4.5 ALMACENAMIENTO LOCAL
+------------------------
+AsyncStorage:
+- Guarda estado de clock in (backup)
+- Permite recuperar estado si app se cierra
+- Clave: '@teamlink_clock_state'
+- Datos: { isClockedIn, clockInTime, location }
+
+Sincronización:
+- Al iniciar app, verifica turno activo en BD
+- Si hay turno activo en BD, restaura estado local
+- Si no hay turno activo, limpia estado local
+
+================================================================================
+5. INTERFAZ DE USUARIO
+================================================================================
+
+5.1 ESTADOS VISUALES
+--------------------
+Clock In (No trabajando):
+- Botón verde "Clock In"
+- Selector de ubicación visible
+- Reloj mostrando hora actual
+- Sin contador de tiempo
+
+Clock Out (Trabajando):
+- Botón rojo "Clock Out"
+- Muestra hora de check-in
+- Contador de tiempo transcurrido (actualiza cada segundo)
+- Selector de ubicación oculto
+
+Loading States:
+- Botón deshabilitado con spinner
+- Mensajes: "Getting location...", "Capturing photo..."
+
+5.2 HISTORIAL DE SHIFTS
+------------------------
+Muestra últimos 5 shifts completados:
+- Fecha (hoy, ayer, o fecha completa)
+- Horario (clock in - clock out)
+- Ubicación con icono
+- Coordenadas GPS (si disponibles)
+- Foto (si se capturó)
+- Duración en horas
+
+5.3 RESUMEN SEMANAL
+-------------------
+- Total de horas trabajadas esta semana
+- Calculado desde domingo de la semana actual
+- Solo incluye shifts completados (con clock_out)
+
+5.4 TEMAS Y ESTILOS
+-------------------
+- Integrado con sistema de temas de la app
+- Soporta Light, Dark, y temas Pastel
+- Colores dinámicos según tema seleccionado
+- Sombras y bordes redondeados
+- Responsive para web y móvil
+
+================================================================================
+6. CASOS EDGE Y MANEJO DE ERRORES
+================================================================================
+
+6.1 PERMISOS DENEGADOS
+----------------------
+Ubicación:
+- Muestra alerta informativa
+- Permite continuar sin ubicación
+- Clock in se guarda sin coordenadas
+
+Cámara:
+- Muestra alerta informativa
+- Permite continuar sin foto
+- Clock in se guarda sin foto
+
+6.2 TURNO ACTIVO EXISTENTE
+--------------------------
+Al intentar clock in:
+- Verifica si hay turno activo (sin clock_out)
+- Si existe: muestra error
+- Usuario debe hacer clock out primero
+
+6.3 ERRORES DE RED
+------------------
+Clock In:
+- Si falla: muestra error, no cambia estado
+- Usuario puede reintentar
+
+Clock Out:
+- Si falla: muestra error, mantiene estado "clocked in"
+- Usuario puede reintentar
+
+Subida de Foto:
+- Si falla: continúa sin foto
+- No bloquea el clock in
+- Logs de error para debugging
+
+6.4 SINCRONIZACIÓN
+------------------
+Al iniciar app:
+- Verifica turno activo en BD
+- Si hay turno activo: restaura estado
+- Si no hay: limpia estado local
+- Previene estados inconsistentes
+
+================================================================================
+7. CONFIGURACIÓN REQUERIDA
+================================================================================
+
+7.1 BASE DE DATOS
+-----------------
+EJECUTAR MIGRACIÓN:
+1. Ir a Supabase Dashboard
+2. SQL Editor
+3. Ejecutar: database/add_shifts_location_photo.sql
+4. Verificar que se agregaron los campos:
+   - latitude
+   - longitude
+   - photo_url
+
+7.2 SUPABASE STORAGE
+--------------------
+CREAR BUCKET:
+1. Ir a Storage en Supabase Dashboard
+2. Crear nuevo bucket: "team-files"
+3. Configuración:
+   - Public bucket: ON
+   - Restrict file size: ON (5-10 MB)
+   - Restrict MIME types: ON
+   - Tipos permitidos:
+     * image/jpeg
+     * image/jpg
+     * image/png
+     * image/heic
+     * image/heif
+
+POLÍTICAS DE ACCESO:
+- Los usuarios pueden subir sus propias fotos
+- Las fotos son públicas (URLs públicas)
+- Considerar RLS en el futuro si se necesita privacidad
+
+================================================================================
+8. FLUJO DE DATOS COMPLETO
+================================================================================
+
+EJEMPLO: Clock In con ubicación y foto
+
+1. Usuario → TimeClockScreen
+   └─> Presiona "Clock In"
+   └─> Selecciona ubicación: "Main Office"
+
+2. TimeClockScreen → getCurrentLocation()
+   └─> Solicita permisos
+   └─> Obtiene: { latitude: 40.7128, longitude: -74.0060 }
+
+3. TimeClockScreen → capturePhoto()
+   └─> Solicita permisos cámara
+   └─> Captura foto
+   └─> Retorna: photoUri, mimeType: "image/heic"
+
+4. TimeClockScreen → shiftsService.uploadPhoto()
+   └─> Detecta formato: HEIC
+   └─> Crea nombre: shift-photos/{userId}/1234567890.heic
+   └─> Convierte a Blob
+   └─> Sube a Storage
+   └─> Retorna: "https://...supabase.co/storage/v1/object/public/team-files/..."
+
+5. TimeClockScreen → shiftsService.clockIn()
+   └─> Parámetros:
+      * userId
+      * location: "Main Office"
+      * latitude: 40.7128
+      * longitude: -74.0060
+      * photoUrl: "https://..."
+   └─> Inserta en BD
+   └─> Retorna: { success: true, shift: {...} }
+
+6. TimeClockScreen → Actualiza UI
+   └─> Muestra "Clocked In"
+   └─> Inicia contador
+   └─> Guarda en AsyncStorage
+
+7. BD → Almacena:
+   {
+     id: 123,
+     user_id: "uuid...",
+     clock_in: "2025-01-25T10:00:00Z",
+     location: "Main Office",
+     latitude: 40.7128,
+     longitude: -74.0060,
+     photo_url: "https://...",
+     clock_out: null,
+     duration: null
+   }
+
+================================================================================
+9. VENTAJAS DE ESTA IMPLEMENTACIÓN
+================================================================================
+
+✅ ROBUSTEZ:
+- No bloquea clock in si falla ubicación o foto
+- Manejo de errores completo
+- Estados consistentes
+
+✅ FLEXIBILIDAD:
+- Soporta múltiples formatos de imagen
+- Funciona en web y móvil
+- Permisos opcionales
+
+✅ UX:
+- Feedback visual claro
+- Loading states informativos
+- No interrumpe flujo si algo falla
+
+✅ SEGURIDAD:
+- Validación de usuario autenticado
+- Verificación de permisos
+- RLS en base de datos
+
+✅ PERFORMANCE:
+- Subida de foto asíncrona
+- No bloquea UI
+- Caché local con AsyncStorage
+
+================================================================================
+10. PRÓXIMOS PASOS
+================================================================================
+
+PENDIENTE:
+1. ⚠️ Ejecutar migración SQL en Supabase
+2. ⚠️ Configurar bucket "team-files" en Supabase Storage
+3. ⚠️ Testing en dispositivos reales (iOS y Android)
+4. ⚠️ Testing de permisos denegados
+5. ⚠️ Testing de casos edge
+6. ⚠️ Implementar captura de foto en web (opcional)
+
+MEJORAS FUTURAS (V1.2):
+- Validación de ubicación (radio permitido)
+- Conversión automática de HEIC a JPEG (para compatibilidad)
+- Compresión de imágenes antes de subir
+- Preview de foto antes de confirmar
+- Edición de foto antes de subir
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
