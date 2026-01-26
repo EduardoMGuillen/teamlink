@@ -132,7 +132,7 @@ export default function SignUpScreen() {
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={Platform.OS !== 'web'}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.content}>
@@ -614,17 +614,22 @@ const createStyles = (colors) => StyleSheet.create({
     backgroundColor: colors.background,
     ...(Platform.OS === 'web' && {
       height: '100vh',
-      overflow: 'hidden',
+      position: 'relative',
+      display: 'flex',
+      flexDirection: 'column',
     }),
   },
   scrollView: {
     flex: 1,
     ...(Platform.OS === 'web' && {
-      height: '100vh',
-      overflowY: 'auto',
+      flex: 1,
+      overflowY: 'scroll',
       overflowX: 'hidden',
       WebkitOverflowScrolling: 'touch',
-      flex: 1,
+      height: '100%',
+      maxHeight: '100vh',
+      // Force scrollbar to be visible
+      scrollbarWidth: 'thin',
     }),
   },
   scrollContent: {

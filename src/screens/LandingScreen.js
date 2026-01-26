@@ -281,7 +281,7 @@ const createStyles = (colors) => StyleSheet.create({
       height: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      overflow: 'hidden',
+      position: 'relative',
     }),
   },
   header: {
@@ -435,13 +435,16 @@ const createStyles = (colors) => StyleSheet.create({
   scrollView: {
     flex: 1,
     ...(isWeb && {
-      height: '100%',
-      overflowY: 'auto',
+      flex: 1,
+      overflowY: 'scroll',
       overflowX: 'hidden',
       WebkitOverflowScrolling: 'touch',
       cursor: 'default',
       overscrollBehavior: 'contain',
-      flex: 1,
+      height: '100%',
+      maxHeight: '100vh',
+      // Force scrollbar to be visible
+      scrollbarWidth: 'thin',
     }),
   },
   scrollContent: {
