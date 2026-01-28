@@ -420,9 +420,17 @@ export const teamsService = {
     }
   },
 
-  // Aprobar solicitud
+  // Aprobar solicitud: agregar como miembro primero, luego marcar approved
   async approveJoinRequest(requestId, teamId, userId) {
     try {
+      const addResult = await this.addMember(teamId, userId, 'member');
+      if (!addResult.success) {
+        const alreadyMember = addResult.error && /unique|duplicate|23505/i.test(addResult.error);
+        if (!alreadyMember) {
+          return addResult;
+        }
+      }
+
       const { error: updateError } = await supabase
         .from('team_join_requests')
         .update({ status: 'approved' })
@@ -432,8 +440,7 @@ export const teamsService = {
         console.error('Error approving join request:', updateError);
         return { success: false, error: updateError.message };
       }
-
-      return await this.addMember(teamId, userId, 'member');
+      return { success: true };
     } catch (error) {
       console.error('Approve join request error:', error);
       return { success: false, error: error.message };
