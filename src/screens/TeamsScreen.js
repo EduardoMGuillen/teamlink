@@ -1226,11 +1226,19 @@ const createStyles = (colors) => StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.4)',
     justifyContent: 'center',
     padding: 20,
+    ...(Platform.OS === 'web' && {
+      alignItems: 'center',
+    }),
   },
   modalContent: {
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     padding: 20,
+    width: '100%',
+    ...(Platform.OS === 'web' && {
+      maxWidth: 520,
+      width: '100%',
+    }),
   },
   modalTitle: {
     fontSize: 18,
