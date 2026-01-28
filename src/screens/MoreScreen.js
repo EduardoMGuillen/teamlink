@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -49,12 +50,20 @@ export default function MoreScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.content, isWeb && styles.contentWeb]}>
-        {/* Profile Section */}
-        <View style={styles.profileSection}>
+        {/* Profile Section – tap to edit */}
+        <TouchableOpacity
+          style={styles.profileSection}
+          onPress={() => navigation.navigate('EditProfile')}
+          activeOpacity={0.8}
+        >
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {currentUser.name.charAt(0).toUpperCase()}
-            </Text>
+            {currentUser.avatar_url ? (
+              <Image source={{ uri: currentUser.avatar_url }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarText}>
+                {(currentUser.name || 'U').charAt(0).toUpperCase()}
+              </Text>
+            )}
           </View>
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{currentUser.name}</Text>
@@ -63,7 +72,8 @@ export default function MoreScreen() {
               <Text style={styles.profileDepartment}>{currentUser.department}</Text>
             )}
           </View>
-        </View>
+          <Ionicons name="chevron-forward" size={22} color={colors.textMuted} />
+        </TouchableOpacity>
 
         {/* Menu Sections */}
         {menuSections.map((section, sectionIndex) => (
@@ -145,6 +155,11 @@ const createStyles = (colors) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
   avatarText: {
     fontSize: 24,

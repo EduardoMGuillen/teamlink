@@ -31,6 +31,7 @@ import MotivationSettingsScreen from './src/screens/MotivationSettingsScreen';
 import TeamTasksScreen from './src/screens/TeamTasksScreen';
 import TeamMembersScreen from './src/screens/TeamMembersScreen';
 import TeamJoinRequestsScreen from './src/screens/TeamJoinRequestsScreen';
+import EditProfileScreen from './src/screens/EditProfileScreen';
 
 const Tab = createBottomTabNavigator();
 // Usar Stack Navigator nativo para móvil, Stack Navigator regular para web
@@ -140,6 +141,7 @@ function AppNavigator() {
         TeamTasks: 'team-tasks',
         TeamMembers: 'team-members',
         TeamJoinRequests: 'team-join-requests',
+        EditProfile: 'edit-profile',
         ConnectionTest: 'connection-test',
       },
     },
@@ -181,6 +183,11 @@ function AppNavigator() {
         {isAuthenticated ? (
           <>
             <Stack.Screen name="MainTabs" component={MainTabs} />
+            <Stack.Screen 
+              name="EditProfile" 
+              component={EditProfileScreen}
+              options={{ headerShown: false }}
+            />
             <Stack.Screen 
               name="Settings" 
               component={SettingsScreen}

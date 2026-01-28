@@ -246,10 +246,84 @@ export const authService = {
         gender: userData.gender,
         role: userData.role || 'employee',
         department: userData.department || 'Operations',
+        avatar_url: userData.avatar_url || null,
       };
     } catch (error) {
       console.error('Get current user error:', error);
       return null;
+    }
+  },
+
+  // Subir foto de perfil y devolver URL pública
+  async uploadAvatar(userId, photoUri, mimeType = null) {
+    try {
+      let ext = 'jpg';
+      let contentType = 'image/jpeg';
+      if (mimeType?.includes('png')) {
+        ext = 'png';
+        contentType = 'image/png';
+      } else if (mimeType?.includes('heic') || mimeType?.includes('heif')) {
+        ext = 'heic';
+        contentType = 'image/heic';
+      }
+      const fileName = `avatars/${userId}.${ext}`;
+      const response = await fetch(photoUri);
+      const fileBody = await response.blob();
+      const { error } = await supabase.storage
+        .from('team-files')
+        .upload(fileName, fileBody, { contentType, upsert: true });
+      if (error) {
+        console.error('Error uploading avatar:', error);
+        return null;
+      }
+      const { data: urlData } = supabase.storage.from('team-files').getPublicUrl(fileName);
+      return urlData?.publicUrl || null;
+    } catch (err) {
+      console.error('uploadAvatar error:', err);
+      return null;
+    }
+  },
+
+  // Actualizar perfil en public.users
+  async updateProfile(userId, fields) {
+    try {
+      const allowed = ['name', 'username', 'phone', 'department', 'avatar_url', 'city', 'country', 'timezone'];
+      const payload = {};
+      for (const k of allowed) {
+        if (fields[k] !== undefined) payload[k] = fields[k] === '' ? null : fields[k];
+      }
+      if (Object.keys(payload).length === 0) return { success: true, user: null };
+      const { data, error } = await supabase
+        .from('users')
+        .update({ ...payload, updated_at: new Date().toISOString() })
+        .eq('id', userId)
+        .select()
+        .single();
+      if (error) {
+        console.error('updateProfile error:', error);
+        return { success: false, error: error.message };
+      }
+      return {
+        success: true,
+        user: {
+          id: data.id,
+          email: data.email,
+          name: data.name,
+          username: data.username,
+          phone: data.phone,
+          department: data.department,
+          avatar_url: data.avatar_url,
+          city: data.city,
+          country: data.country,
+          timezone: data.timezone,
+          role: data.role,
+          date_of_birth: data.date_of_birth,
+          gender: data.gender,
+        },
+      };
+    } catch (err) {
+      console.error('updateProfile error:', err);
+      return { success: false, error: err.message };
     }
   },
 
