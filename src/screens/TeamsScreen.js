@@ -44,6 +44,7 @@ export default function TeamsScreen() {
   const [teamDepartment, setTeamDepartment] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [joinStatus, setJoinStatus] = useState('');
+  const [joinStatusIsError, setJoinStatusIsError] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteStatus, setInviteStatus] = useState('');
   const [memberRole, setMemberRole] = useState('member');
@@ -202,15 +203,37 @@ export default function TeamsScreen() {
   };
 
   const handleJoinByCode = async () => {
-    if (!currentUser?.id || !joinCode.trim()) return;
+    setJoinStatus('');
+    setJoinStatusIsError(false);
+    if (!currentUser?.id) {
+      setJoinStatus(t('loginRequired') || 'You must be logged in.');
+      setJoinStatusIsError(true);
+      return;
+    }
+    if (!joinCode.trim()) {
+      setJoinStatus(t('enterTeamCode') || 'Enter team code');
+      setJoinStatusIsError(true);
+      return;
+    }
     setIsWorking(true);
     try {
       const result = await teamsService.requestJoinByCode(joinCode, currentUser.id);
       if (result.success) {
         setJoinStatus(t('joinRequestSent') || 'Request sent. Waiting for approval.');
+        setJoinStatusIsError(false);
         setJoinCode('');
+      } else {
+        const errMsg =
+          result.error === 'You already have a pending request for this team.'
+            ? (t('joinRequestAlreadyPending') || result.error)
+            : (result.error || t('joinRequestFailed') || 'Could not send request.');
+        setJoinStatus(errMsg);
+        setJoinStatusIsError(true);
       }
     } catch (error) {
+      const msg = error?.message || (t('joinRequestFailed') || 'Could not send request. Try again.');
+      setJoinStatus(msg);
+      setJoinStatusIsError(true);
       console.error('Error joining team:', error);
     } finally {
       setIsWorking(false);
@@ -745,7 +768,11 @@ export default function TeamsScreen() {
               onChangeText={setJoinCode}
               autoCapitalize="characters"
             />
-            {!!joinStatus && <Text style={styles.joinStatus}>{joinStatus}</Text>}
+            {!!joinStatus && (
+              <Text style={[styles.joinStatus, joinStatusIsError && styles.joinStatusError]}>
+                {joinStatus}
+              </Text>
+            )}
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalCancel]}
@@ -753,6 +780,7 @@ export default function TeamsScreen() {
                   setShowJoinModal(false);
                   setJoinCode('');
                   setJoinStatus('');
+                  setJoinStatusIsError(false);
                 }}
               >
                 <Text style={styles.modalCancelText}>{t('cancel')}</Text>
@@ -1289,6 +1317,9 @@ const createStyles = (colors) => StyleSheet.create({
     color: colors.primary,
     fontSize: 12,
     fontWeight: '600',
+  },
+  joinStatusError: {
+    color: colors.danger,
   },
   roleRow: {
     flexDirection: 'row',

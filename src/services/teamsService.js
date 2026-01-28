@@ -344,7 +344,11 @@ export const teamsService = {
 
       if (requestError) {
         console.error('Error creating join request:', requestError);
-        return { success: false, error: requestError.message };
+        const msg =
+          requestError.code === '23505'
+            ? 'You already have a pending request for this team.'
+            : requestError.message;
+        return { success: false, error: msg };
       }
 
       return { success: true, teamId: team.id };

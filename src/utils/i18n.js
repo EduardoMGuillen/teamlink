@@ -121,6 +121,9 @@ const translations = {
     enterTeamCode: 'Enter team code',
     requestToJoin: 'Request to Join',
     joinRequestSent: 'Request sent. Waiting for approval.',
+    joinRequestFailed: 'Could not send request. Try again.',
+    joinRequestAlreadyPending: 'You already have a pending request for this team.',
+    loginRequired: 'You must be logged in.',
     joinRequests: 'Join Requests',
     noJoinRequests: 'No pending requests',
     // Team Tasks
@@ -424,6 +427,9 @@ const translations = {
     enterTeamCode: 'Ingresa el código del equipo',
     requestToJoin: 'Solicitar unirse',
     joinRequestSent: 'Solicitud enviada. Espera aprobación.',
+    joinRequestFailed: 'No se pudo enviar la solicitud. Intenta de nuevo.',
+    joinRequestAlreadyPending: 'Ya tienes una solicitud pendiente para este equipo.',
+    loginRequired: 'Debes iniciar sesión.',
     joinRequests: 'Solicitudes de ingreso',
     noJoinRequests: 'No hay solicitudes pendientes',
     // Team Tasks
@@ -722,6 +728,9 @@ const translations = {
     enterTeamCode: "Entrez le code d'équipe",
     requestToJoin: 'Demander à rejoindre',
     joinRequestSent: "Demande envoyée. En attente d'approbation.",
+    joinRequestFailed: "Impossible d'envoyer la demande. Réessayez.",
+    joinRequestAlreadyPending: 'Vous avez déjà une demande en attente pour cette équipe.',
+    loginRequired: 'Vous devez être connecté.',
     joinRequests: 'Demandes',
     noJoinRequests: 'Aucune demande en attente',
     // Team Tasks
