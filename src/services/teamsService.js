@@ -370,39 +370,48 @@ export const teamsService = {
   // Obtener solicitudes pendientes
   async getJoinRequests(teamId) {
     try {
-      const { data, error } = await supabase
+      // Intentar primero sin join: evita que un embed fallido (RLS/relación) deje la lista vacía
+      const { data: dataSimple, error: errSimple } = await supabase
+        .from('team_join_requests')
+        .select('id, status, created_at, user_id')
+        .eq('team_id', teamId)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (errSimple) {
+        console.error('Error fetching join requests:', errSimple);
+        return [];
+      }
+      if (!dataSimple?.length) {
+        return [];
+      }
+
+      // Opcional: intentar cargar nombres con join; si falla, la lista ya tiene id/user_id
+      const { data: dataWithUsers } = await supabase
         .from('team_join_requests')
         .select(`
           id,
-          status,
-          created_at,
           user_id,
-          users (
-            id,
-            name,
-            email
-          )
+          users ( id, name, email )
         `)
         .eq('team_id', teamId)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching join requests:', error);
-        return [];
-      }
+      const byId = (dataWithUsers || []).reduce((acc, row) => {
+        acc[row.id] = row.users ?? row.user ?? null;
+        return acc;
+      }, {});
 
-      return data.map(item => {
-        const usr = item.users ?? item.user ?? null;
+      return dataSimple.map(item => {
+        const usr = byId[item.id] ?? null;
         return {
           id: item.id,
           userId: item.user_id,
           createdAt: item.created_at,
-          user: usr ? {
-            id: usr.id,
-            name: usr.name,
-            email: usr.email,
-          } : { id: item.user_id, name: null, email: null },
+          user: usr
+            ? { id: usr.id, name: usr.name, email: usr.email }
+            : { id: item.user_id, name: null, email: null },
         };
       });
     } catch (error) {
