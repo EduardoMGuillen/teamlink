@@ -176,9 +176,10 @@ const createStyles = (colors) => StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 24,
+    flexGrow: 0,
   },
   scrollContentWeb: {
-    flexGrow: 1,
+    paddingBottom: 24,
   },
   content: {
     width: '100%',

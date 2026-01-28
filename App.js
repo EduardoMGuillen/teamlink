@@ -196,21 +196,6 @@ function AppNavigator() {
               component={PrivacyPolicyScreen}
               options={{ 
                 headerShown: false,
-                ...(Platform.OS === 'web' && {
-                  headerShown: true,
-                  title: 'Privacy Policy',
-                  headerBackTitleVisible: false,
-                  headerStyle: {
-                    backgroundColor: '#fff',
-                    borderBottomWidth: 1,
-                    borderBottomColor: '#E5E5EA',
-                  },
-                  headerTintColor: '#007AFF',
-                  headerTitleStyle: {
-                    fontWeight: '600',
-                    fontSize: 18,
-                  },
-                }),
               }}
             />
             <Stack.Screen 
@@ -218,21 +203,6 @@ function AppNavigator() {
               component={TermsOfServiceScreen}
               options={{ 
                 headerShown: false,
-                ...(Platform.OS === 'web' && {
-                  headerShown: true,
-                  title: 'Terms of Service',
-                  headerBackTitleVisible: false,
-                  headerStyle: {
-                    backgroundColor: '#fff',
-                    borderBottomWidth: 1,
-                    borderBottomColor: '#E5E5EA',
-                  },
-                  headerTintColor: '#007AFF',
-                  headerTitleStyle: {
-                    fontWeight: '600',
-                    fontSize: 18,
-                  },
-                }),
               }}
             />
             <Stack.Screen 
@@ -240,21 +210,6 @@ function AppNavigator() {
               component={AboutScreen}
               options={{ 
                 headerShown: false,
-                ...(Platform.OS === 'web' && {
-                  headerShown: true,
-                  title: 'About',
-                  headerBackTitleVisible: false,
-                  headerStyle: {
-                    backgroundColor: '#fff',
-                    borderBottomWidth: 1,
-                    borderBottomColor: '#E5E5EA',
-                  },
-                  headerTintColor: '#007AFF',
-                  headerTitleStyle: {
-                    fontWeight: '600',
-                    fontSize: 18,
-                  },
-                }),
               }}
             />
             <Stack.Screen 
