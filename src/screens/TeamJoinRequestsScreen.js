@@ -118,13 +118,17 @@ export default function TeamJoinRequestsScreen() {
               {joinRequests.map(request => (
                 <View key={request.id} style={styles.requestCard}>
                   <View style={styles.requestInfo}>
-                    <View style={styles.requestAvatar}>
-                      <Text style={styles.requestAvatarText}>
-                        {request.user?.name?.charAt(0).toUpperCase() || 'U'}
-                      </Text>
-                    </View>
+<View style={styles.requestAvatar}>
+                        <Text style={styles.requestAvatarText}>
+                          {(request.user?.name || request.user?.email?.split('@')[0] || 'U')
+                            .charAt(0)
+                            .toUpperCase()}
+                        </Text>
+                      </View>
                     <View style={styles.requestDetails}>
-                      <Text style={styles.requestName}>{request.user?.name || 'User'}</Text>
+                      <Text style={styles.requestName}>
+                        {request.user?.name || request.user?.email?.split('@')[0] || 'User'}
+                      </Text>
                       <Text style={styles.requestEmail}>{request.user?.email || ''}</Text>
                       <Text style={styles.requestDate}>
                         {new Date(request.createdAt).toLocaleDateString()}
