@@ -392,16 +392,19 @@ export const teamsService = {
         return [];
       }
 
-      return data.map(item => ({
-        id: item.id,
-        userId: item.user_id,
-        createdAt: item.created_at,
-        user: {
-          id: item.users?.id,
-          name: item.users?.name,
-          email: item.users?.email,
-        },
-      }));
+      return data.map(item => {
+        const usr = item.users ?? item.user ?? null;
+        return {
+          id: item.id,
+          userId: item.user_id,
+          createdAt: item.created_at,
+          user: usr ? {
+            id: usr.id,
+            name: usr.name,
+            email: usr.email,
+          } : { id: item.user_id, name: null, email: null },
+        };
+      });
     } catch (error) {
       console.error('Get join requests error:', error);
       return [];

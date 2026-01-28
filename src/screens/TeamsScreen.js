@@ -600,8 +600,8 @@ export default function TeamsScreen() {
                 </View>
               </TouchableOpacity>
 
-              {/* Join Requests Summary */}
-              {isManager && (
+              {/* Join Requests Summary – managers and leads */}
+              {canManageMembers && (
                 <TouchableOpacity
                   style={styles.summaryCard}
                   onPress={() => navigation.navigate('TeamJoinRequests', { 

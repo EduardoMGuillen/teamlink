@@ -72,17 +72,24 @@ export default function EditProfileScreen() {
     if (!currentUser?.id) return;
     setSaving(true);
     try {
-      let newAvatarUrl = avatarUrl;
-      if (avatarUri) {
-        const mime = avatarUri.toLowerCase().includes('.png') ? 'image/png' : 'image/jpeg';
-        newAvatarUrl = await authService.uploadAvatar(currentUser.id, avatarUri, mime);
-      }
-      const res = await authService.updateProfile(currentUser.id, {
+      const fields = {
         name: name.trim(),
         phone: phone.trim() || null,
         department: department.trim() || null,
-        avatar_url: newAvatarUrl,
-      });
+      };
+      if (avatarUri) {
+        const mime = avatarUri.toLowerCase().includes('.png') ? 'image/png' : 'image/jpeg';
+        const newAvatarUrl = await authService.uploadAvatar(currentUser.id, avatarUri, mime);
+        if (!newAvatarUrl) {
+          Alert.alert(
+            t('error') || 'Error',
+            t('avatarUploadFailed') || 'Could not upload photo. Check storage bucket "team-files" and run add_users_avatar_url.sql in Supabase.'
+          );
+          return;
+        }
+        fields.avatar_url = newAvatarUrl;
+      }
+      const res = await authService.updateProfile(currentUser.id, fields);
       if (!res.success) {
         Alert.alert(t('error') || 'Error', res.error || 'Could not update profile.');
         return;
