@@ -212,8 +212,9 @@ export default function DashboardScreen() {
           {/* Daily Motivation - Spark */}
           <DailyMotivation />
 
-        {/* Quick Actions */}
-        <View style={[styles.section, isWeb && styles.sectionWeb]}>
+        {/* Quick Actions + This Week: agrupados para evitar hueco en medio (p. ej. Android web) */}
+        <View style={styles.quickAndThisWeekBlock}>
+        <View style={[styles.section, isWeb && styles.sectionWeb, styles.sectionQuickActions]}>
           <Text style={styles.sectionTitle}>{t('quickActions')}</Text>
           <View style={[styles.quickActionsGrid, isWeb && styles.quickActionsGridWeb]}>
             {quickActions.map((action) => (
@@ -248,7 +249,7 @@ export default function DashboardScreen() {
         </View>
 
         {/* Stats */}
-        <View style={[styles.section, isWeb && styles.sectionWeb]}>
+        <View style={[styles.section, isWeb && styles.sectionWeb, styles.sectionThisWeek]}>
           <Text style={styles.sectionTitle}>{t('thisWeek') || 'This Week'}</Text>
           <View style={[styles.statsRow, isWeb && styles.statsRowWeb]}>
             {/* <View style={styles.statCard}>
@@ -262,6 +263,7 @@ export default function DashboardScreen() {
               <Text style={styles.statLabel}>{t('tasks')}</Text>
             </View>
           </View>
+        </View>
         </View>
 
         {/* Today's Activities */}
@@ -367,6 +369,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 24,
+    flexGrow: 0,
   },
   content: {
     width: '100%',
@@ -400,6 +403,15 @@ const createStyles = (colors) => StyleSheet.create({
   },
   sectionWeb: {
     paddingHorizontal: 0,
+  },
+  quickAndThisWeekBlock: {
+    gap: 4,
+  },
+  sectionQuickActions: {
+    paddingBottom: 8,
+  },
+  sectionThisWeek: {
+    paddingTop: 4,
   },
   sectionTitle: {
     fontSize: 18,

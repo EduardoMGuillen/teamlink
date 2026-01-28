@@ -140,30 +140,17 @@ export default function TeamTasksScreen() {
         // Actualizar campos básicos primero (incluyendo status)
         const result = await tasksService.updateTask(editingTask.id, updateData);
         
-        // Luego actualizar la asignación si cambió
+        // Siempre actualizar la asignación al editar (así el asignado se guarda correctamente)
         if (result.success) {
-          // Check if assignment changed
-          const currentAssignedTo = editingTask.assignedTo || null;
-          const newAssignedTo = taskAssignedTo;
-          
-          if (newAssignedTo === null && currentAssignedTo !== null) {
-            // Pasar a unassigned: necesitamos obtener el creador original
-            // Si la tarea tiene assigned_by, el creador original está en el user_id original
-            // Pero cuando está asignada, user_id es el asignado. Necesitamos el creador.
-            // Para tareas de equipo, podemos usar el user_id cuando assigned_by es null
-            // O necesitamos obtener el creador de otra manera
-            const unassignResult = await tasksService.updateTeamTaskAssignment(editingTask.id, null);
-            if (!unassignResult.success) {
-              console.error('Error unassigning task:', unassignResult.error);
-              Alert.alert('Error', unassignResult.error || 'Failed to unassign task');
-            }
-          } else if (newAssignedTo !== null && newAssignedTo !== currentAssignedTo) {
-            // Asignar a un usuario específico
-            const assignResult = await tasksService.updateTeamTaskAssignment(editingTask.id, newAssignedTo, currentUser.id);
-            if (!assignResult.success) {
-              console.error('Error assigning task:', assignResult.error);
-              Alert.alert('Error', assignResult.error || 'Failed to assign task');
-            }
+          const newAssignedTo = taskAssignedTo ?? null;
+          const assignResult = await tasksService.updateTeamTaskAssignment(
+            editingTask.id,
+            newAssignedTo,
+            currentUser.id
+          );
+          if (!assignResult.success) {
+            console.error('Error updating assignment:', assignResult.error);
+            Alert.alert('Error', assignResult.error || 'Failed to update assignment');
           }
         }
 
@@ -484,10 +471,16 @@ export default function TeamTasksScreen() {
       {/* Create Team Task Modal */}
       <Modal visible={showCreateTaskModal} transparent animationType="slide">
         <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.modalOverlay}
         >
-          <View style={styles.modalContent}>
+          <ScrollView
+            style={styles.modalScroll}
+            contentContainerStyle={styles.modalScrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={true}
+          >
+          <View style={[styles.modalContent, !isWeb && styles.modalContentMobile]}>
             <Text style={styles.modalTitle}>
               {editingTask ? (t('editTeamTask') || 'Edit Team Task') : (t('createTeamTask') || 'Create Team Task')}
             </Text>
@@ -693,6 +686,7 @@ export default function TeamTasksScreen() {
               </TouchableOpacity>
             </View>
           </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
@@ -990,11 +984,20 @@ const createStyles = (colors) => StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
   },
+  modalScroll: {
+    maxHeight: '90%',
+  },
+  modalScrollContent: {
+    paddingBottom: 24,
+    flexGrow: 1,
+  },
   modalContent: {
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     padding: 20,
-    maxHeight: '90%',
+  },
+  modalContentMobile: {
+    padding: 16,
   },
   modalTitle: {
     fontSize: 20,

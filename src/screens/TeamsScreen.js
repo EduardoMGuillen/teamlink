@@ -19,7 +19,7 @@ import { teamsService } from '../services/teamsService';
 import { updatesService } from '../services/updatesService';
 import { tasksService } from '../services/tasksService';
 import { shiftsService } from '../services/shiftsService';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 export default function TeamsScreen() {
   const { t } = useTranslation();
@@ -74,6 +74,12 @@ export default function TeamsScreen() {
   useEffect(() => {
     loadInvites();
   }, [currentUser]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (currentUser?.email && currentUser?.id) loadInvites();
+    }, [currentUser?.email, currentUser?.id])
+  );
 
   const selectedTeam = useMemo(
     () => teams.find(team => team.id === selectedTeamId),
@@ -354,6 +360,39 @@ export default function TeamsScreen() {
             </View>
           ) : teams.length === 0 ? (
             <View style={styles.emptyStateContainer}>
+              {pendingInvites.length > 0 && (
+                <View style={[styles.section, { paddingTop: 0 }]}>
+                  <Text style={styles.sectionTitle}>{t('receivedInvitations') || t('invitations') || 'Invitaciones Recibidas'}</Text>
+                  <View style={styles.requestsList}>
+                    {pendingInvites.map(invite => (
+                      <View key={invite.id} style={styles.requestCard}>
+                        <View>
+                          <Text style={styles.searchTitle}>{invite.team?.name || 'Team'}</Text>
+                          <Text style={styles.searchSubtitle}>
+                            {invite.inviter?.name || 'Manager'} • {invite.role}
+                          </Text>
+                        </View>
+                        <View style={styles.requestActions}>
+                          <TouchableOpacity
+                            style={[styles.requestButton, styles.requestApprove]}
+                            onPress={() => handleAcceptInvite(invite)}
+                            disabled={isWorking}
+                          >
+                            <Text style={styles.requestButtonText}>{t('accept') || 'Accept'}</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[styles.requestButton, styles.requestReject]}
+                            onPress={() => handleDeclineInvite(invite.id)}
+                            disabled={isWorking}
+                          >
+                            <Text style={styles.requestButtonText}>{t('decline') || 'Decline'}</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
               <View style={styles.emptyState}>
                 <Ionicons name="people-outline" size={80} color={colors.textMuted} />
                 <Text style={styles.emptyTitle}>{t('teams')}</Text>
@@ -386,7 +425,7 @@ export default function TeamsScreen() {
             <View style={styles.teamsContent}>
           {pendingInvites.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{t('invitations') || 'Invitations'}</Text>
+              <Text style={styles.sectionTitle}>{t('receivedInvitations') || t('invitations') || 'Invitations'}</Text>
               <View style={styles.requestsList}>
                 {pendingInvites.map(invite => (
                   <View key={invite.id} style={styles.requestCard}>

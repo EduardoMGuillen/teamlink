@@ -164,7 +164,14 @@ export default function NotificationsScreen() {
                 styles.notificationCard,
                 !notification.isRead && styles.notificationCardUnread,
               ]}
-              onPress={() => markAsRead(notification.id)}
+              onPress={() => {
+                if (notification.type === 'team_invite') {
+                  markAsRead(notification.id);
+                  navigation.navigate('MainTabs', { screen: 'Teams' });
+                } else {
+                  markAsRead(notification.id);
+                }
+              }}
             >
               <View
                 style={[

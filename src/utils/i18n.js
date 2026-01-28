@@ -91,6 +91,12 @@ const translations = {
     photoLibraryPermission: 'Allow access to photo library to set profile photo.',
     notifications: 'Notifications',
     about: 'About',
+    privacyPolicy: 'Privacy Policy',
+    termsOfService: 'Terms of Service',
+    legal: 'Legal',
+    features: 'Features',
+    lastUpdated: 'Last Updated',
+    contactUs: 'Contact Us',
     
     // Team Collaboration
     directory: 'Directory',
@@ -107,6 +113,7 @@ const translations = {
     teamMembers: 'Team Members',
     inviteMembers: 'Invite Members',
     invitations: 'Invitations',
+    receivedInvitations: 'Received Invitations',
     inviteEmail: 'Email Address',
     inviteEmailPlaceholder: 'name@company.com',
     sendInvite: 'Send Invite',
@@ -409,6 +416,12 @@ const translations = {
     photoLibraryPermission: 'Permite acceso a la galería para establecer la foto de perfil.',
     notifications: 'Notificaciones',
     about: 'Acerca de',
+    privacyPolicy: 'Política de Privacidad',
+    termsOfService: 'Términos de Servicio',
+    legal: 'Legal',
+    features: 'Características',
+    lastUpdated: 'Última Actualización',
+    contactUs: 'Contáctanos',
     
     // Team Collaboration
     directory: 'Directorio',
@@ -722,6 +735,12 @@ const translations = {
     photoLibraryPermission: "Autoriser l'accès à la galerie pour définir la photo de profil.",
     notifications: 'Notifications',
     about: 'À propos',
+    privacyPolicy: 'Politique de Confidentialité',
+    termsOfService: 'Conditions d\'Utilisation',
+    legal: 'Légal',
+    features: 'Fonctionnalités',
+    lastUpdated: 'Dernière Mise à Jour',
+    contactUs: 'Nous Contacter',
     
     // Team Collaboration
     directory: 'Répertoire',
@@ -738,6 +757,7 @@ const translations = {
     teamMembers: "Membres de l'Équipe",
     inviteMembers: 'Inviter des Membres',
     invitations: 'Invitations',
+    receivedInvitations: 'Invitations reçues',
     inviteEmail: 'Adresse e-mail',
     inviteEmailPlaceholder: 'nom@entreprise.com',
     sendInvite: "Envoyer l'invitation",

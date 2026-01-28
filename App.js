@@ -32,6 +32,9 @@ import TeamTasksScreen from './src/screens/TeamTasksScreen';
 import TeamMembersScreen from './src/screens/TeamMembersScreen';
 import TeamJoinRequestsScreen from './src/screens/TeamJoinRequestsScreen';
 import EditProfileScreen from './src/screens/EditProfileScreen';
+import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
+import TermsOfServiceScreen from './src/screens/TermsOfServiceScreen';
+import AboutScreen from './src/screens/AboutScreen';
 
 const Tab = createBottomTabNavigator();
 // Usar Stack Navigator nativo para móvil, Stack Navigator regular para web
@@ -187,6 +190,72 @@ function AppNavigator() {
               name="EditProfile" 
               component={EditProfileScreen}
               options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="PrivacyPolicy" 
+              component={PrivacyPolicyScreen}
+              options={{ 
+                headerShown: false,
+                ...(Platform.OS === 'web' && {
+                  headerShown: true,
+                  title: 'Privacy Policy',
+                  headerBackTitleVisible: false,
+                  headerStyle: {
+                    backgroundColor: '#fff',
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#E5E5EA',
+                  },
+                  headerTintColor: '#007AFF',
+                  headerTitleStyle: {
+                    fontWeight: '600',
+                    fontSize: 18,
+                  },
+                }),
+              }}
+            />
+            <Stack.Screen 
+              name="TermsOfService" 
+              component={TermsOfServiceScreen}
+              options={{ 
+                headerShown: false,
+                ...(Platform.OS === 'web' && {
+                  headerShown: true,
+                  title: 'Terms of Service',
+                  headerBackTitleVisible: false,
+                  headerStyle: {
+                    backgroundColor: '#fff',
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#E5E5EA',
+                  },
+                  headerTintColor: '#007AFF',
+                  headerTitleStyle: {
+                    fontWeight: '600',
+                    fontSize: 18,
+                  },
+                }),
+              }}
+            />
+            <Stack.Screen 
+              name="About" 
+              component={AboutScreen}
+              options={{ 
+                headerShown: false,
+                ...(Platform.OS === 'web' && {
+                  headerShown: true,
+                  title: 'About',
+                  headerBackTitleVisible: false,
+                  headerStyle: {
+                    backgroundColor: '#fff',
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#E5E5EA',
+                  },
+                  headerTintColor: '#007AFF',
+                  headerTitleStyle: {
+                    fontWeight: '600',
+                    fontSize: 18,
+                  },
+                }),
+              }}
             />
             <Stack.Screen 
               name="Settings" 

@@ -37,7 +37,15 @@ export default function MoreScreen() {
       title: t('settings'),
       items: [
         { icon: 'settings', label: t('settings'), screen: 'Settings' },
+        { icon: 'information-circle', label: t('about'), screen: 'About' },
         { icon: 'log-out', label: t('signOut'), action: 'signOut', color: '#FF3B30' },
+      ],
+    },
+    {
+      title: t('legal') || 'Legal',
+      items: [
+        { icon: 'document-text', label: t('privacyPolicy') || 'Privacy Policy', screen: 'PrivacyPolicy' },
+        { icon: 'document-text', label: t('termsOfService') || 'Terms of Service', screen: 'TermsOfService' },
       ],
     },
   ];
