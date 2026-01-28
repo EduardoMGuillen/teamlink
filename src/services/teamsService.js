@@ -319,25 +319,25 @@ export const teamsService = {
   // Solicitar unirse por código
   async requestJoinByCode(teamCode, userId) {
     try {
-      const code = teamCode?.trim().toUpperCase();
+      const code = teamCode?.trim();
       if (!code || !userId) {
         return { success: false, error: 'Invalid data' };
       }
 
-      const { data: team, error: teamError } = await supabase
-        .from('teams')
-        .select('id')
-        .eq('team_code', code)
-        .single();
+      // Usar función RPC para buscar equipo por código (bypass RLS)
+      const { data: teamId, error: teamError } = await supabase.rpc(
+        'get_team_id_by_code',
+        { team_code_param: code }
+      );
 
-      if (teamError || !team) {
+      if (teamError || !teamId) {
         return { success: false, error: 'Team not found' };
       }
 
       const { error: requestError } = await supabase
         .from('team_join_requests')
         .insert({
-          team_id: team.id,
+          team_id: teamId,
           user_id: userId,
           status: 'pending',
         });
@@ -351,7 +351,7 @@ export const teamsService = {
         return { success: false, error: msg };
       }
 
-      return { success: true, teamId: team.id };
+      return { success: true, teamId: teamId };
     } catch (error) {
       console.error('Request join error:', error);
       return { success: false, error: error.message };
