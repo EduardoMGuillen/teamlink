@@ -330,7 +330,14 @@ export const teamsService = {
         { team_code_param: code }
       );
 
-      if (teamError || !teamId) {
+      if (teamError) {
+        const msg =
+          teamError.message && /function.*does not exist/i.test(teamError.message)
+            ? 'Team code search is not set up. Ask your admin to run the database migration (fix_team_code_search.sql) in Supabase.'
+            : teamError.message;
+        return { success: false, error: msg };
+      }
+      if (!teamId) {
         return { success: false, error: 'Team not found' };
       }
 
@@ -344,10 +351,12 @@ export const teamsService = {
 
       if (requestError) {
         console.error('Error creating join request:', requestError);
-        const msg =
-          requestError.code === '23505'
-            ? 'You already have a pending request for this team.'
-            : requestError.message;
+        let msg = requestError.message;
+        if (requestError.code === '23505') {
+          msg = 'You already have a pending request for this team.';
+        } else if (requestError.code === '23503' && /user_id_fkey/i.test(requestError.message || '')) {
+          msg = 'Your profile is not set up in the database. Ask your admin to run fix_team_join_requests_user_fkey.sql in Supabase, or try logging out and back in.';
+        }
         return { success: false, error: msg };
       }
 

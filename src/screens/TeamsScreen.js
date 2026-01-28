@@ -226,7 +226,11 @@ export default function TeamsScreen() {
         const errMsg =
           result.error === 'You already have a pending request for this team.'
             ? (t('joinRequestAlreadyPending') || result.error)
-            : (result.error || t('joinRequestFailed') || 'Could not send request.');
+            : /fix_team_code_search|not set up/i.test(result.error || '')
+              ? (t('teamCodeSearchNotSetup') || result.error)
+              : /profile.*not set up|user_id_fkey|fix_team_join_requests_user_fkey/i.test(result.error || '')
+                ? (t('joinRequestProfileNotSetup') || result.error)
+                : (result.error || t('joinRequestFailed') || 'Could not send request.');
         setJoinStatus(errMsg);
         setJoinStatusIsError(true);
       }
