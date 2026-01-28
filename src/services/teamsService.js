@@ -519,14 +519,7 @@ export const teamsService = {
           user_id,
           role,
           joined_at,
-          users (
-            id,
-            name,
-            email,
-            phone,
-            department,
-            role
-          )
+          users ( id, name, email, phone, department, role )
         `)
         .eq('team_id', teamId);
 
@@ -534,20 +527,34 @@ export const teamsService = {
         console.error('Error fetching team members:', error);
         return [];
       }
+      if (!data?.length) return [];
 
-      return data.map(item => ({
-        userId: item.user_id,
-        role: item.role,
-        joinedAt: item.joined_at,
-        user: {
-          id: item.users.id,
-          name: item.users.name,
-          email: item.users.email,
-          phone: item.users.phone,
-          department: item.users.department,
-          role: item.users.role,
-        },
-      }));
+      const u = (item) => item.users ?? item.user ?? null;
+      return data.map(item => {
+        const usr = u(item);
+        return {
+          userId: item.user_id,
+          role: item.role,
+          joinedAt: item.joined_at,
+          user: usr
+            ? {
+                id: usr.id,
+                name: usr.name,
+                email: usr.email,
+                phone: usr.phone,
+                department: usr.department,
+                role: usr.role,
+              }
+            : {
+                id: item.user_id,
+                name: null,
+                email: null,
+                phone: null,
+                department: null,
+                role: null,
+              },
+        };
+      });
     } catch (error) {
       console.error('Get team members error:', error);
       return [];
