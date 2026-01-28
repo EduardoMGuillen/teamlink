@@ -7,6 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -31,6 +32,7 @@ export default function TeamJoinRequestsScreen() {
   const [joinRequests, setJoinRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isWorking, setIsWorking] = useState(false);
+  const [actionError, setActionError] = useState(null);
 
   useEffect(() => {
     if (teamId) {
@@ -53,13 +55,18 @@ export default function TeamJoinRequestsScreen() {
 
   const handleApproveRequest = async (request) => {
     if (!teamId) return;
+    setActionError(null);
     setIsWorking(true);
     try {
       const result = await teamsService.approveJoinRequest(request.id, teamId, request.userId);
       if (result.success) {
         await loadJoinRequests();
+      } else {
+        setActionError(result.error || (t('approveRequestFailed') || 'Could not approve request.'));
       }
     } catch (error) {
+      const msg = error?.message || (t('approveRequestFailed') || 'Could not approve request.');
+      setActionError(msg);
       console.error('Error approving request:', error);
     } finally {
       setIsWorking(false);
@@ -67,13 +74,18 @@ export default function TeamJoinRequestsScreen() {
   };
 
   const handleRejectRequest = async (requestId) => {
+    setActionError(null);
     setIsWorking(true);
     try {
       const result = await teamsService.rejectJoinRequest(requestId);
       if (result.success) {
         await loadJoinRequests();
+      } else {
+        setActionError(result.error || (t('rejectRequestFailed') || 'Could not reject request.'));
       }
     } catch (error) {
+      const msg = error?.message || (t('rejectRequestFailed') || 'Could not reject request.');
+      setActionError(msg);
       console.error('Error rejecting request:', error);
     } finally {
       setIsWorking(false);
@@ -106,6 +118,17 @@ export default function TeamJoinRequestsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.content, isWeb && styles.contentWeb]}>
+          {!!actionError && (
+            <TouchableOpacity
+              style={styles.errorBanner}
+              onPress={() => setActionError(null)}
+              activeOpacity={0.9}
+            >
+              <Ionicons name="alert-circle" size={20} color={colors.danger} />
+              <Text style={styles.errorBannerText}>{actionError}</Text>
+              <Ionicons name="close" size={20} color={colors.danger} />
+            </TouchableOpacity>
+          )}
           {joinRequests.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="person-add-outline" size={64} color={colors.textMuted} />
@@ -214,6 +237,23 @@ const createStyles = (colors) => StyleSheet.create({
     maxWidth: 1200,
     alignSelf: 'center',
     paddingHorizontal: 24,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: `${colors.danger}15`,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    borderRadius: radii.md,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorBannerText: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.danger,
+    fontWeight: '500',
   },
   loadingContainer: {
     flex: 1,

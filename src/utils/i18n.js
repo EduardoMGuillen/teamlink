@@ -135,6 +135,8 @@ const translations = {
     loginRequired: 'You must be logged in.',
     joinRequests: 'Join Requests',
     noJoinRequests: 'No pending requests',
+    approveRequestFailed: 'Could not approve request. Ask your admin to run fix_team_members_insert_policy.sql in Supabase.',
+    rejectRequestFailed: 'Could not reject request.',
     // Team Tasks
     teamTasks: 'Team Tasks',
     createTeamTask: 'Create Team Task',
@@ -450,6 +452,8 @@ const translations = {
     loginRequired: 'Debes iniciar sesión.',
     joinRequests: 'Solicitudes de ingreso',
     noJoinRequests: 'No hay solicitudes pendientes',
+    approveRequestFailed: 'No se pudo aprobar. Pide al admin ejecutar fix_team_members_insert_policy.sql en Supabase.',
+    rejectRequestFailed: 'No se pudo rechazar la solicitud.',
     // Team Tasks
     teamTasks: 'Tareas del Equipo',
     createTeamTask: 'Crear Tarea del Equipo',
@@ -760,6 +764,8 @@ const translations = {
     loginRequired: 'Vous devez être connecté.',
     joinRequests: 'Demandes',
     noJoinRequests: 'Aucune demande en attente',
+    approveRequestFailed: "Impossible d'approuver. Demandez à l'admin d'exécuter fix_team_members_insert_policy.sql dans Supabase.",
+    rejectRequestFailed: "Impossible de rejeter la demande.",
     // Team Tasks
     teamTasks: 'Tâches d\'Équipe',
     createTeamTask: 'Créer une Tâche d\'Équipe',
