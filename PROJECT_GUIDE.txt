@@ -1,7 +1,7 @@
 ================================================================================
                     TEAMLINK - GUÍA DEL PROYECTO
                     Documento de Planificación y Roadmap
-                    Última actualización: Enero 2025
+                    Última actualización: Enero 2026
 ================================================================================
 
 ÍNDICE
@@ -47,8 +47,8 @@ DIFERENCIADORES:
 2. ESTADO ACTUAL DE LA APLICACIÓN
 ================================================================================
 
-VERSIÓN ACTUAL: V1.0 (Pre-Launch)
-ESTADO: Desarrollo activo, fase de testing y refinamiento
+VERSIÓN ACTUAL: V1.1 (Pre-Launch)
+ESTADO: Desarrollo activo, Fase 2 - Reportes y Analytics básicos (en preparación)
 
 PLATAFORMAS:
 ✅ Web (React Native Web) - Funcional
@@ -256,7 +256,7 @@ TeamLink/
 │   ├── screens/              # Componentes de pantallas
 │   │   ├── DashboardScreen.js
 │   │   ├── TasksScreen.js
-│   │   ├── TimeClockScreen.js (oculto)
+│   │   ├── TimeClockScreen.js
 │   │   ├── ScheduleScreen.js
 │   │   ├── ChatScreen.js
 │   │   ├── DirectoryScreen.js
