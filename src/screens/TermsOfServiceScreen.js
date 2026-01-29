@@ -1,12 +1,5 @@
 import React, { useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Platform,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Platform, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppState } from '../context/AppStateContext';
@@ -19,7 +12,6 @@ export default function TermsOfServiceScreen() {
   const { colors } = theme;
   const navigation = useNavigation();
   const { t } = useTranslation();
-  const isWeb = Platform.OS === 'web';
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
@@ -35,106 +27,117 @@ export default function TermsOfServiceScreen() {
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
+        nestedScrollEnabled={true}
+        scrollEnabled={true}
+        bounces={false}
       >
         <View style={[styles.content, isWeb && styles.contentWeb]}>
           <Text style={styles.lastUpdated}>
-            {t('lastUpdated') || 'Last Updated'}: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            {t('lastUpdated') || 'Last Updated'}: {new Date().toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}
           </Text>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>1. {t('acceptanceOfTerms') || 'Acceptance of Terms'}</Text>
+            <Text style={styles.sectionTitle}>1. Acceptance of Terms</Text>
             <Text style={styles.paragraph}>
-              {t('termsAcceptance') || 'By accessing or using TeamLink, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using this service.'}
+              By accessing or using TeamLink, you agree to be bound by these Terms of Service and all applicable laws
+              and regulations. If you do not agree with these terms, you must not use the service.
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>2. {t('useOfService') || 'Use of Service'}</Text>
+            <Text style={styles.sectionTitle}>2. Use of the Service</Text>
             <Text style={styles.paragraph}>
-              {t('termsUseDescription') || 'TeamLink is a team collaboration and management platform. You agree to use the service only for lawful purposes and in accordance with these Terms.'}
+              TeamLink is a team collaboration and workforce management platform. You agree to use the service only for
+              lawful purposes and in accordance with these Terms.
             </Text>
-            <Text style={styles.subsectionTitle}>
-              {t('userObligations') || 'User Obligations:'}
-            </Text>
+            <Text style={styles.subsectionTitle}>User obligations:</Text>
+            <Text style={styles.bulletPoint}>• Provide accurate and complete information</Text>
+            <Text style={styles.bulletPoint}>• Keep your login credentials secure</Text>
+            <Text style={styles.bulletPoint}>• Respect other users and maintain professional conduct</Text>
             <Text style={styles.bulletPoint}>
-              • {t('termsProvideAccurateInfo') || 'Provide accurate and complete information'}
-            </Text>
-            <Text style={styles.bulletPoint}>
-              • {t('termsMaintainSecurity') || 'Maintain the security of your account credentials'}
-            </Text>
-            <Text style={styles.bulletPoint}>
-              • {t('termsRespectOthers') || 'Respect other users and maintain professional conduct'}
-            </Text>
-            <Text style={styles.bulletPoint}>
-              • {t('termsNoIllegalActivity') || 'Not use the service for any illegal or unauthorized purpose'}
+              • Not use the service for any illegal, harmful, or unauthorized activity
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>3. {t('accountResponsibility') || 'Account Responsibility'}</Text>
+            <Text style={styles.sectionTitle}>3. Account Responsibility</Text>
             <Text style={styles.paragraph}>
-              {t('termsAccountResponsibility') || 'You are responsible for maintaining the confidentiality of your account and password. You agree to accept responsibility for all activities that occur under your account.'}
+              You are responsible for all activity that occurs under your account. If you suspect unauthorized access,
+              you must notify your administrator or support as soon as possible.
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>4. {t('userContent') || 'User Content'}</Text>
+            <Text style={styles.sectionTitle}>4. User Content</Text>
             <Text style={styles.paragraph}>
-              {t('termsUserContent') || 'You retain ownership of any content you create or upload to TeamLink. By using the service, you grant TeamLink a license to use, store, and display your content as necessary to provide the service.'}
+              You retain ownership of the content you create or upload to TeamLink. By using the service, you grant us
+              a limited license to store, process, and display that content as needed to operate the platform.
             </Text>
             <Text style={styles.paragraph}>
-              {t('termsContentStandards') || 'You agree not to upload content that is illegal, harmful, threatening, abusive, or violates any third-party rights.'}
-            </Text>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>5. {t('intellectualProperty') || 'Intellectual Property'}</Text>
-            <Text style={styles.paragraph}>
-              {t('termsIPRights') || 'The TeamLink service, including its design, features, and functionality, is owned by TeamLink and protected by intellectual property laws. You may not copy, modify, or create derivative works of the service.'}
+              You are responsible for ensuring that your content does not violate any laws or third‑party rights.
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>6. {t('serviceAvailability') || 'Service Availability'}</Text>
+            <Text style={styles.sectionTitle}>5. Intellectual Property</Text>
             <Text style={styles.paragraph}>
-              {t('termsAvailability') || 'We strive to provide reliable service but do not guarantee uninterrupted or error-free operation. We reserve the right to modify, suspend, or discontinue any part of the service at any time.'}
+              The TeamLink platform, including its design, code, and branding, is protected by intellectual property
+              laws. You may not copy, modify, reverse engineer, or create derivative works of any part of the service.
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>7. {t('limitationOfLiability') || 'Limitation of Liability'}</Text>
+            <Text style={styles.sectionTitle}>6. Service Availability</Text>
             <Text style={styles.paragraph}>
-              {t('termsLiability') || 'To the maximum extent permitted by law, TeamLink shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the service.'}
+              We aim to keep TeamLink available and reliable, but we cannot guarantee uninterrupted or error‑free
+              operation. We may modify, suspend, or discontinue features or the service at any time.
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>8. {t('termination') || 'Termination'}</Text>
+            <Text style={styles.sectionTitle}>7. Limitation of Liability</Text>
             <Text style={styles.paragraph}>
-              {t('termsTermination') || 'We reserve the right to terminate or suspend your account at any time for violation of these Terms or for any other reason. You may also terminate your account at any time through the app settings.'}
+              To the fullest extent permitted by law, TeamLink will not be liable for any indirect, incidental, special,
+              or consequential damages arising out of or in connection with your use of the service.
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>9. {t('changesToTerms') || 'Changes to Terms'}</Text>
+            <Text style={styles.sectionTitle}>8. Termination</Text>
             <Text style={styles.paragraph}>
-              {t('termsChanges') || 'We may update these Terms of Service from time to time. Continued use of the service after changes constitutes acceptance of the new terms.'}
+              We may suspend or terminate your access to TeamLink if you violate these Terms or use the service in a
+              way that may cause harm. You may also stop using the service at any time and request that your account be
+              closed.
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>10. {t('governingLaw') || 'Governing Law'}</Text>
+            <Text style={styles.sectionTitle}>9. Changes to These Terms</Text>
             <Text style={styles.paragraph}>
-              {t('termsGoverningLaw') || 'These Terms shall be governed by and construed in accordance with applicable laws, without regard to conflict of law provisions.'}
+              We may update these Terms from time to time. If we make material changes, we will update the &quot;Last
+              Updated&quot; date and, where appropriate, notify you in the app. Continued use of the service after
+              changes means you accept the updated Terms.
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>11. {t('contactUs') || 'Contact Us'}</Text>
+            <Text style={styles.sectionTitle}>10. Governing Law</Text>
             <Text style={styles.paragraph}>
-              {t('termsContact') || 'If you have questions about these Terms of Service, please contact us through the app settings or your organization\'s administrator.'}
+              These Terms will be governed by applicable law in your region, without regard to conflict of law rules.
+            </Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>11. Contact</Text>
+            <Text style={styles.paragraph}>
+              If you have questions about these Terms of Service, please contact your organization&apos;s administrator
+              or reach out through the in‑app support options.
             </Text>
           </View>
         </View>
@@ -173,13 +176,21 @@ const createStyles = (colors) => StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    ...(Platform.OS === 'web' && {
+      overflowX: 'hidden',
+      WebkitOverflowScrolling: 'touch',
+      cursor: 'default',
+      overscrollBehavior: 'contain',
+      height: '100%',
+      maxHeight: '100vh',
+      scrollbarWidth: 'thin',
+    }),
   },
   scrollContent: {
-    paddingBottom: 24,
-    flexGrow: 0,
-  },
-  scrollContentWeb: {
-    paddingBottom: 24,
+    paddingBottom: 48,
+    ...(Platform.OS === 'web' && {
+      paddingTop: 16,
+    }),
   },
   content: {
     width: '100%',

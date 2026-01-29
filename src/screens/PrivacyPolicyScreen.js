@@ -1,12 +1,5 @@
 import React, { useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Platform,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Platform, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppState } from '../context/AppStateContext';
@@ -19,7 +12,6 @@ export default function PrivacyPolicyScreen() {
   const { colors } = theme;
   const navigation = useNavigation();
   const { t } = useTranslation();
-  const isWeb = Platform.OS === 'web';
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
@@ -35,125 +27,112 @@ export default function PrivacyPolicyScreen() {
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
+        nestedScrollEnabled={true}
+        scrollEnabled={true}
+        bounces={false}
       >
         <View style={[styles.content, isWeb && styles.contentWeb]}>
           <Text style={styles.lastUpdated}>
-            {t('lastUpdated') || 'Last Updated'}: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            {t('lastUpdated') || 'Last Updated'}: {new Date().toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}
           </Text>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>1. {t('informationWeCollect') || 'Information We Collect'}</Text>
+            <Text style={styles.sectionTitle}>1. Information We Collect</Text>
             <Text style={styles.paragraph}>
-              {t('privacyInfoCollection') || 'TeamLink collects information necessary to provide our services, including:'}
+              TeamLink collects only the information needed to provide and improve the service. This may include:
+            </Text>
+            <Text style={styles.bulletPoint}>• Personal information (name, email, phone number)</Text>
+            <Text style={styles.bulletPoint}>• Work information (department, role, teams you belong to)</Text>
+            <Text style={styles.bulletPoint}>• Usage data (tasks, schedules, time clock entries, messages)</Text>
+            <Text style={styles.bulletPoint}>
+              • Location data (only when you use Time Clock features that request your location)
+            </Text>
+            <Text style={styles.bulletPoint}>• Device information (platform, app version)</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>2. How We Use Your Information</Text>
+            <Text style={styles.paragraph}>We use your information to:</Text>
+            <Text style={styles.bulletPoint}>• Provide and maintain the TeamLink service</Text>
+            <Text style={styles.bulletPoint}>• Personalize your experience and improve product quality</Text>
+            <Text style={styles.bulletPoint}>• Communicate with you about your account and updates</Text>
+            <Text style={styles.bulletPoint}>• Enable collaboration between you and your team members</Text>
+            <Text style={styles.bulletPoint}>• Comply with legal, accounting, and security obligations</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>3. Data Sharing and Disclosure</Text>
+            <Text style={styles.paragraph}>
+              We do not sell your personal data. We share information only in the following limited situations:
             </Text>
             <Text style={styles.bulletPoint}>
-              • {t('privacyPersonalInfo') || 'Personal information (name, email, phone number)'}
+              • With team members and administrators in your organization, so they can collaborate with you
             </Text>
             <Text style={styles.bulletPoint}>
-              • {t('privacyWorkInfo') || 'Work-related information (department, role, team assignments)'}
+              • With infrastructure and analytics providers who help us run TeamLink, under strict confidentiality
+              agreements
             </Text>
             <Text style={styles.bulletPoint}>
-              • {t('privacyUsageData') || 'Usage data (tasks, schedules, time clock entries, messages)'}
-            </Text>
-            <Text style={styles.bulletPoint}>
-              • {t('privacyLocationData') || 'Location data (when using Time Clock features)'}
-            </Text>
-            <Text style={styles.bulletPoint}>
-              • {t('privacyDeviceInfo') || 'Device information (platform, app version)'}
+              • When required by law, or when we need to protect the rights, property, or safety of users or the
+              service
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>2. {t('howWeUseInfo') || 'How We Use Your Information'}</Text>
+            <Text style={styles.sectionTitle}>4. Data Security</Text>
             <Text style={styles.paragraph}>
-              {t('privacyUsePurpose') || 'We use your information to:'}
-            </Text>
-            <Text style={styles.bulletPoint}>
-              • {t('privacyProvideServices') || 'Provide and maintain our services'}
-            </Text>
-            <Text style={styles.bulletPoint}>
-              • {t('privacyImproveServices') || 'Improve and personalize your experience'}
-            </Text>
-            <Text style={styles.bulletPoint}>
-              • {t('privacyCommunicate') || 'Communicate with you about your account and services'}
-            </Text>
-            <Text style={styles.bulletPoint}>
-              • {t('privacyTeamCollaboration') || 'Enable team collaboration and task management'}
-            </Text>
-            <Text style={styles.bulletPoint}>
-              • {t('privacyCompliance') || 'Comply with legal obligations'}
+              We use encryption, access controls, and secure infrastructure to protect your data. While no online
+              service can be 100% secure, we continuously improve our safeguards to reduce risk.
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>3. {t('dataSharing') || 'Data Sharing and Disclosure'}</Text>
-            <Text style={styles.paragraph}>
-              {t('privacySharingPolicy') || 'We do not sell your personal information. We may share your information only in the following circumstances:'}
-            </Text>
+            <Text style={styles.sectionTitle}>5. Your Rights and Choices</Text>
+            <Text style={styles.paragraph}>Depending on your region, you may have the right to:</Text>
+            <Text style={styles.bulletPoint}>• Access and review the personal information we hold about you</Text>
+            <Text style={styles.bulletPoint}>• Correct inaccurate or incomplete information</Text>
+            <Text style={styles.bulletPoint}>• Request deletion of your account and associated data</Text>
             <Text style={styles.bulletPoint}>
-              • {t('privacyTeamMembers') || 'With team members and administrators within your organization'}
-            </Text>
-            <Text style={styles.bulletPoint}>
-              • {t('privacyServiceProviders') || 'With service providers who assist in operating our services (under strict confidentiality agreements)'}
-            </Text>
-            <Text style={styles.bulletPoint}>
-              • {t('privacyLegalRequirements') || 'When required by law or to protect our rights'}
+              • Opt out of certain types of communications or data processing, where applicable
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>4. {t('dataSecurity') || 'Data Security'}</Text>
+            <Text style={styles.sectionTitle}>6. Data Retention</Text>
             <Text style={styles.paragraph}>
-              {t('privacySecurityMeasures') || 'We implement industry-standard security measures to protect your information, including encryption, secure servers, and access controls. However, no method of transmission over the internet is 100% secure.'}
+              We keep your information for as long as you have an active account or as needed to provide the service.
+              When your account is closed, we delete or anonymize your data within a reasonable period, unless we must
+              retain it to comply with legal obligations.
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>5. {t('yourRights') || 'Your Rights'}</Text>
+            <Text style={styles.sectionTitle}>7. Children&apos;s Privacy</Text>
             <Text style={styles.paragraph}>
-              {t('privacyUserRights') || 'You have the right to:'}
-            </Text>
-            <Text style={styles.bulletPoint}>
-              • {t('privacyAccessData') || 'Access and review your personal information'}
-            </Text>
-            <Text style={styles.bulletPoint}>
-              • {t('privacyCorrectData') || 'Correct inaccurate information'}
-            </Text>
-            <Text style={styles.bulletPoint}>
-              • {t('privacyDeleteData') || 'Request deletion of your account and data'}
-            </Text>
-            <Text style={styles.bulletPoint}>
-              • {t('privacyOptOut') || 'Opt-out of certain data processing activities'}
+              TeamLink is not directed to children under 13, and we do not knowingly collect personal information from
+              children under 13. If we learn that such data has been collected, we will delete it.
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>6. {t('dataRetention') || 'Data Retention'}</Text>
+            <Text style={styles.sectionTitle}>8. Changes to This Policy</Text>
             <Text style={styles.paragraph}>
-              {t('privacyRetentionPolicy') || 'We retain your information for as long as necessary to provide our services and comply with legal obligations. When you delete your account, we will delete or anonymize your personal information within 30 days.'}
+              We may occasionally update this Privacy Policy. When we make material changes, we will update the
+              &quot;Last Updated&quot; date at the top of this page and, where appropriate, notify you through the app.
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>7. {t('childrenPrivacy') || "Children's Privacy"}</Text>
+            <Text style={styles.sectionTitle}>9. Contact</Text>
             <Text style={styles.paragraph}>
-              {t('privacyChildrenPolicy') || 'TeamLink is not intended for users under the age of 13. We do not knowingly collect personal information from children under 13.'}
-            </Text>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>8. {t('changesToPolicy') || 'Changes to This Policy'}</Text>
-            <Text style={styles.paragraph}>
-              {t('privacyPolicyChanges') || 'We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new policy on this page and updating the "Last Updated" date.'}
-            </Text>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>9. {t('contactUs') || 'Contact Us'}</Text>
-            <Text style={styles.paragraph}>
-              {t('privacyContact') || 'If you have questions about this Privacy Policy, please contact us through the app settings or your organization\'s administrator.'}
+              If you have questions about this Privacy Policy or how we handle your data, please contact your
+              organization&apos;s administrator or reach out through the support options available in the app.
             </Text>
           </View>
         </View>
@@ -192,13 +171,21 @@ const createStyles = (colors) => StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    ...(Platform.OS === 'web' && {
+      overflowX: 'hidden',
+      WebkitOverflowScrolling: 'touch',
+      cursor: 'default',
+      overscrollBehavior: 'contain',
+      height: '100%',
+      maxHeight: '100vh',
+      scrollbarWidth: 'thin',
+    }),
   },
   scrollContent: {
-    paddingBottom: 24,
-    flexGrow: 0,
-  },
-  scrollContentWeb: {
-    paddingBottom: 24,
+    paddingBottom: 48,
+    ...(Platform.OS === 'web' && {
+      paddingTop: 16,
+    }),
   },
   content: {
     width: '100%',

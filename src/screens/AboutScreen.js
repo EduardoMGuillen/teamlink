@@ -1,12 +1,5 @@
 import React, { useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Platform,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Platform, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppState } from '../context/AppStateContext';
@@ -19,49 +12,54 @@ export default function AboutScreen() {
   const { colors } = theme;
   const navigation = useNavigation();
   const { t } = useTranslation();
-  const isWeb = Platform.OS === 'web';
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const features = [
     {
       icon: 'people',
-      title: t('teamCollaboration') || 'Team Collaboration',
-      description: t('aboutTeamCollaboration') || 'Create and manage teams, invite members, and collaborate seamlessly with your colleagues.',
+      title: 'Team Collaboration',
+      description:
+        'Create and manage teams, invite members, and collaborate seamlessly with your colleagues.',
     },
     {
       icon: 'checkmark-circle',
-      title: t('taskManagement') || 'Task Management',
-      description: t('aboutTaskManagement') || 'Organize individual and team tasks with priorities, due dates, and status tracking.',
+      title: 'Task Management',
+      description:
+        'Organize individual and team tasks with priorities, due dates, and status tracking.',
     },
     {
       icon: 'time',
-      title: t('timeClock') || 'Time Clock',
-      description: t('aboutTimeClock') || 'Track work hours with GPS location and photo verification for accurate timekeeping.',
+      title: 'Time Clock',
+      description:
+        'Track work hours with GPS location and optional photo verification for accurate timekeeping.',
     },
     {
       icon: 'calendar',
-      title: t('scheduleManagement') || 'Schedule Management',
-      description: t('aboutScheduleManagement') || 'View and manage your work schedule, recurring events, and team calendars.',
+      title: 'Schedule Management',
+      description:
+        'View and manage your work schedule, recurring events, and team calendars in one place.',
     },
     {
       icon: 'chatbubble',
-      title: t('teamMessaging') || 'Team Messaging',
-      description: t('aboutTeamMessaging') || 'Communicate with your team through real-time messaging and updates.',
+      title: 'Team Messaging',
+      description: 'Communicate with your team through real-time messaging and updates.',
     },
     {
       icon: 'notifications',
-      title: t('notifications') || 'Notifications',
-      description: t('aboutNotifications') || 'Stay informed with real-time notifications about tasks, messages, and team activities.',
+      title: 'Notifications',
+      description:
+        'Stay informed with real-time notifications about tasks, messages, time clock events, and team activity.',
     },
     {
       icon: 'document-text',
-      title: t('updates') || 'Updates',
-      description: t('aboutUpdates') || 'Share and receive important team updates and announcements.',
+      title: 'Updates',
+      description: 'Share and receive important team updates and announcements.',
     },
     {
       icon: 'bulb',
-      title: t('dailyMotivation') || 'Daily Motivation',
-      description: t('aboutDailyMotivation') || 'Get inspired with daily motivational quotes and personalized messages.',
+      title: 'Daily Motivation',
+      description:
+        'Get inspired with daily motivational quotes and personalized messages configured by your team.',
     },
   ];
 
@@ -78,8 +76,11 @@ export default function AboutScreen() {
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[styles.scrollContent, isWeb && styles.scrollContentWeb]}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
+        nestedScrollEnabled={true}
+        scrollEnabled={true}
+        bounces={false}
       >
         <View style={[styles.content, isWeb && styles.contentWeb]}>
           {/* App Info */}
@@ -90,7 +91,9 @@ export default function AboutScreen() {
             <Text style={styles.appName}>TeamLink</Text>
             <Text style={styles.appVersion}>Version 1.1</Text>
             <Text style={styles.appDescription}>
-              {t('aboutAppDescription') || 'TeamLink is a comprehensive team collaboration and management platform designed to help teams work together more efficiently. Manage tasks, track time, communicate with your team, and stay organized—all in one place.'}
+              TeamLink is a team collaboration and workforce management platform that helps teams stay
+              organized, communicate clearly, and track work in one place. Manage tasks, schedules, time
+              tracking, and updates without bouncing between different tools.
             </Text>
           </View>
 
@@ -114,20 +117,25 @@ export default function AboutScreen() {
 
           {/* Additional Info */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('additionalInformation') || 'Additional Information'}</Text>
+            <Text style={styles.sectionTitle}>
+              {t('additionalInformation') || 'Additional Information'}
+            </Text>
             <View style={styles.infoCard}>
               <Text style={styles.infoText}>
-                {t('aboutPlatformSupport') || 'TeamLink is available on iOS, Android, and Web platforms, ensuring you can access your team workspace from anywhere.'}
+                TeamLink is available on iOS, Android, and Web so you and your team can access your
+                workspace from anywhere.
               </Text>
             </View>
             <View style={styles.infoCard}>
               <Text style={styles.infoText}>
-                {t('aboutDataSecurity') || 'Your data is securely stored and encrypted. We prioritize your privacy and data security.'}
+                Your data is stored in a secure, cloud‑hosted database with access control and encryption.
+                We prioritize privacy and security in every new feature we ship.
               </Text>
             </View>
             <View style={styles.infoCard}>
               <Text style={styles.infoText}>
-                {t('aboutSupport') || 'For support, questions, or feedback, please contact your organization\'s administrator or use the in-app support features.'}
+                For support, questions, or feedback, contact your organization&apos;s administrator or use
+                the in‑app support options.
               </Text>
             </View>
           </View>
@@ -167,13 +175,21 @@ const createStyles = (colors) => StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    ...(Platform.OS === 'web' && {
+      overflowX: 'hidden',
+      WebkitOverflowScrolling: 'touch',
+      cursor: 'default',
+      overscrollBehavior: 'contain',
+      height: '100%',
+      maxHeight: '100vh',
+      scrollbarWidth: 'thin',
+    }),
   },
   scrollContent: {
-    paddingBottom: 24,
-    flexGrow: 0,
-  },
-  scrollContentWeb: {
-    paddingBottom: 24,
+    paddingBottom: 48,
+    ...(Platform.OS === 'web' && {
+      paddingTop: 16,
+    }),
   },
   content: {
     width: '100%',
