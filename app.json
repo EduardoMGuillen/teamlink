@@ -44,6 +44,22 @@
       "icon": "./square-image.jpg",
       "config": {
         "head": {
+          "meta": [
+            {
+              "name": "apple-mobile-web-app-title",
+              "content": "TeamLink"
+            },
+            {
+              "name": "apple-mobile-web-app-capable",
+              "content": "yes"
+            }
+          ],
+          "link": [
+            {
+              "rel": "apple-touch-icon",
+              "href": "./square-image.jpg"
+            }
+          ],
           "scripts": [
             {
               "src": "https://www.googletagmanager.com/gtag/js?id=G-ZGSCPDY50J",
