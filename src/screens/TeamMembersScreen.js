@@ -100,6 +100,23 @@ export default function TeamMembersScreen() {
     }
   };
 
+  const handleChangeMemberRole = async (userId, newRole) => {
+    if (!teamId || !userId || !newRole) return;
+    // Evitar que un manager se cambie su propio rol desde la UI
+    if (userId === currentUser?.id) return;
+    setIsWorking(true);
+    try {
+      const result = await teamsService.updateMemberRole(teamId, userId, newRole);
+      if (result.success) {
+        await loadTeamMembers();
+      }
+    } catch (error) {
+      console.error('Error updating member role:', error);
+    } finally {
+      setIsWorking(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
@@ -161,6 +178,30 @@ export default function TeamMembersScreen() {
                     <Text style={styles.memberMeta}>
                       {member.user.email} • {member.role}
                     </Text>
+                    {canManageMembers && member.userId !== currentUser?.id && (
+                      <View style={styles.memberRoleRow}>
+                        {['member', 'lead', 'manager'].map(roleOption => (
+                          <TouchableOpacity
+                            key={roleOption}
+                            style={[
+                              styles.memberRoleChip,
+                              member.role === roleOption && styles.memberRoleChipActive,
+                            ]}
+                            onPress={() => handleChangeMemberRole(member.userId, roleOption)}
+                            disabled={isWorking}
+                          >
+                            <Text
+                              style={[
+                                styles.memberRoleChipText,
+                                member.role === roleOption && styles.memberRoleChipTextActive,
+                              ]}
+                            >
+                              {roleOption}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
                   </View>
                   {canManageMembers && member.userId !== currentUser?.id && (
                     <TouchableOpacity 
@@ -340,6 +381,32 @@ const createStyles = (colors) => StyleSheet.create({
   memberMeta: {
     fontSize: 13,
     color: colors.textMuted,
+  },
+  memberRoleRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 6,
+  },
+  memberRoleChip: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 999,
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  memberRoleChipActive: {
+    backgroundColor: `${colors.primary}15`,
+    borderColor: colors.primary,
+  },
+  memberRoleChipText: {
+    fontSize: 11,
+    color: colors.textMuted,
+    textTransform: 'capitalize',
+  },
+  memberRoleChipTextActive: {
+    color: colors.primary,
+    fontWeight: '600',
   },
   removeButton: {
     padding: 4,

@@ -153,6 +153,32 @@ export const teamsService = {
     }
   },
 
+  // Actualizar rol de un miembro del equipo
+  async updateMemberRole(teamId, userId, role) {
+    try {
+      const { data, error } = await supabase
+        .from('team_members')
+        .update({ role })
+        .eq('team_id', teamId)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating member role:', error);
+        return { success: false, error: error.message };
+      }
+
+      return {
+        success: true,
+        member: data,
+      };
+    } catch (error) {
+      console.error('Update member role error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
   // Actualizar equipo
   async updateTeam(teamId, teamData) {
     try {
