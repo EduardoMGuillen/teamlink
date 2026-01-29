@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "icon": "./logo.png",
+    "icon": "./square-image.jpg",
     "splash": {
       "image": "./logo.png",
       "resizeMode": "contain",
@@ -18,17 +18,17 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.teamlink.app",
       "deploymentTarget": "15.1",
-      "icon": "./logo.png",
+      "icon": "./square-image.jpg",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./logo.png",
+        "foregroundImage": "./square-image.jpg",
         "backgroundColor": "#ffffff"
       },
-      "icon": "./logo.png",
+      "icon": "./square-image.jpg",
       "package": "com.teamlink.app",
       "compileSdkVersion": 34,
       "targetSdkVersion": 34,
@@ -40,7 +40,8 @@
     },
     "web": {
       "bundler": "metro",
-      "favicon": "./logo.png",
+      "favicon": "./square-image.jpg",
+      "icon": "./square-image.jpg",
       "config": {
         "head": {
           "scripts": [
