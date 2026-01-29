@@ -9,6 +9,7 @@ import {
   Modal,
   ActivityIndicator,
   Platform,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -142,9 +143,18 @@ export default function TeamMembersScreen() {
               teamMembers.map(member => (
                 <View key={member.userId} style={styles.memberRow}>
                   <View style={styles.memberAvatar}>
-                    <Text style={styles.memberAvatarText}>
-                      {member.user.name?.charAt(0).toUpperCase() || 'U'}
-                    </Text>
+                    {member.user?.avatar_url ? (
+                      <Image
+                        source={{ uri: member.user.avatar_url }}
+                        style={styles.memberAvatarImage}
+                      />
+                    ) : (
+                      <Text style={styles.memberAvatarText}>
+                        {(member.user?.name || member.user?.email || 'U')
+                          .charAt(0)
+                          .toUpperCase()}
+                      </Text>
+                    )}
                   </View>
                   <View style={styles.memberInfo}>
                     <Text style={styles.memberName}>{member.user.name}</Text>
@@ -307,6 +317,11 @@ const createStyles = (colors) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+  },
+  memberAvatarImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
   },
   memberAvatarText: {
     fontSize: 20,

@@ -519,7 +519,7 @@ export const teamsService = {
           user_id,
           role,
           joined_at,
-          users ( id, name, email, phone, department, role )
+          users ( id, name, email, phone, department, role, avatar_url )
         `)
         .eq('team_id', teamId);
 
@@ -544,6 +544,7 @@ export const teamsService = {
                 phone: usr.phone,
                 department: usr.department,
                 role: usr.role,
+                avatar_url: usr.avatar_url,
               }
             : {
                 id: item.user_id,
