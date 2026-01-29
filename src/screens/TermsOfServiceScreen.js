@@ -7,6 +7,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from '../utils/useTranslation';
 import { radii, shadows } from '../utils/theme';
 
+const isWeb = Platform.OS === 'web';
+
 export default function TermsOfServiceScreen() {
   const { theme } = useAppState();
   const { colors } = theme;
