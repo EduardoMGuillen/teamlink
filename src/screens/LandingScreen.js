@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -25,7 +25,81 @@ export default function LandingScreen() {
   const navigation = useNavigation();
   const { t, language, changeLanguage, availableLanguages } = useTranslation();
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const [installPromptEvent, setInstallPromptEvent] = useState(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [installBannerType, setInstallBannerType] = useState(null); // 'android' | 'ios' | null
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  // Detectar si está corriendo como PWA (standalone) y si debemos mostrar banner
+  useEffect(() => {
+    if (!isWeb || typeof window === 'undefined') return;
+
+    const isStandaloneWeb =
+      window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+    const isStandaloneIOS = window.navigator.standalone === true;
+    const standalone = isStandaloneWeb || isStandaloneIOS;
+
+    const dismissed = window.localStorage.getItem('teamlink_pwa_dismissed') === 'true';
+
+    if (standalone || dismissed) {
+      setShowInstallBanner(false);
+      return;
+    }
+
+    const isIOS =
+      /iphone|ipad|ipod/i.test(window.navigator.userAgent || '') &&
+      !window.MSStream;
+
+    const handleBeforeInstallPrompt = (e) => {
+      // Chrome/Android dispara este evento cuando la PWA es instalable
+      e.preventDefault();
+      setInstallPromptEvent(e);
+      setInstallBannerType('android');
+      setShowInstallBanner(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // Si es iOS (no hay beforeinstallprompt), mostramos banner educativo
+    if (isIOS && !standalone && !dismissed) {
+      setInstallBannerType('ios');
+      setShowInstallBanner(true);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleDismissInstallBanner = () => {
+    if (isWeb && typeof window !== 'undefined') {
+      window.localStorage.setItem('teamlink_pwa_dismissed', 'true');
+    }
+    setShowInstallBanner(false);
+    setInstallPromptEvent(null);
+    setInstallBannerType(null);
+  };
+
+  const handleInstallClick = async () => {
+    if (!installPromptEvent) {
+      // En iOS sólo mostramos instrucciones, así que simplemente ocultamos el banner si el usuario pulsa "Entendido"
+      handleDismissInstallBanner();
+      return;
+    }
+    try {
+      installPromptEvent.prompt();
+      const choice = await installPromptEvent.userChoice;
+      if (choice?.outcome === 'accepted') {
+        handleDismissInstallBanner();
+      } else {
+        // Si el usuario rechaza, no volvemos a mostrar el banner
+        handleDismissInstallBanner();
+      }
+    } catch (e) {
+      console.error('PWA install prompt error:', e);
+      handleDismissInstallBanner();
+    }
+  };
 
   const handleLanguageSelect = (langCode) => {
     changeLanguage(langCode);
@@ -103,6 +177,47 @@ export default function LandingScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* PWA Install Banner (solo web) */}
+      {isWeb && showInstallBanner && (
+        <View style={styles.installBanner}>
+          <View style={styles.installBannerContent}>
+            <Ionicons name="download-outline" size={18} color={colors.primary} />
+            <View style={styles.installBannerTextContainer}>
+              <Text style={styles.installBannerTitle}>
+                {t('installApp') || 'Instala TeamLink'}
+              </Text>
+              <Text style={styles.installBannerSubtitle}>
+                {installBannerType === 'ios'
+                  ? t('installAppIosHint') ||
+                    'Para añadirla a tu pantalla de inicio, toca el botón de compartir y elige “Añadir a pantalla de inicio”.'
+                  : t('installAppHint') ||
+                    'Añade TeamLink a tu pantalla de inicio para una experiencia tipo app.'}
+              </Text>
+            </View>
+            <View style={styles.installBannerActions}>
+              <TouchableOpacity
+                style={styles.installBannerSkip}
+                onPress={handleDismissInstallBanner}
+              >
+                <Text style={styles.installBannerSkipText}>
+                  {t('notNow') || 'Ahora no'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.installBannerButton}
+                onPress={handleInstallClick}
+              >
+                <Text style={styles.installBannerButtonText}>
+                  {installBannerType === 'ios'
+                    ? t('gotIt') || 'Entendido'
+                    : t('install') || 'Instalar'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
 
       {/* Main Content */}
       <ScrollView 
@@ -302,7 +417,66 @@ const createStyles = (colors) => StyleSheet.create({
       left: 0,
       right: 0,
       width: '100%',
+      zIndex: 20,
     }),
+  },
+  installBanner: {
+    ...(isWeb && {
+      position: 'fixed',
+      top: 72,
+      left: 0,
+      right: 0,
+      zIndex: 19,
+    }),
+    paddingHorizontal: isWeb ? 24 : 16,
+    paddingTop: 8,
+  },
+  installBannerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: colors.surface,
+    ...shadows.soft,
+    gap: 8,
+  },
+  installBannerTextContainer: {
+    flex: 1,
+  },
+  installBannerTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  installBannerSubtitle: {
+    fontSize: 11,
+    color: colors.textMuted,
+  },
+  installBannerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 8,
+  },
+  installBannerSkip: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  installBannerSkipText: {
+    fontSize: 11,
+    color: colors.textMuted,
+  },
+  installBannerButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: colors.primary,
+  },
+  installBannerButtonText: {
+    fontSize: 11,
+    color: '#fff',
+    fontWeight: '600',
   },
   headerMobile: {
     paddingHorizontal: 12,
